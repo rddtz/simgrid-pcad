@@ -1,0 +1,25 @@
+#+STARTUP: content
+#+STARTUP: overview
+#+STARTUP: indent
+#+STARTUP: latexpreview
+#+TITLE: Notes on implementing the PCAD Digital Twin with SimGrid.
+#+AUTHOR: Rayan Raddatz de Matos
+
+
+* Idea
+The idea is to create a "replica" of the PCAD in [[https://simgrid.org/doc/latest/index.html][SimGrid]] using the C++ interface
+
+* Work
+** 2025-11-06
+[11:32:57; 06.11.2025]: I will use the base example of the site
+(https://simgrid.org/doc/latest/Platform_cpp.html#example) to start.
+
+[11:41:05; 06.11.2025]: The references will stay in a separated
+directory.
+
+#+begin_src shell :results output :exports both
+ls references
+#+end_src
+
+#+RESULTS:
+: smpi_article.pdf
