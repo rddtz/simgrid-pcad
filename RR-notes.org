@@ -9,7 +9,7 @@
 * Idea
 The idea is to create a "replica" of the PCAD in [[https://simgrid.org/doc/latest/index.html][SimGrid]] using the C++ interface
 
-* Work
+* Journal
 ** 2025-11-06
 [11:32:57; 06.11.2025]: I will use the base example of the site
 (https://simgrid.org/doc/latest/Platform_cpp.html#example) to start.
@@ -23,3 +23,162 @@ ls references
 
 #+RESULTS:
 : smpi_article.pdf
+
+** 2025-12-05
+
+[08:40:25; 05.12.2025]: The two important points are the creation of
+the interface and also the calibration.
+
+[08:45:38; 05.12.2025]: I will start by reading and getting used to
+the platform. I also want to start using the examples to see what path
+should I follow.
+
+[09:01:00; 05.12.2025]: To calibrate or validate I must first have a
+functional (even though small) cluster. I will try to start with a toy
+example and scale it to create the CEI partition.
+
+CEI HARDWARE:
+| name     | partition | processor                                                        | memory     | accelerator | disk                      | motherboard       |
+|----------+-----------+------------------------------------------------------------------+------------+-------------+---------------------------+-------------------|
+| cei[1-6] | cei       | 2 x Intel(R) Xeon(R) Silver 4116, 2.10 GHz, 48 threads, 24 cores | 96 GB DDR4 | --          | 21.8 TB HDD, 894.3 GB SSD | Supermicro X11DPU |
+
+They are connected by a 10G Internet Switch.
+
+[09:14:52; 05.12.2025]: I am compiling the simgrid examples to use as
+base.
+
+[09:45:13; 05.12.2025]: I think I can modulate to create the
+partitions (one function for each partition) and after joint
+everything to create the PCAD.
+
+[09:46:51; 05.12.2025]: My debian current MPI version don't have a
+fully updated simgrid version. I will probably download from source then.
+
+[10:07:06; 05.12.2025]: Since Lucas said they are shifting toward Nix,
+I will probably download the Nix SimGrid Version.
+
+[11:10:48; 05.12.2025]: I make a break to go to super market. I
+installed the simgrid from source (git version 4.1.1) and installed at
+/opt/simgrid. To compile with this version, i need to change the dkpg
+path env variable:
+
+#+begin_src shell :results output :exports both
+export PKG_CONFIG_PATH=/opt/simgrid/lib/pkgconfig:$PKG_CONFIG_PATH
+#+end_src
+
+and then compile:
+
+#+begin_src shell :results output :exports both
+g++ -shared -fPIC -o libgriffon_platform.so base.cpp $(pkg-config --cflags --libs simgrid)
+#+end_src
+
+This will create a library to my platform.
+
+
+* Work
+** Create PCAD (the currently exact version)
+:PROPERTIES:
+:header-args: :tangle create-pcad.cpp
+:END:
+
+This is currently the base example from the simgrid documentation.
+
+#+begin_src C++ :includes :results output :exports both
+#include <numeric>
+#include <simgrid/s4u.hpp>
+namespace sg4 = simgrid::s4u;
+
+/**
+ * @brief Create a new cabinet
+ *
+ * This function creates the cabinet, adding the hosts and links properly.
+ * See figure below for more details of each cabinet
+ *
+ * @param root Root netzone
+ * @param name Cabinet name
+ * @param radicals IDs of nodes inside the cabinet
+ * @return netzone the created netzone
+ */
+static sg4::NetZone* create_cabinet(sg4::NetZone* root, const std::string& name, const std::vector<int>& radicals)
+{
+  auto* cluster      = root->add_netzone_star(name);
+  std::string prefix = "griffon-";
+  std::string suffix = ".nancy.grid5000.fr";
+
+  /* create the backbone link */
+  const sg4::Link* l_bb = cluster->add_link("backbone-" + name, "1.25GBps");
+  sg4::LinkInRoute backbone(l_bb);
+
+  /* create all hosts and connect them to outside world */
+  for (const auto& id : radicals) {
+    std::string hostname = prefix + std::to_string(id) + suffix;
+    /* create host */
+    const sg4::Host* host = cluster->add_host(hostname, "286.087kf");
+    /* create UP/DOWN link */
+    const sg4::Link* link = cluster->add_split_duplex_link(hostname, "125MBps")->set_latency("24us");
+
+    /* add link and backbone for communications from the host */
+    cluster->add_route(host, nullptr, {{link, sg4::LinkInRoute::Direction::UP}, backbone}, true);
+  }
+
+  /* create gateway */
+
+  cluster->set_gateway(cluster->add_router(prefix + name + "-router" + suffix));
+
+  cluster->seal();
+  return cluster;
+}
+
+/** @brief Programmatic version of griffon.xml */
+extern "C" void load_platform(sg4::Engine& e);
+void load_platform(sg4::Engine& e)
+{
+  /**
+   * C++ version of griffon.xml
+   * Old Grid5000 cluster (not available anymore): 3 cabinets containing homogeneous nodes connected through a backbone
+   *                                  1.25GBps shared link
+   *                          ___________________________________
+   *          1              /                |                  \
+   *                        /                 |                   \
+   *                       /                  |                    \
+   *     ________________ /             ______|__________           \_________________
+   *     |               |              |               |            |               |
+   *     | cab1 router   |              | cab2 router   |            | cab3 router   |
+   *     |_______________|              |_______________|            |_______________|
+   *     ++++++++++++++++               ++++++++++++++++             ++++++++++++++++++  <-- 1.25 backbone
+   *     / /   | |    \ \              / /    | |    \ \             / /     | |     \ \
+   *    / /    | |     \ \            / /     | |     \ \           / /      | |      \ \ <-- 125Mbps links
+   *   / /     | |      \ \          / /      | |      \ \         / /       | |       \ \
+   * host1     ...      hostN      host1      ...      hostM      host1      ...       hostQ
+   */
+
+  auto* root = e.get_netzone_root()->add_netzone_star("AS_griffon");
+
+  /* create top link */
+  const sg4::Link* l_bb = root->add_link("backbone", "1.25GBps")->set_latency("24us")->seal();
+  sg4::LinkInRoute backbone{l_bb};
+
+  /* create cabinet1 */
+  std::vector<int> rad(32);
+  std::iota(rad.begin(), rad.end(), 1); // 1-29,58,59,60
+  rad[rad.size() - 1]  = 60;
+  rad[rad.size() - 2]  = 59;
+  rad[rad.size() - 3]  = 58;
+  const sg4::NetZone* cab_zone = create_cabinet(root, "cabinet1", rad);
+  root->add_route(cab_zone, nullptr, {backbone});
+
+  /* create cabinet2 */
+  rad.resize(28);
+  std::iota(rad.begin(), rad.end(), 30); // 30-57
+  cab_zone = create_cabinet(root, "cabinet2", rad);
+  root->add_route(cab_zone, nullptr, {backbone});
+
+  /* create cabinet3 */
+  rad.resize(32);
+  std::iota(rad.begin(), rad.end(), 61); // 61-92
+  cab_zone = create_cabinet(root, "cabinet3", rad);
+  root->add_route(cab_zone, nullptr, {backbone});
+
+  root->seal();
+}
+#+end_src
