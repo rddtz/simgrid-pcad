@@ -9,81 +9,35 @@
 * Idea
 The idea is to create a "replica" of the PCAD in [[https://simgrid.org/doc/latest/index.html][SimGrid]] using the C++ interface
 
-* Journal
-** 2025-11-06
-[11:32:57; 06.11.2025]: I will use the base example of the site
-(https://simgrid.org/doc/latest/Platform_cpp.html#example) to start.
-
-[11:41:05; 06.11.2025]: The references will stay in a separated
-directory.
-
-#+begin_src shell :results output :exports both
-ls references
-#+end_src
-
-#+RESULTS:
-: smpi_article.pdf
-
-** 2025-12-05
-
-[08:40:25; 05.12.2025]: The two important points are the creation of
-the interface and also the calibration.
-
-[08:45:38; 05.12.2025]: I will start by reading and getting used to
-the platform. I also want to start using the examples to see what path
-should I follow.
-
-[09:01:00; 05.12.2025]: To calibrate or validate I must first have a
-functional (even though small) cluster. I will try to start with a toy
-example and scale it to create the CEI partition.
-
-CEI HARDWARE:
-| name     | partition | processor                                                        | memory     | accelerator | disk                      | motherboard       |
-|----------+-----------+------------------------------------------------------------------+------------+-------------+---------------------------+-------------------|
-| cei[1-6] | cei       | 2 x Intel(R) Xeon(R) Silver 4116, 2.10 GHz, 48 threads, 24 cores | 96 GB DDR4 | --          | 21.8 TB HDD, 894.3 GB SSD | Supermicro X11DPU |
-
-They are connected by a 10G Internet Switch.
-
-[09:14:52; 05.12.2025]: I am compiling the simgrid examples to use as
-base.
-
-[09:45:13; 05.12.2025]: I think I can modulate to create the
-partitions (one function for each partition) and after joint
-everything to create the PCAD.
-
-[09:46:51; 05.12.2025]: My debian current MPI version don't have a
-fully updated simgrid version. I will probably download from source then.
-
-[10:07:06; 05.12.2025]: Since Lucas said they are shifting toward Nix,
-I will probably download the Nix SimGrid Version.
-
-[11:10:48; 05.12.2025]: I make a break to go to super market. I
-installed the simgrid from source (git version 4.1.1) and installed at
-/opt/simgrid. To compile with this version, i need to change the dkpg
-path env variable:
-
-#+begin_src shell :results output :exports both
-export PKG_CONFIG_PATH=/opt/simgrid/lib/pkgconfig:$PKG_CONFIG_PATH
-#+end_src
-
-and then compile:
-
-#+begin_src shell :results output :exports both
-g++ -shared -fPIC -o libgriffon_platform.so base.cpp $(pkg-config --cflags --libs simgrid)
-#+end_src
-
-This will create a library to my platform.
-
-
 * Work
-** Create PCAD (the currently exact version)
-:PROPERTIES:
-:header-args: :tangle create-pcad.cpp
-:END:
 
-This is currently the base example from the simgrid documentation.
+** Makefile
+#+begin_src makefile :tangle Makefile
+CPPC=g++
+CPPFLAGS=-shared -Wall -Werror -fPIC
+LIBS=simgrid
 
-#+begin_src C++ :includes :results output :exports both
+.PHONY: clean platform
+
+export PKG_CONFIG_PATH := /opt/simgrid/lib/pkgconfig:$(PKG_CONFIG_PATH) # export installation path to simgrid
+
+pcad:
+	g++ -shared -fPIC -o pcad.so create-pcad.cpp `pkg-config --cflags --libs $(LIBS)`
+
+base:
+	g++ -shared -fPIC -o libgriffon_platform.so base.cpp `pkg-config --cflags --libs $(LIBS)`
+
+clean:
+	rm -f *.so
+#+end_src
+
+** Base example (from simgrid docs)
+#+begin_src C++ :tangle base.cpp :results output :exports both :main no
+/* Copyright (c) 2006-2025. The SimGrid Team. All rights reserved.          */
+
+/* This program is free software; you can redistribute it and/or modify it
+ * under the terms of the license (GNU LGPL) which comes with this package. */
+
 #include <numeric>
 #include <simgrid/s4u.hpp>
 namespace sg4 = simgrid::s4u;
@@ -182,3 +136,327 @@ void load_platform(sg4::Engine& e)
   root->seal();
 }
 #+end_src
+
+** Create PCAD (the currently exact version)
+:PROPERTIES:
+:header-args: :tangle create-pcad.cpp :main no
+:END:
+
+This is currently the base example from the simgrid documentation.
+
+*** Libraries and namespace
+#+begin_src C++ :results output :exports both
+#include <numeric>
+#include <simgrid/s4u.hpp>
+
+namespace sg4 = simgrid::s4u;
+#+end_src
+
+*** Generic function to create one partition
+#+begin_src C++ :results output :exports both
+
+/**
+ ,* @brief Create a partition with N machines
+ ,*
+ ,* This function creates the any partition, adding the hosts and links properly.
+ ,* See figure below for more details of each cabinet
+ ,*
+ ,* @param root Root netzone
+ ,* @param switch_fatpipe Switch link for the rack to model the connection
+ ,* @param N Number of hosts
+ ,* @param name Host partition name
+ ,* @param host_speed Host computing speed
+ ,* @param host_bw Host Bandwidth
+ ,* @param host_lat Host Latency
+ ,*/
+
+void create_partition(sg4::NetZone* rack,
+                      sg4::Link* switch_fatpipe,
+                      int N,
+                      const std::string& name, const std::string& host_speed,
+                      const std::string& host_bw, const std::string& host_lat)
+{
+  for (int id = 1; id <= N; id++) {
+    std::string hostname = name + std::to_string(id);
+
+    auto* host = rack->add_host(hostname, host_speed)->seal();
+
+    auto* node_cable = rack->add_link(hostname + "_cable", host_bw)->set_latency(host_lat)->seal();
+
+    // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
+    rack->add_route(host,
+                    nullptr,
+                    std::vector<const sg4::Link*>{node_cable, switch_fatpipe});
+  }
+}
+#+end_src
+
+*** Creating two racks with some partitions (cei, draco, poti, tupi)
+#+begin_src C++ :results output :exports both
+/** @brief Programmatic version of PCAD */
+extern "C" void load_platform(sg4::Engine& e);
+void load_platform(sg4::Engine& e)
+{
+  auto* root = e.get_netzone_root();
+
+  // =-=-=-=-=-=-=-=-=-=-=-= RACK 2 =-=-=-=-=-=-=-=-=-=-=-=
+  std::string rack_name = "rack2";
+  auto* rack2_zone = root->add_netzone_star(rack_name);
+  auto* rack2_router = rack2_zone->add_router(rack_name + "_router");
+  rack2_zone->set_gateway(rack2_router); // rack gateaway
+
+  std::string switch_capacity = "10Gbps";
+  std::string switch_latency  = "100ns";
+
+  // Create Fatpipe to simulate the switch
+  auto* rack2_switch_fatpipe = rack2_zone->add_link(rack_name + "_fatpipe", switch_capacity)
+    ->set_latency(switch_latency)
+    ->set_sharing_policy(sg4::Link::SharingPolicy::FATPIPE)
+    ->seal();
+
+  // Nodes partitions (nodes)
+  create_partition(rack2_zone, rack2_switch_fatpipe, 6, "cei", "100kf", "1Gbps", "50us");
+  create_partition(rack2_zone, rack2_switch_fatpipe, 6, "draco", "50kf", "1Gbps", "50us");
+
+  rack2_zone->seal();
+
+  // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
+  rack_name = "rack4";
+  auto* rack4_zone = root->add_netzone_star(rack_name); // StarZone
+  auto* rack4_router = rack4_zone->add_router(rack_name + "_router");
+  rack4_zone->set_gateway(rack4_router);
+
+  switch_capacity = "10Gbps";
+  switch_latency  = "100ns";
+
+  auto* rack4_switch_fatpipe = rack4_zone->add_link(rack_name + "_fatpipe", switch_capacity)
+    ->set_latency(switch_latency)
+    ->set_sharing_policy(sg4::Link::SharingPolicy::FATPIPE)
+    ->seal();
+
+  create_partition(rack4_zone, rack4_switch_fatpipe, 5, "poti", "400kf", "1Gbps", "50us");
+  create_partition(rack4_zone, rack4_switch_fatpipe, 4, "tupi", "500kf", "1Gbps", "50us");
+
+  rack4_zone->seal();
+
+
+  // =-=-=-=-=-=-=-=-=-=-=-= CONNECTION BETWEEN THE RACKS (switchs) =-=-=-=-=-=-=-=-=-=-=-=
+  std::string inter_switch_bw = "10Gbps";
+  std::string inter_switch_lat = "50us";
+
+  auto* rack_link = root->add_link("r2_to_r4_cable", inter_switch_bw)
+    ->set_latency(inter_switch_lat)
+    ->seal();
+
+  // connect the zones
+  root->add_route(rack2_zone, rack4_zone, {rack_link});
+
+  root->seal();
+}
+#+end_src
+
+
+* Journal
+** 2025-11-06
+[11:32:57; 06.11.2025]: I will use the base example of the site
+(https://simgrid.org/doc/latest/Platform_cpp.html#example) to start.
+
+[11:41:05; 06.11.2025]: The references will stay in a separated
+directory.
+
+#+begin_src shell :results output :exports both
+ls references
+#+end_src
+
+#+RESULTS:
+: smpi_article.pdf
+
+** 2025-12-05: SimGrid Install From Source
+
+[08:40:25; 05.12.2025]: The two important points are the creation of
+the interface and also the calibration.
+
+[08:45:38; 05.12.2025]: I will start by reading and getting used to
+the platform. I also want to start using the examples to see what path
+should I follow.
+
+[09:01:00; 05.12.2025]: To calibrate or validate I must first have a
+functional (even though small) cluster. I will try to start with a toy
+example and scale it to create the CEI partition.
+
+CEI HARDWARE:
+| name     | partition | processor                                                        | memory     | accelerator | disk                      | motherboard       |
+|----------+-----------+------------------------------------------------------------------+------------+-------------+---------------------------+-------------------|
+| cei[1-6] | cei       | 2 x Intel(R) Xeon(R) Silver 4116, 2.10 GHz, 48 threads, 24 cores | 96 GB DDR4 | --          | 21.8 TB HDD, 894.3 GB SSD | Supermicro X11DPU |
+
+They are connected by a 10G Internet Switch.
+
+[09:14:52; 05.12.2025]: I am compiling the simgrid examples to use as
+base.
+
+[09:45:13; 05.12.2025]: I think I can modulate to create the
+partitions (one function for each partition) and after joint
+everything to create the PCAD.
+
+[09:46:51; 05.12.2025]: My debian current MPI version don't have a
+fully updated simgrid version. I will probably download from source then.
+
+[10:07:06; 05.12.2025]: Since Lucas said they are shifting toward Nix,
+I will probably download the Nix SimGrid Version.
+
+[11:10:48; 05.12.2025]: I made a break to go to super market. I
+installed the simgrid from source (git version 4.1.1) and installed at
+/opt/simgrid. To compile with this version, i need to change the dkpg
+path env variable:
+
+#+begin_src shell :results output :exports both
+export PKG_CONFIG_PATH=/opt/simgrid/lib/pkgconfig:$PKG_CONFIG_PATH
+#+end_src
+
+and then compile:
+
+#+begin_src shell :results output :exports both
+g++ -shared -fPIC -o libgriffon_platform.so base.cpp $(pkg-config --cflags --libs simgrid)
+#+end_src
+
+This will create a library to my platform.
+
+** 2025-12-09: Arthur TCC
+
+[10:49:45; 09.12.2025]: TCC do Arthur
+[10:49:51; 09.12.2025]: Como é a comunicação no pcad?
+
+Nó -> uma máquina (ex.: cei1)
+
+[11:35:42; 09.12.2025]: SimGrid escala bem
+
+** 2025-12-11: Proxy Apps Working and Topology
+
+[07:23:42; 11.12.2025]: Arrived at the lab, today my plan is to start
+designing the cei nodes. I also want to read the two articles cited in
+the IC propose.
+
+[07:30:47; 11.12.2025]: Important pages about calibration:
+https://simgrid.org/doc/latest/Calibrating_the_models.html#mpi-network-calibration
+https://framagit.org/simgrid/platform-calibration/
+
+[07:33:11; 11.12.2025]: [[file:network_topology.pdf]]
+
+If i get it correctly. the topology is as follow:
+
+
+#+begin_src txt
+                             ___________________________________________________________________
+                            /                |                              |                   \
+                           /                 |                              |                    \  <---- Switch speed connection to other racks
+                          /                  |                              |                     \
+        ________________ /             ______|__________            ________|________              \_________________
+        |               |              |               |            |               |               |               |
+        | rack 1 switch |              | rack 2 switch |            | rack 3 switch |               | rack 4 switch | <-- Fatpipe with high capacity and low latency
+        |_______________|              |_______________|            |_______________|               |_______________|
+        ++++++++++++++++               ++++++++++++++++             ++++++++++++++++++              ++++++++++++++++++
+        / /   | |    \ \              / /    | |    \ \             / /     | |     \ \             / /     | |     \ \
+       / /    | |     \ \            / /     | |     \ \           / /      | |      \ \           / /      | |      \ \ <-- Switch Speed connection between nodes
+      / /     | |      \ \          / /      | |      \ \         / /       | |       \ \         / /       | |       \ \
+    node1     ...      nodeN      node1      ...      nodeM      node1      ...       nodeQ      node1      ...       nodeP
+#+end_src
+
+[07:56:13; 11.12.2025]: Makefile created.
+
+[08:05:11; 11.12.2025]: I need to figure out how to use the platform
+before trying to create one...
+
+[17:22:18; 11.12.2025]: Lucas send me the wrong link to the proxy
+apps, they are now working correctly, next step is understand how the
+platform working and then trying to create mine. I stopped to search
+about it in the morning because I point my focus to the LPPD table and
+studying to a exam.
+
+** 2025-12-15: Configured Proxy Apps and started creating the PCAD
+
+[14:01:48; 15.12.2025]: I will start by revisiting what I did in the
+last time.
+
+[14:03:27; 15.12.2025]: As Lucas said: "Acho que tu podes te focar em
+criar apenas uma ou duas partições. Pode ser as poti, as tupi, as cei,
+e até as dracos somente." I will focus on the partitions with a lot of machines
+
+[14:04:52; 15.12.2025]: Applications that Arthur also used: *Lulesh*,
+*coMd* and *minivite*
+
+[14:18:24; 15.12.2025]: The file
+=[[file:SMPI-proxy-apps/bin/Coral_Lulesh.sh]]= can be used to compile
+and run the Lulesh application. To run it manually after compiled, you
+can run:
+
+#+begin_src shell :results output :exports both
+export OMP_NUM_THREADS=1
+smpirun -np 8 -hostfile $PLATFORMDIR/cluster_hostfile.txt -platform $PLATFORMDIR/cluster_crossbar.xml --cfg=smpi/host-speed:100 ./lulesh2.0 -i 10
+
+#+end_src
+
+[14:37:09; 15.12.2025]: I am having some problems using the current
+version of simgrid. I will reinstall in the default dir that I install
+the libraries. Maybe I will install with spack.
+
+[14:47:32; 15.12.2025]: I get it to work, i just need to specify the
+SIMGRID_PATH env var when compiling the applications.
+
+
+After compiling the Lulesh again with:
+#+begin_src shell :results output :exports both
+export SIMGRID_PATH=/opt/simgrid/
+export WORKSPACE=$(pwd)
+ ./bin/Coral_Lulesh.sh
+#+end_src
+
+I executed:
+#+begin_src shell :results output :exports both
+/opt/simgrid/bin/smpirun -np 4 -hostfile hostfile.txt -platform ./libgriffon_platform.so --cfg=smpi/host-speed:100f ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 10
+#+end_src
+And everything worked! :)
+
+(this was the output)
+#+begin_src txt
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'smpi/privatization' to 'ON'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'smpi/np' to '8'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'smpi/hostfile' to 'hostfile.txt'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'precision/timing' to '1e-9'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'network/model' to 'SMPI'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'smpi/host-speed' to '100f'
+[0.000000] [xbt_cfg/INFO] Configuration change: Set 'smpi/tmpdir' to '/tmp'
+[0.000000] [smpi/INFO] You requested to use 8 ranks, but there is only 4 processes in your hostfile...
+Running problem size 30^3 per domain until completion
+Num processors: 8
+Num threads: 1
+Total number of elements: 216000
+
+To run other sizes, use -s <integer>.
+To run a fixed number of iterations, use -i <integer>.
+To run a more or less balanced region set, use -b <integer>.
+To change the relative costs of regions, use -c <integer>.
+To print out progress, use -p
+To write an output file for VisIt, use -v
+See help (-h) for more options
+
+Run completed:
+   Problem size        =  30
+   MPI tasks           =  8
+   Iteration count     =  10
+   Final Origin Energy = 5.609011e+07
+   Testing Plane 0 of Energy Array on rank 0:
+        MaxAbsDiff   = 1.164153e-10
+        TotalAbsDiff = 1.233715e-10
+        MaxRelDiff   = 7.751076e-14
+
+
+Elapsed time         =       0.07 (s)
+Grind time (us/z/c)  = 0.25094378 (per dom)  (0.031367973 overall)
+FOM                  =   31879.65 (z/s)
+#+end_src
+
+** 2025-12-17: Finishe the pcad base?
+
+[12:39:17; 17.12.2025]: Today and yesterday I spend the day trying to
+create a functional (at least executable) platform. Now I need to
+learn how to verify if it is correct.
