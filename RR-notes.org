@@ -142,7 +142,8 @@ void load_platform(sg4::Engine& e)
 :header-args: :tangle create-pcad.cpp :main no
 :END:
 
-This is currently the base example from the simgrid documentation.
+This currently has rack2 cei and draco and rack4 tupi and poti (not
+fully configurated). Based on the simgrid example.
 
 *** Libraries and namespace
 #+begin_src C++ :results output :exports both
@@ -169,7 +170,6 @@ namespace sg4 = simgrid::s4u;
  ,* @param host_bw Host Bandwidth
  ,* @param host_lat Host Latency
  ,*/
-
 void create_partition(sg4::NetZone* rack,
                       sg4::Link* switch_fatpipe,
                       int N,
@@ -180,7 +180,6 @@ void create_partition(sg4::NetZone* rack,
     std::string hostname = name + std::to_string(id);
 
     auto* host = rack->add_host(hostname, host_speed)->seal();
-
     auto* node_cable = rack->add_link(hostname + "_cable", host_bw)->set_latency(host_lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
@@ -254,7 +253,6 @@ void load_platform(sg4::Engine& e)
   root->seal();
 }
 #+end_src
-
 
 * Journal
 ** 2025-11-06
