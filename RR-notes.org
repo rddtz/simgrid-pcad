@@ -10,7 +10,6 @@
 The idea is to create a "replica" of the PCAD in [[https://simgrid.org/doc/latest/index.html][SimGrid]] using the C++ interface
 
 * Work
-
 ** Makefile
 #+begin_src makefile :tangle Makefile
 CPPC=g++
@@ -453,8 +452,40 @@ Grind time (us/z/c)  = 0.25094378 (per dom)  (0.031367973 overall)
 FOM                  =   31879.65 (z/s)
 #+end_src
 
-** 2025-12-17: Finishe the pcad base?
+** 2025-12-17: Finished the pcad base?
 
 [12:39:17; 17.12.2025]: Today and yesterday I spend the day trying to
 create a functional (at least executable) platform. Now I need to
 learn how to verify if it is correct.
+
+[17:52:33; 17.12.2025]: Lucas send me the template from simgrid to
+follow. I will also use nix for the reproducibility.
+
+** 2025-12-22: Nix and cmake working
+
+[17:09:11; 22.12.2025]: The Nix is working! There is also a cmake file
+to create the lib! I can run a application with:
+
+#+begin_src shell :results output :exports both
+smpirun -np 8 -hostfile hosts.txt -platform ./result/lib/libpcad.so --cfg=smpi/host-speed:100f ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 10
+#+end_src
+
+[17:14:09; 22.12.2025]: I think I can generalize the rack creation and
+enable a scalatable creation using vectors. Each position is a
+partition configuration (name, speed, bw and lat) of the host.
+
+
+[17:19:15; 22.12.2025]: Created a script using the "amigo" to verify
+the topology: =verify-platform.cpp=. The section about latency is not
+important by now since it is hardcoded with the random value, but the
+connections are
+
+Compile the program:
+#+begin_src shell :results output :exports both
+g++ verify-platform.cpp create-pcad.cpp -o verify_platform `pkg-config --cflags --libs simgrid`
+#+end_src
+
+Convert topology.dot to png.
+#+begin_src shell :results output :exports both
+dot -Tpng topology.dot -o topology.png
+#+end_src
