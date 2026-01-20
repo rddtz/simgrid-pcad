@@ -7,10 +7,16 @@
 #+AUTHOR: Rayan Raddatz de Matos
 
 
+* TODOS
+
+** TODO ERAD
+DEADLINE: <2026-02-25 Wed>
+Não sei se tem conteúdo suficiente mas veremos o que sai daqui.
+
 * Idea
 The idea is to create a "replica" of the PCAD in [[https://simgrid.org/doc/latest/index.html][SimGrid]] using the C++ interface
 
-* Work
+* Code
 ** Makefile
 #+begin_src makefile :tangle Makefile
 CPPC=g++
@@ -137,12 +143,12 @@ void load_platform(sg4::Engine& e)
 }
 #+end_src
 
-** Create PCAD (the currently exact version)
+** Create PCAD
 :PROPERTIES:
 :header-args: :tangle create-pcad.cpp :main no
 :END:
 
-This currently has rack2 cei and draco and rack4 tupi and poti (not
+This currently has rack2 with cei and draco and rack4 with tupi and poti (not
 fully configurated). Based on the simgrid example.
 
 *** Libraries and namespace
@@ -270,6 +276,14 @@ void load_platform(sg4::Engine& e)
 #+end_src
 
 * Journal
+
+#+BEGIN: clocktable :scope subtree :maxlevel 2
+#+CAPTION: Clock summary at [2026-01-20 Tue 18:39]
+| Headline   | Time |
+|------------+------|
+| *Total time* | *0:00* |
+#+END:
+
 ** 2025-11-06
 [11:32:57; 06.11.2025]: I will use the base example of the site
 (https://simgrid.org/doc/latest/Platform_cpp.html#example) to start.
@@ -526,3 +540,48 @@ get the information easily.
 platform_calibration project. Since everything looks very automatized,
 I will try to create a workflow to generate the full calibration for
 the whole pcad (if possible, need further reading).
+
+** 2026-01-20: Going back to work
+:LOGBOOK:
+CLOCK: [2026-01-20 Tue 18:30]
+:END:
+
+[18:36:10; 20.01.2026]: After some time to establish myself for the
+internship, I am going back to work. I will start to use also orgclock
+to mark the working time
+
+[18:37:25; 20.01.2026]: Irei tirar a noite para ler o TCC do Arthur
+(Frontier) e o artigo da Gabriella (CO2 plugin) e também retomar e ver
+o que já tinha sido feito.
+
+[18:42:30; 20.01.2026]: Alguns nodos do PCAD tem GPU também, vale
+verificar se é valida a criação (posteriormente) de diferentes hosts para esses nós,
+tal como é feito no trabalho do Arthur.
+
+[18:48:49; 20.01.2026]: Ver como testaram a conexão entre hosts nesse
+artigo: https://dl.acm.org/doi/10.1145/3624062.3624203
+
+[19:01:27; 20.01.2026]: Comparar o traços MPI de uma aplicação
+original com os traços gerados pelo simgrid.
+
+[19:21:03; 20.01.2026]: O trabalho da Gabriella foca no BatSim, um
+simulador para estudos de gerenciadores de recursos.
+
+[19:21:50; 20.01.2026]: Tentar fazer algo para a ERAD. DEADLINE: <2026-02-25 Wed>
+
+[19:50:19; 20.01.2026]: The execution is not working :) and I didnt
+save how to run the experiment, I will create a README with this info.
+
+[19:51:35; 20.01.2026]: I really want to know more about nix since it
+looks very good and powerful
+
+[20:05:57; 20.01.2026]: Searching with the version of simgrid is not updating.
+
+[20:19:57; 20.01.2026]: I runned =nix develop --recreate-lock-file= and
+looks like it works? Maybe it was dirty by something
+
+[20:20:51; 20.01.2026]: Yes, it worked. I need to entry in the ambient
+by using the =nix develop= command
+
+[21:03:05; 20.01.2026]: I needed to recompile the proxy apps by using
+the bin in the bins folder and setting the workspace env var as my pwd.

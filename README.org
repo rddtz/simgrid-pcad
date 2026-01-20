@@ -1,0 +1,45 @@
+#+STARTUP: content
+#+STARTUP: overview
+#+STARTUP: indent
+#+TITLE: PCAD Digital Twin
+#+AUTHOR: Rayan Raddatz de Matos
+
+The code here implements a simulator/digital twin for the INF-UFRGS "Parque
+Computacional de Alto Desempenho" (PCAD) using the [[https://simgrid.org/doc/latest/app_s4u.html][simgrid s4u
+interface]], being able to simulate MPI programs and the network
+connection between the hosts.
+
+* Using the PCAD simulator
+
+** Requirements
+
+Make sure to have [[https://nixos.org/download/][nix]] installed before continuing, we used nix to make easier to use and also ensure
+reproducibility. Also the PCAD library is being created using the
+[[https://framagit.org/simgrid/simgrid/-/releases/v4.1][SimGrid v4.1]] (latest release from source at the moment).
+
+** Building the platform
+
+It is possible to build the platform and create a shared library to
+use with =smpi=:
+
+#+begin_src shell :results output :exports both
+nix build ./nix
+#+end_src
+
+This will create a simlink name =result= that you can use together your
+smpi execution, here is a example of how a execution would look like:
+
+#+begin_src shell :results output :exports both
+smpirun -np 8 -hostfile hostnames.txt -platform ./result/lib/libpcad.so --cfg=smpi/host-speed:100f ./my_smpi_app
+#+end_src
+
+** Development environment
+
+Nix also enables the creation of a contained environment to develop
+the application, thus defining the correct environment variables to
+the ones used in the pcad library.
+
+#+begin_src shell :results output :exports both
+nix flake update
+nix develop ./nix
+#+end_src

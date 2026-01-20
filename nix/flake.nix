@@ -7,7 +7,7 @@
 
     # SimGrid from source (commit 1ea158ba)
     simgrid-src = {
-      url = "git+https://framagit.org/simgrid/simgrid.git?rev=1ea158bafce54c909c1b26a8e85f4af1fc6ed6db";
+      url = "git+https://framagit.org/simgrid/simgrid.git?ref=refs/tags/v4.1";
       flake = false;
     };
   };
@@ -18,7 +18,7 @@
         simgridOverlay = final: prev: {
           simgrid = prev.simgrid.overrideAttrs (oldAttrs: {
             pname = "simgrid-git";
-            version = "master";
+            version = "4.1";
             src = simgrid-src;
 #	    outputs = [ "out" ];
             doCheck = false;
@@ -37,7 +37,7 @@
         # build
         packages.default = pkgs.stdenv.mkDerivation {
           name = "pcad-platform";
-          src = ./.; # Usa os arquivos da pasta atual
+          src = ./..; # Usa os arquivos da pasta atual
 
           # Build dependencies
           nativeBuildInputs = with pkgs; [ cmake pkg-config ];
@@ -46,7 +46,6 @@
           buildInputs = with pkgs; [ simgrid boost ];
 
           # O Nix runs automatically: cmake configure, make, make install
-          # Graças ao passo 1 (install no CMake), o .so vai para o lugar certo.
         };
 
         # dev env (inherits from above)
