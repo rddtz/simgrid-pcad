@@ -27,7 +27,7 @@ void create_partition(sg4::NetZone* rack,
   for (int id = 1; id <= partition.count; id++) {
     std::string hostname = partition.name + std::to_string(id);
 
-    auto* host = rack->add_host(hostname, partition.speed)->seal();
+    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(10)->seal();
     auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
