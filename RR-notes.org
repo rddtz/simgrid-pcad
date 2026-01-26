@@ -1,8 +1,6 @@
-
 #+STARTUP: content
 #+STARTUP: overview
 #+STARTUP: indent
-#+STARTUP: latexpreview
 #+TITLE: Notes on implementing the PCAD Digital Twin with SimGrid.
 #+AUTHOR: Rayan Raddatz de Matos
 
@@ -616,3 +614,61 @@ but i dont know if it works.
 
 [19:58:20; 21.01.2026]: I need to go now, but I will read about the
 HPL and how to use it and run experiments in the PCAD using a nix package.
+
+** 2026-01-26: Small search about HPL
+:LOGBOOK:
+CLOCK: [2026-01-26 Mon 20:16]
+:END:
+
+[20:16:34; 26.01.2026]: Today was a busy (and a little disappointing)
+day, but I'll do a few every day, even if it is just 30 minutes, it
+still better then nothing.
+
+[20:41:45; 26.01.2026]: HPL has a hpl.dat file that configures the
+execution. Correctly configuring it looks essential for a honest
+result.
+https://netlib.org/benchmark/hpl/tuning.html
+https://www.netlib.org/benchmark/hpl/faqs.html
+
+N: 80 % of the total amount of memory is a good guess
+Nb: The bottom line is that "good" block sizes are almost always in the [32 .. 256] interval.
+
+
+[21:17:45; 26.01.2026]: I will use guix while pcad don't have nix at
+the moment.
+
+Save the channels from the experiment time
+#+begin_src shell :results output :exports both
+guix describe -f channels > channels.scm
+#+end_src
+
+Using channel and manifest to full reproducibility
+#+begin_src shell :results output :exports both
+guix time-machine -C channels.scm -- shell -m manifest.scm
+#+end_src
+
+Using the shell (=--pure= removes everything else):
+#+begin_src shell :results output :exports both
+guix shell --pure -m manifest.scm
+#+end_src
+
+
+Manifesto para o hpl:
+#+begin_src shell :tangle manifest.scm :results output :exports both
+(specifications->manifest
+  '("hpl"
+    "openmpi"
+    "coreutils")) ; Adiciona ls, cp, cat, etc.
+#+end_src
+
+
+Code to get NB:
+#+begin_src shell :results output :exports both
+echo "scale=0; 0.8*sqrt($(free -b | awk '{print $3}' | sed "2q;d")/8) / 1" | bc
+#+end_src
+
+Last division by one is from here:
+https://askubuntu.com/questions/217570/bc-set-number-of-digits-after-decimal-point
+
+[21:43:33; 26.01.2026]: I need to refresh guix repo and it will take
+some time.
