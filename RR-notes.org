@@ -5,14 +5,27 @@
 #+AUTHOR: Rayan Raddatz de Matos
 
 
+
+
 * TODOS
 
-** TODO ERAD
+** IN-PROGRESS ERAD
 DEADLINE: <2026-02-25 Wed>
+- State "IN-PROGRESS" from "TODO"       [2026-01-27 Tue 22:03]
 Não sei se tem conteúdo suficiente mas veremos o que sai daqui.
 
-** TODO Set the link and hosts speeds
+** IN-PROGRESS [#A] Set the link and hosts speeds
+DEADLINE: <2026-02-01 Sun>
+- State "IN-PROGRESS" from "DONE"       [2026-01-28 Wed 22:11]
 See how to get this information
+
+
+[22:03:09; 27.01.2026]: I am searching about this, I will probably try
+to use hpl to find the host speed, maybe a experiment with iperf3 to
+find about the network?
+
+[22:10:45; 28.01.2026]: This week I want to get the speeds done. If i
+didn't manage to use hpl tomorrow I will find another way to get it.
 
 ** TODO Validate by seeing the difference between real application
 
@@ -281,15 +294,20 @@ void load_platform(sg4::Engine& e)
 
 * Journal
 
-#+BEGIN: clocktable :scope subtree :maxlevel 2
-#+CAPTION: Clock summary at [2026-01-21 Wed 20:41]
-| Headline                                   | Time |      |
-|--------------------------------------------+------+------|
-| *Total time*                                 | *3:10* |      |
-|--------------------------------------------+------+------|
-| Journal                                    | 3:10 |      |
-| \_  2026-01-20: Going back to work         |      | 2:40 |
-| \_  2026-01-21: Small search about host... |      | 0:30 |
+#+BEGIN: clocktable :scope subtree :maxlevel 3
+#+CAPTION: Clock summary at [2026-01-30 Fri 20:52]
+| Headline                                      | Time  |      |      |
+|-----------------------------------------------+-------+------+------|
+| *Total time*                                    | *11:42* |      |      |
+|-----------------------------------------------+-------+------+------|
+| Journal                                       | 11:42 |      |      |
+| \_  2026-01-20: Going back to work            |       | 2:40 |      |
+| \_  2026-01-21: Small search about host...    |       | 0:30 |      |
+| \_  2026 Week 05 [Jan]                        |       | 8:32 |      |
+| \_    2026-01-26: Small search about HPL      |       |      | 1:38 |
+| \_    2026-01-27: Small GUIX config           |       |      | 1:13 |
+| \_    2026-01-28: Continuing with HPL         |       |      | 2:27 |
+| \_    2026-01-30: Again with HPL (it's now... |       |      | 3:14 |
 #+END:
 
 ** 2025-11-06
@@ -615,9 +633,14 @@ but i dont know if it works.
 [19:58:20; 21.01.2026]: I need to go now, but I will read about the
 HPL and how to use it and run experiments in the PCAD using a nix package.
 
-** 2026-01-26: Small search about HPL
+
+** 2026 Week 05 [Jan]
+[22:19:44; 27.01.2026]: From now on I will use the week to index
+(better visualization with the org clock)
+*** 2026-01-26: Small search about HPL
+:PROPERTIES:
 :LOGBOOK:
-CLOCK: [2026-01-26 Mon 20:16]
+CLOCK: [2026-01-26 Mon 20:16]--[2026-01-26 Mon 21:54] =>  1:38
 :END:
 
 [20:16:34; 26.01.2026]: Today was a busy (and a little disappointing)
@@ -671,4 +694,96 @@ Last division by one is from here:
 https://askubuntu.com/questions/217570/bc-set-number-of-digits-after-decimal-point
 
 [21:43:33; 26.01.2026]: I need to refresh guix repo and it will take
-some time.
+some time. I will try to run it today if it updates before I go sleep.
+\
+*** 2026-01-27: Small GUIX config
+:LOGBOOK:
+CLOCK: [2026-01-27 Tue 21:07]--[2026-01-27 Tue 22:20] =>  1:13
+:END:
+
+[21:06:58; 27.01.2026]: I don't have much time today also, but will
+try to spend some time configuring GUIX to run the hpl.
+
+[21:07:38; 27.01.2026]: The internet here in the residence is not the
+better so it is a pain to use the pcad through ssh.
+
+[22:02:29; 27.01.2026]: HPL is running, tomorrow I will run in each
+node for every partition that I modeled.
+
+[22:06:38; 27.01.2026]: My plan is to have by the end of tomorrow a
+experiment to run and find out the host speed. I need to see how to
+automatize this because there is a lot of parameters to look at. But i
+just need a approximation to after compare with the real application.
+
+*** 2026-01-28: Continuing with HPL
+:LOGBOOK:
+CLOCK: [2026-01-28 Wed 21:58]--[2026-01-28 Wed 22:09] =>  0:11
+CLOCK: [2026-01-28 Wed 17:58]--[2026-01-28 Wed 20:07] =>  2:09
+CLOCK: [2026-01-28 Wed 17:40]--[2026-01-28 Wed 17:47] =>  0:07
+:END:
+
+[17:43:44; 28.01.2026]: Today I have more time then the previous days,
+but there is also other tasks to do.
+
+[17:47:19; 28.01.2026]: Pause to clean the clothes.
+
+[17:58:43; 28.01.2026]: I am back, more 30 minutes before it ready.
+
+[19:29:26; 28.01.2026]: I am getting some problems when running the
+hpl due to the HPL.dat misconfiguration.
+
+[20:06:31; 28.01.2026]: I don't figure out the problem with the mpirun
+until now... I will pause to eat.
+
+[21:58:45; 28.01.2026]: Coming back for one more test.
+
+[22:05:32; 28.01.2026]: The internet is awful.. During the afternoon
+is better.
+
+[22:09:15; 28.01.2026]: I can't even connect to pcad to run the
+tests... I will continue tomorrow in the afternoon
+
+*** 2026-01-30: Again with HPL (it's now or never)
+:LOGBOOK:
+CLOCK: [2026-01-30 Fri 17:38]--[2026-01-30 Fri 20:52] =>  3:14
+:END:
+
+[17:38:07; 30.01.2026]: Yesterday I had to go out so I don't have the
+time to work in the simgrid.
+
+[18:05:35; 30.01.2026]: The problem seems to be with the mpirun
+command, i tried:
+#+begin_src shell :results output :exports both
+mpirun -np 24 python3 -c "from mpi4py import MPI; print(MPI.COMM_WORLD.Get_size())"
+#+end_src
+and the output was all ones, meaning that the process can't connect.
+
+[18:12:25; 30.01.2026]: This command worked:
+#+begin_src shell :results output :exports both
+/gnu/store/a94k93jk44j44r6hcrilk31blysmqbyj-openmpi-4.1.6/bin/mpirun -np 24 xhpl
+#+end_src
+
+[18:37:24; 30.01.2026]: I executed by get a very low Gfps of 6.7... I
+will see if there is any misconfiguration in the running...
+
+#+begin_src shell :results output :exports both
+dirname $(guix gc -R $(which xhpl) | grep openmpi | head -n 1)/bin/mpirun
+#+end_src
+
+[19:35:47; 30.01.2026]: Finally I have a script to run the HPL :)))),
+I will know run it in different machines
+
+[19:39:37; 30.01.2026]: I need to export this threads to avoid racing
+between process:
+
+#+begin_src shell :results output :exports both
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+#+end_src
+
+[20:32:54; 30.01.2026]: I am suffering some problems due to guix but
+everything will be fine..
+
+[20:50:52; 30.01.2026]: Finally I have the script, I will run and
+tomorrow morning I will then saw the results, I can then continue to
+the network calibration.
