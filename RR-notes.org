@@ -301,12 +301,12 @@ void load_platform(sg4::Engine& e)
 * Journal
 
 #+BEGIN: clocktable :scope subtree :maxlevel 3
-#+CAPTION: Clock summary at [2026-01-30 Fri 20:52]
+#+CAPTION: Clock summary at [2026-02-04 Wed 21:47]
 | Headline                                      | Time  |      |      |
 |-----------------------------------------------+-------+------+------|
-| *Total time*                                    | *11:42* |      |      |
+| *Total time*                                    | *14:23* |      |      |
 |-----------------------------------------------+-------+------+------|
-| Journal                                       | 11:42 |      |      |
+| Journal                                       | 14:23 |      |      |
 | \_  2026-01-20: Going back to work            |       | 2:40 |      |
 | \_  2026-01-21: Small search about host...    |       | 0:30 |      |
 | \_  2026 Week 05 [Jan]                        |       | 8:32 |      |
@@ -314,6 +314,8 @@ void load_platform(sg4::Engine& e)
 | \_    2026-01-27: Small GUIX config           |       |      | 1:13 |
 | \_    2026-01-28: Continuing with HPL         |       |      | 2:27 |
 | \_    2026-01-30: Again with HPL (it's now... |       |      | 3:14 |
+| \_  2026 Week 06 [Feb]                        |       | 2:41 |      |
+| \_    2026-02-04                              |       |      | 2:41 |
 #+END:
 
 ** 2025-11-06
@@ -797,7 +799,7 @@ the network calibration.
 ** 2026 Week 06 [Feb]
 *** 2026-02-04
 :LOGBOOK:
-CLOCK: [2026-02-04 Wed 19:06]
+CLOCK: [2026-02-04 Wed 19:06]--[2026-02-04 Wed 21:47] =>  2:41
 :END:
 
 [19:06:22; 04.02.2026]: Full week, but got some time to come back here
@@ -993,4 +995,58 @@ https://simgrid.org/doc/latest/Configuring_SimGrid.html#options
 following the right way, but it seems like I am...
 
 [20:59:52; 04.02.2026]: I will need to growth my knowledge about SSH
-and learn how to use SSH Tunnels to access the notebooks through the pcad.
+and learn how to use SSH Tunnels to access the notebooks through the
+pcad.
+
+[21:13:46; 04.02.2026]: I will try to go out of home more often to do
+the work from UFGRS, so I can focus more...
+
+
+[21:30:32; 04.02.2026]: To create the ssh tunel:
+#+begin_src shell :results output :exports both
+ssh -L 8888:cei2:8888 rrdmatos@pcad
+#+end_src
+
+[21:31:56; 04.02.2026]: Ok, the workflow is as follow:
+
+First do the listed here:
+https://framagit.org/simgrid/platform-calibration
+
+Then proceed to what is listed here:
+https://simgrid.org/doc/latest/Calibrating_the_models.html#mpi-network-calibration
+
+This is what needs to be done to the things to work properly.
+I will then start now! Maybe there is a way to automatize the most
+part of it?
+
+[21:36:27; 04.02.2026]: The time that I have isn't really enough, I
+wanted more time to dedicate to it because it really sounds
+cool. Well, I will manage it. Now I will go talk with my family, I
+need to rest, tomorrow I will have time to it also.
+
+[21:37:57; 04.02.2026]: I will just read a little more, I need to
+prepare the terrain to not be so late.
+
+[21:41:01; 04.02.2026]: I found this:
+https://github.com/Ezibenroc/peanut
+It looks very interesting (I just looked fast what it does), I will
+look more on it tomorrow. Looks like it has a option to perform the
+HPL (and I doing this manually, came on...)
+
+[21:45:10; 04.02.2026]: Nah, this is basically only for the G5K :(
+
+[21:46:36; 04.02.2026]: Anyway, this don't look so difficult to run. I
+want to also read some papers about SimGrid.
+
+#+begin_src shell :results output :exports both
+ls references
+#+end_src
+
+#+RESULTS:
+: American Institute of Aeronautics and Astronautics.pdf
+: arthur-alves-tcc.pdf
+: network_topology.pdf
+: pitfalls.pdf
+: predictions_thesis.pdf
+: simgrid-batsim.pdf
+: simgrid.pdf
