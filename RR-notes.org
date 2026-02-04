@@ -19,13 +19,19 @@ DEADLINE: <2026-02-01 Sun>
 - State "IN-PROGRESS" from "DONE"       [2026-01-28 Wed 22:11]
 See how to get this information
 
-
 [22:03:09; 27.01.2026]: I am searching about this, I will probably try
 to use hpl to find the host speed, maybe a experiment with iperf3 to
 find about the network?
 
 [22:10:45; 28.01.2026]: This week I want to get the speeds done. If i
 didn't manage to use hpl tomorrow I will find another way to get it.
+
+[20:11:35; 04.02.2026]: I get the host time, but there is a high
+variance for some hosts, so I will get more runs...
+
+[20:12:10; 04.02.2026]: I will also focus in the network and on this
+repo: https://framagit.org/simgrid/platform-calibration/-/tree/master/src/calibration?ref_type=heads
+
 
 ** TODO Validate by seeing the difference between real application
 
@@ -787,3 +793,204 @@ everything will be fine..
 [20:50:52; 30.01.2026]: Finally I have the script, I will run and
 tomorrow morning I will then saw the results, I can then continue to
 the network calibration.
+
+** 2026 Week 06 [Feb]
+*** 2026-02-04
+:LOGBOOK:
+CLOCK: [2026-02-04 Wed 19:06]
+:END:
+
+[19:06:22; 04.02.2026]: Full week, but got some time to come back here
+and see the results, I already had a sneak peak into it on sunday but
+I will see it fully now.
+
+[19:26:44; 04.02.2026]: The results are in the hpl directory into the
+subdir results, the create-csv-hpl.sh scripts creates a csv from the results
+#+begin_src shell :results output :exports both
+ls hpl
+
+echo ""
+echo "Results for my tests:"
+cat hpl/hpl-results.csv
+#+end_src
+
+#+RESULTS:
+#+begin_example
+create-csv-hpl.sh
+hpl-results.csv
+manifest.scm
+results
+
+Results for my tests:
+tupi3,1769812151,103884,64,4,6,2231.19,3.3499e+02
+tupi3,1769812151,103884,128,4,6,1652.75,4.5223e+02
+tupi3,1769812151,103884,256,4,6,1503.50,4.9712e+02
+tupi3,1769806580,103884,64,4,6,2264.71,3.3003e+02
+tupi3,1769806580,103884,128,4,6,1626.71,4.5947e+02
+tupi3,1769806580,103884,256,4,6,1504.14,4.9691e+02
+tupi3,1769817711,103884,64,4,6,2229.52,3.3524e+02
+tupi3,1769817711,103884,128,4,6,1659.17,4.5048e+02
+tupi3,1769817711,103884,256,4,6,1511.99,4.9433e+02
+poti3,1769810881,89918,64,4,5,1884.08,2.5725e+02
+poti3,1769810881,89918,128,4,5,1342.96,3.6091e+02
+poti3,1769810881,89918,256,4,5,1138.03,4.2590e+02
+poti3,1769806285,89918,64,4,5,1941.20,2.4968e+02
+poti3,1769806285,89918,128,4,5,1350.52,3.5889e+02
+poti3,1769806285,89918,256,4,5,1150.32,4.2135e+02
+poti3,1769815398,89918,64,4,5,1894.86,2.5579e+02
+poti3,1769815398,89918,128,4,5,1351.59,3.5860e+02
+poti3,1769815398,89918,256,4,5,1138.89,4.2558e+02
+draco2,1769802650,73467,64,4,4,1280.21,2.0650e+02
+draco2,1769802650,73467,128,4,4,1254.81,2.1068e+02
+draco2,1769802650,73467,256,4,4,1321.54,2.0004e+02
+draco2,1769811112,73467,64,4,4,1277.81,2.0689e+02
+draco2,1769811112,73467,128,4,4,1254.16,2.1079e+02
+draco2,1769811112,73467,256,4,4,1322.55,1.9989e+02
+draco2,1769806883,73467,64,4,4,1278.83,2.0672e+02
+draco2,1769806883,73467,128,4,4,1255.01,2.1065e+02
+draco2,1769806883,73467,256,4,4,1320.35,2.0022e+02
+cei1,1769809681,89404,64,4,6,1091.40,4.3652e+02
+cei1,1769809681,89404,128,4,6,1023.40,4.6553e+02
+cei1,1769809681,89404,256,4,6,1056.45,4.5096e+02
+cei1,1769802641,89404,64,4,6,1092.40,4.3612e+02
+cei1,1769802641,89404,128,4,6,1024.43,4.6506e+02
+cei1,1769802641,89404,256,4,6,1059.66,4.4960e+02
+cei1,1769806164,89404,64,4,6,1091.68,4.3641e+02
+cei1,1769806164,89404,128,4,6,1024.25,4.6514e+02
+cei1,1769806164,89404,256,4,6,1058.21,4.5021e+02
+#+end_example
+
+
+[19:28:27; 04.02.2026]: I executed only 3 repetitions to see the
+variance, I will now use R to continue:
+
+**** Checking the results
+
+***** Loading data
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "./hpl"
+tibble(CSV = dir_ls(BASE, regexp = "csv$", recurse=TRUE)) |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |>
+  select(-CSV) -> df
+
+
+df |> print(n=36)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 36 × 8
+   Machine     Run_ID      N    NB     P     Q  Time GFlops
+   <chr>        <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 tupi3   1769812151 103884    64     4     6 2231.   335.
+ 2 tupi3   1769812151 103884   128     4     6 1653.   452.
+ 3 tupi3   1769812151 103884   256     4     6 1504.   497.
+ 4 tupi3   1769806580 103884    64     4     6 2265.   330.
+ 5 tupi3   1769806580 103884   128     4     6 1627.   459.
+ 6 tupi3   1769806580 103884   256     4     6 1504.   497.
+ 7 tupi3   1769817711 103884    64     4     6 2230.   335.
+ 8 tupi3   1769817711 103884   128     4     6 1659.   450.
+ 9 tupi3   1769817711 103884   256     4     6 1512.   494.
+10 poti3   1769810881  89918    64     4     5 1884.   257.
+11 poti3   1769810881  89918   128     4     5 1343.   361.
+12 poti3   1769810881  89918   256     4     5 1138.   426.
+13 poti3   1769806285  89918    64     4     5 1941.   250.
+14 poti3   1769806285  89918   128     4     5 1351.   359.
+15 poti3   1769806285  89918   256     4     5 1150.   421.
+16 poti3   1769815398  89918    64     4     5 1895.   256.
+17 poti3   1769815398  89918   128     4     5 1352.   359.
+18 poti3   1769815398  89918   256     4     5 1139.   426.
+19 draco2  1769802650  73467    64     4     4 1280.   206.
+20 draco2  1769802650  73467   128     4     4 1255.   211.
+21 draco2  1769802650  73467   256     4     4 1322.   200.
+22 draco2  1769811112  73467    64     4     4 1278.   207.
+23 draco2  1769811112  73467   128     4     4 1254.   211.
+24 draco2  1769811112  73467   256     4     4 1323.   200.
+25 draco2  1769806883  73467    64     4     4 1279.   207.
+26 draco2  1769806883  73467   128     4     4 1255.   211.
+27 draco2  1769806883  73467   256     4     4 1320.   200.
+28 cei1    1769809681  89404    64     4     6 1091.   437.
+29 cei1    1769809681  89404   128     4     6 1023.   466.
+30 cei1    1769809681  89404   256     4     6 1056.   451.
+31 cei1    1769802641  89404    64     4     6 1092.   436.
+32 cei1    1769802641  89404   128     4     6 1024.   465.
+33 cei1    1769802641  89404   256     4     6 1060.   450.
+34 cei1    1769806164  89404    64     4     6 1092.   436.
+35 cei1    1769806164  89404   128     4     6 1024.   465.
+36 cei1    1769806164  89404   256     4     6 1058.   450.
+#+end_example
+
+***** Grouping
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(Machine, NB) |>
+  summarize(
+    n = n(),
+    sd = sd(GFlops),
+    se = (3 * sd) / sqrt(n),
+    sd_time = sd(Time), # [19:49:40; 04.02.2026]: Even the time is variating a lot, maybe I need to control better
+    time = sum(Time)/60,
+    GF = mean(GFlops)
+  )
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'Machine'. You can override using the `.groups` argument.
+# A tibble: 12 × 8
+# Groups:   Machine [4]
+   Machine    NB     n     sd    se sd_time  time    GF
+   <chr>   <dbl> <int>  <dbl> <dbl>   <dbl> <dbl> <dbl>
+ 1 cei1       64     3 0.207  0.358   0.516  54.6  436.
+ 2 cei1      128     3 0.251  0.436   0.550  51.2  465.
+ 3 cei1      256     3 0.681  1.18    1.61   52.9  450.
+ 4 draco2     64     3 0.196  0.339   1.20   63.9  207.
+ 5 draco2    128     3 0.0737 0.128   0.444  62.7  211.
+ 6 draco2    256     3 0.165  0.286   1.10   66.1  200.
+ 7 poti3      64     3 4.02   6.96   30.3    95.3  254.
+ 8 poti3     128     3 1.26   2.18    4.70   67.4  359.
+ 9 poti3     256     3 2.54   4.40    6.86   57.1  424.
+10 tupi3      64     3 2.94   5.09   19.9   112.   333.
+11 tupi3     128     3 4.77   8.26   17.2    82.3  454.
+12 tupi3     256     3 1.55   2.69    4.73   75.3  496.
+#+end_example
+
+[19:44:15; 04.02.2026]: Poti e Tupi mostraram uma grande variancia nos
+resultados entre as execuções... I will then execute more runs.
+
+
+**** Continuing
+
+[19:45:44; 04.02.2026]: I concluded that the poti and tupi machines
+had a really high variance, so I will run more experiments in
+general. It would be good to have a automatic workflow that identifies
+if more runs are needed after the execution and runs if needed...
+
+[20:16:22; 04.02.2026]: SimGrid emulates MPI computations, and MPI
+changes its behavior depending on what is being send, so maybe I will
+need to model this also.
+
+[20:24:43; 04.02.2026]: This MPI configurations seems to be more for
+when I want to run a program using the simgrid then to when creating a
+platform, I will by now use my own values but keep an eye in this
+information:
+
+If I want to set a configuration to simgrid, I can do by:
+#+begin_src C++ :results output :exports both
+simgrid::s4u::Engine::set_config("Item:Value");
+#+end_src
+
+More information in:
+https://simgrid.org/doc/latest/Configuring_SimGrid.html#options
+
+
+[20:53:42; 04.02.2026]: I confess that I was a bit lost if I was
+following the right way, but it seems like I am...
+
+[20:59:52; 04.02.2026]: I will need to growth my knowledge about SSH
+and learn how to use SSH Tunnels to access the notebooks through the pcad.

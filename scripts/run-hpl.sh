@@ -10,7 +10,7 @@ mkdir -p logs
 exec > >(tee -a "logs/${RUN_NAME}-$(date +%d-%m-%Y-%s)") 2>&1
 
 
-CORES=$(echo "scale=0; ($(lscpu | grep "Core" | cut -d: -f2 | xargs)*$(lscpu | grep "Socket" | cut -d: -f2 | xargs)) / 1" | bc)
+CORES=$(echo "scale=0; ($(lscpu | grep "Core(s) per socket" | cut -d: -f2 | xargs)*$(lscpu | grep "Socket" | cut -d: -f2 | xargs)) / 1" | bc)
 P=$(echo "sqrt($CORES)" | bc)
 while [ $P -gt 0 ]; do
     if [ $((CORES % P)) -eq 0 ]; then
