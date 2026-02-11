@@ -269,15 +269,15 @@ void load_platform(sg4::Engine& e)
   auto* root = e.get_netzone_root();
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 2 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t cei = {"cei", "100kf", "1Gbps", "50us", 6};
-  partition_t draco = {"draco", "50kf", "1Gbps", "50us", 6};
+  partition_t cei = {"cei", "459Gf", "1Gbps", "50us", 6};
+  partition_t draco = {"draco", "228Gf", "1Gbps", "50us", 6};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t tupi = {"tupi", "500kf", "1Gbps", "50us", 6};
-  partition_t poti = {"poti", "400kf", "1Gbps", "50us", 6};
+  partition_t tupi = {"tupi", "465Gf", "1Gbps", "50us", 6};
+  partition_t poti = {"poti", "410Gf", "1Gbps", "50us", 5};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
@@ -301,12 +301,12 @@ void load_platform(sg4::Engine& e)
 * Journal
 
 #+BEGIN: clocktable :scope subtree :maxlevel 3
-#+CAPTION: Clock summary at [2026-02-04 Wed 21:47]
+#+CAPTION: Clock summary at [2026-02-09 Mon 22:04]
 | Headline                                      | Time  |      |      |
 |-----------------------------------------------+-------+------+------|
-| *Total time*                                    | *14:23* |      |      |
+| *Total time*                                    | *17:46* |      |      |
 |-----------------------------------------------+-------+------+------|
-| Journal                                       | 14:23 |      |      |
+| Journal                                       | 17:46 |      |      |
 | \_  2026-01-20: Going back to work            |       | 2:40 |      |
 | \_  2026-01-21: Small search about host...    |       | 0:30 |      |
 | \_  2026 Week 05 [Jan]                        |       | 8:32 |      |
@@ -314,8 +314,11 @@ void load_platform(sg4::Engine& e)
 | \_    2026-01-27: Small GUIX config           |       |      | 1:13 |
 | \_    2026-01-28: Continuing with HPL         |       |      | 2:27 |
 | \_    2026-01-30: Again with HPL (it's now... |       |      | 3:14 |
-| \_  2026 Week 06 [Feb]                        |       | 2:41 |      |
+| \_  2026 Week 06 [Feb]                        |       | 5:00 |      |
 | \_    2026-02-04                              |       |      | 2:41 |
+| \_    2026-02-05                              |       |      | 2:19 |
+| \_  2026 Week 07 [Feb]                        |       | 1:04 |      |
+| \_    2026-02-09                              |       |      | 1:04 |
 #+END:
 
 ** 2025-11-06
@@ -862,7 +865,6 @@ cei1,1769806164,89404,128,4,6,1024.25,4.6514e+02
 cei1,1769806164,89404,256,4,6,1058.21,4.5021e+02
 #+end_example
 
-
 [19:28:27; 04.02.2026]: I executed only 3 repetitions to see the
 variance, I will now use R to continue:
 
@@ -1050,3 +1052,671 @@ ls references
 : predictions_thesis.pdf
 : simgrid-batsim.pdf
 : simgrid.pdf
+
+*** 2026-02-05
+:LOGBOOK:
+CLOCK: [2026-02-05 Thu 19:52]--[2026-02-05 Thu 22:11] =>  2:19
+:END:
+
+[19:52:52; 05.02.2026]: Here we are, I am very tired today (busy day +
+maybe sick?). I will see the results and try to run the calibration
+binary to see how things goes, then in can proceed.
+
+[19:53:54; 05.02.2026]: I will copy the code for the analytics so I
+dont change what happened yesterday...
+
+**** Checking the results
+
+***** Loading data
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "./hpl"
+tibble(CSV = dir_ls(BASE, regexp = "csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |>
+  select(-CSV) -> df
+
+
+df |> print(n=36)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 ./hpl/hpl-results.csv
+# A tibble: 99 × 8
+   Machine     Run_ID     N    NB     P     Q  Time GFlops
+   <chr>        <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 draco1  1770249307 73467    64     4     4 1128.   234.
+ 2 draco1  1770249307 73467   128     4     4 1098.   241.
+ 3 draco1  1770249307 73467   256     4     4 1153.   229.
+ 4 draco1  1770275362 73467    64     4     4 1132.   234.
+ 5 draco1  1770275362 73467   128     4     4 1099.   241.
+ 6 draco1  1770241877 73467    64     4     4 1129.   234.
+ 7 draco1  1770241877 73467   128     4     4 1099.   241.
+ 8 draco1  1770241877 73467   256     4     4 1149.   230.
+ 9 draco1  1770256725 73467    64     4     4 1128.   234.
+10 draco1  1770256725 73467   128     4     4 1098.   241.
+11 draco1  1770256725 73467   256     4     4 1184.   223.
+12 draco1  1770245585 73467    64     4     4 1134.   233.
+13 draco1  1770245585 73467   128     4     4 1100.   240.
+14 draco1  1770245585 73467   256     4     4 1155.   229.
+15 draco1  1770260463 73467    64     4     4 1128.   234.
+16 draco1  1770260463 73467   128     4     4 1098.   241.
+17 draco1  1770260463 73467   256     4     4 1150.   230.
+18 draco1  1770253014 73467    64     4     4 1129.   234.
+19 draco1  1770253014 73467   128     4     4 1099.   241.
+20 draco1  1770253014 73467   256     4     4 1155.   229.
+21 draco1  1770264167 73467    64     4     4 1132.   233.
+22 draco1  1770264167 73467   128     4     4 1098.   241.
+23 draco1  1770264167 73467   256     4     4 1152.   230.
+24 draco1  1770267876 73467    64     4     4 1129.   234.
+25 draco1  1770267876 73467   128     4     4 1098.   241.
+26 draco1  1770267876 73467   256     4     4 1205.   219.
+27 draco1  1770271635 73467    64     4     4 1129.   234.
+28 draco1  1770271635 73467   128     4     4 1098.   241.
+29 draco1  1770271635 73467   256     4     4 1172.   225.
+30 poti1   1770231032 89918    64     4     5 1878.   258.
+31 poti1   1770231032 89918   128     4     5 1347.   360.
+32 poti1   1770231032 89918   256     4     5 1137.   426.
+33 poti1   1770262421 89918    64     4     5 1874.   259.
+34 poti1   1770262421 89918   128     4     5 1342.   361.
+35 poti1   1770262421 89918   256     4     5 1129.   429.
+36 poti1   1770253445 89918    64     4     5 1870.   259.
+# ℹ 63 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+***** Grouping
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(Machine, NB) |>
+  summarize(
+    n = n(),
+    sd = sd(GFlops),
+    se = (3 * sd) / sqrt(n),
+    GF = mean(GFlops),
+    GFCV = sd/GF, # [19:57:04; 05.02.2026]: CV is pretty ok for most of the runs,
+    #                                       but this doesn't means that the variance is so low
+    time = sum(Time)/60,
+    sd_time = sd(Time),
+    CVTIME = sd_time/mean(time)
+  )
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'Machine'. You can override using the `.groups` argument.
+# A tibble: 12 × 10
+# Groups:   Machine [4]
+   Machine    NB     n     sd     se    GF     GFCV  time sd_time  CVTIME
+   <chr>   <dbl> <int>  <dbl>  <dbl> <dbl>    <dbl> <dbl>   <dbl>   <dbl>
+ 1 cei1       64    10 31.1   29.6    392. 0.0795    204. 109.    0.536
+ 2 cei1      128    10  3.74   3.54   457. 0.00818   174.   8.63  0.0496
+ 3 cei1      256     9  1.28   1.28   444. 0.00289   161.   3.11  0.0193
+ 4 draco1     64    10  0.397  0.377  234. 0.00170   188.   1.93  0.0102
+ 5 draco1    128    10  0.114  0.108  241. 0.000472  183.   0.516 0.00282
+ 6 draco1    256     9  3.71   3.71   227. 0.0163    175.  19.4   0.111
+ 7 poti1      64     8  1.10   1.17   260. 0.00423   249.   7.89  0.0317
+ 8 poti1     128     8  1.25   1.33   362. 0.00345   178.   4.63  0.0259
+ 9 poti1     256     8  1.23   1.31   429. 0.00287   151.   3.26  0.0217
+10 tupi4      64     6  0.423  0.518  309. 0.00137   242.   3.29  0.0136
+11 tupi4     128     6  1.70   2.08   411. 0.00414   182.   7.51  0.0413
+12 tupi4     256     5  0.219  0.294  434. 0.000505  144.   0.872 0.00608
+#+end_example
+
+[19:59:16; 05.02.2026]: cei with small block shows a really high time
+variance...
+the sd is more then half of the mean value...
+
+[20:01:40; 05.02.2026]: The results are very different from the ones
+from yesterday for cei, even though its the same machine...
+
+[20:02:31; 05.02.2026]: The GF for the small block is also very
+slow... What happened?
+
+#+begin_src R :results output :session *R* :exports both
+df |> filter(Machine=="cei1" & NB ==64)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 10 × 8
+   Machine     Run_ID     N    NB     P     Q  Time GFlops
+   <chr>        <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 cei1    1770242516 89404    64     4     6 1176.   405.
+ 2 cei1    1770264298 89404    64     4     6 1158.   412.
+ 3 cei1    1770260669 89404    64     4     6 1158.   412.
+ 4 cei1    1770231037 89404    64     4     6 1432.   333.
+ 5 cei1    1770246149 89404    64     4     6 1171.   407.
+ 6 cei1    1770253406 89404    64     4     6 1169.   407.
+ 7 cei1    1770238865 89404    64     4     6 1194.   399.
+ 8 cei1    1770234953 89404    64     4     6 1428.   334.
+ 9 cei1    1770257030 89404    64     4     6 1173.   406
+10 cei1    1770249774 89404    64     4     6 1176.   405.
+#+end_example
+
+[20:03:47; 05.02.2026]: Now it is possible to see, two runs with
+really low results when compared to the others...
+
+[20:05:06; 05.02.2026]: I will of course run more, and better, in
+different machines, so I can get different results to model the whole
+cluster (maybe the correct would be to test all nodes in the cluster?)
+
+
+
+**** Continuing
+
+[20:24:09; 05.02.2026]: This thing of creating a subsection and being
+stuck in this forever is really annoying...
+
+[20:28:18; 05.02.2026]: While the HPL tests run I will look for the
+MPI calibration...
+
+[20:28:35; 05.02.2026]: I saw that Otho is probably using simgrid, I
+asked him about it.
+
+[20:52:13; 05.02.2026]: I looked and Lucas has some commits in the
+calibration repo, very cool!
+
+[20:52:35; 05.02.2026]: By default the generate sizes creates 50
+executions of each MPI command, I think it is a good number.
+
+#+begin_src python :results output :exports both
+import itertools
+import random
+
+random.seed(0) # [20:54:22; 05.02.2026]: I added the seed here, I think it is better to be
+               #                         deterministic for the good of reproductibility :)
+
+op = ['Recv', 'Isend', 'PingPong', 'Wtime', 'Wtime', 'Iprobe', 'Test']
+sizes = [int(10**random.uniform(0, 9)) for _ in range(100)]
+exp = list(itertools.product(op, sizes))
+exp *= 50
+random.shuffle(exp)
+
+# print('operation, size') [20:55:17; 05.02.2026]: Also removed the header
+for op, size in exp:
+    print('%s, %d' % (op, size))
+#+end_src
+
+[20:56:33; 05.02.2026]: I will probably need to nodes two nodes for
+the calibration. I will create a slurm for the calibration and let it
+run today.
+
+
+#+begin_src shell :tangle slurm/mpi-calibration.slurm :results output :exports both
+#!/bin/bash
+#SBATCH --job-name=Network_Calibration_SIMGRID
+#partition will be defined by the command line call of sbatch
+#SBATCH --nodes=2
+#SBATCH --time=24:00:00
+#SBATCH --output=%N_%x_%j.out
+#SBATCH --error=%N_%x_%j.err
+
+date +%D-%T 2>&1
+
+set -euo pipefail
+
+MACHINEFILE="nodes.$SLURM_JOB_ID"
+srun -l hostname | sort -n | awk '{print $2}' > $MACHINEFILE
+
+HOST_IDS=$(paste -sd '-' $MACHINEFILE)
+
+DIR="calibration-$HOST_IDS-`date +%d-%m-%s`-$SLURM_JOB_ID"
+mkdir $DIR
+
+EXP_FILE="${DIR}/exp_sizes_${SLURM_JOB_ID}.csv"
+
+make
+python3 generate_size_file.py > $EXP_FILE
+
+mpirun -np 2 -machinefile $MACHINEFILE ./calibrate -d $DIR -m 0 -M 1000000000 -p "exp-$SLURM_JOB_ID" -s $EXP_FILE
+
+date +%D-%T 2>&1
+#+end_src
+
+[21:25:18; 05.02.2026]: Talked with Otho about and get some insights,
+It would be interesting to take a look at the StarPU mechanisms for
+simgrid, maybe we will make a meeting someday to talk about. I can use
+the StarPU to validation of the digital twin...
+
+[21:27:42; 05.02.2026]: Run 5 times the calibration script, the file
+has already 50 replications of each combination of operation and size,
+a total of =100 x 2 x 50 x 5 = 500000= experiments.
+
+[21:29:26; 05.02.2026]: Otho send me this link, very interesting, will
+take a time to read it:
+https://files.inria.fr/starpu/doc/starpu.pdf#chapter.52
+
+[21:36:40; 05.02.2026]: Maybe it will be interesting to compare the
+results from a manual calibration (with all the tools I am using) with
+the StarPU calibration... I need to see how to run the StarPU programs
+in simgrid without using the official support.
+
+[21:47:30; 05.02.2026]: They removed the -n option from the
+calibration, the replication is all when creating the exp now, it ok,
+So it will be just 10000 executions...
+
+[22:11:06; 05.02.2026]: I sended the execution of the slurms and will
+know talk with my family.
+
+** 2026 Week 07 [Feb]
+*** 2026-02-09
+:LOGBOOK:
+CLOCK: [2026-02-09 Mon 21:00]--[2026-02-09 Mon 22:04] =>  1:04
+:END:
+
+[21:10:37; 09.02.2026]: Seeing the results of last week experiments.
+
+[21:16:27; 09.02.2026]: I have done more experiments regarding the
+GFlops and network calibration, I run the HPL in different nodes of
+the same partition, the results should be similar.
+
+
+**** Checking the results
+
+***** Loading data
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "./hpl"
+tibble(CSV = dir_ls(BASE, regexp = "csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |>
+  select(-CSV) -> df
+
+
+df |> print(n=36)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 ./hpl/hpl-results.csv
+# A tibble: 240 × 8
+   Machine     Run_ID      N    NB     P     Q  Time GFlops
+   <chr>        <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 cei1    1770349513  89404    64     4     6 1091.   437.
+ 2 cei1    1770349513  89404   128     4     6 1026.   464.
+ 3 cei1    1770349513  89404   256     4     6 1066.   447.
+ 4 cei1    1770324738  89404    64     4     6 1099.   433.
+ 5 cei1    1770324738  89404   128     4     6 1033.   461.
+ 6 cei1    1770324738  89404   256     4     6 1069.   445.
+ 7 cei1    1770345983  89404    64     4     6 1093.   436.
+ 8 cei1    1770345983  89404   128     4     6 1026.   464.
+ 9 cei1    1770345983  89404   256     4     6 1068.   446.
+10 cei1    1770342451  89404    64     4     6 1092.   436.
+11 cei1    1770342451  89404   128     4     6 1027.   464.
+12 cei1    1770342451  89404   256     4     6 1068.   446.
+13 cei1    1770338920  89404    64     4     6 1091.   437.
+14 cei1    1770338920  89404   128     4     6 1029.   463
+15 cei1    1770338920  89404   256     4     6 1068.   446.
+16 cei1    1770317538  89404    64     4     6 1146.   416.
+17 cei1    1770317538  89404   128     4     6 1035.   461.
+18 cei1    1770317538  89404   256     4     6 1071.   445.
+19 cei1    1770335381  89404    64     4     6 1092.   436.
+20 cei1    1770335381  89404   128     4     6 1029.   463.
+21 cei1    1770335381  89404   256     4     6 1071.   445.
+22 cei1    1770331831  89404    64     4     6 1092.   436.
+23 cei1    1770331831  89404   128     4     6 1030.   463.
+24 cei1    1770331831  89404   256     4     6 1071.   445.
+25 cei1    1770321134  89404    64     4     6 1154.   413.
+26 cei1    1770321134  89404   128     4     6 1033.   461.
+27 cei1    1770321134  89404   256     4     6 1072.   444.
+28 cei1    1770328283  89404    64     4     6 1095.   435
+29 cei1    1770328283  89404   128     4     6 1030.   462.
+30 cei1    1770328283  89404   256     4     6 1071.   445.
+31 tupi3   1770361914 103884    64     4     6 2224.   336.
+32 tupi3   1770361914 103884   128     4     6 1638.   456.
+33 tupi3   1770361914 103884   256     4     6 1494.   500.
+34 tupi3   1770328654 103884    64     4     6 2228.   335.
+35 tupi3   1770328654 103884   128     4     6 1643.   455.
+36 tupi3   1770328654 103884   256     4     6 1506.   496.
+# ℹ 204 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+***** Grouping
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(Machine, NB) |>
+  summarize(
+    n = n(),
+    sd = sd(GFlops),
+    se = (3 * sd) / sqrt(n),
+    GF = mean(GFlops),
+    GFCV = sd/GF, # [19:57:04; 05.02.2026]: CV is pretty ok for most of the runs,
+    #                                       but this doesn't means that the variance is so low
+    time = sum(Time)/60,
+    sd_time = sd(Time),
+    CVTIME = sd_time/mean(time)
+  ) |> print(n=100z)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'Machine'. You can override using the `.groups` argument.
+# A tibble: 24 × 10
+# Groups:   Machine [8]
+   Machine    NB     n    sd    se    GF     GFCV  time sd_time  CVTIME
+   <chr>   <dbl> <int> <dbl> <dbl> <dbl>    <dbl> <dbl>   <dbl>   <dbl>
+ 1 cei1       64    10 9.16  8.69   432. 0.0212    184.  24.2   0.131
+ 2 cei1      128    10 1.35  1.28   463. 0.00291   172.   3.00  0.0175
+ 3 cei1      256    10 0.863 0.819  445. 0.00194   178.   2.07  0.0116
+ 4 cei4       64    10 2.02  1.92   371. 0.00545   214.   6.99  0.0327
+ 5 cei4      128    10 0.521 0.494  456. 0.00114   174.   1.20  0.00687
+ 6 cei4      256    10 0.282 0.267  443. 0.000635  179.   0.682 0.00381
+ 7 draco1     64    10 0.259 0.246  234. 0.00111   188.   1.25  0.00663
+ 8 draco1    128    10 0.192 0.182  241. 0.000797  183.   0.879 0.00480
+ 9 draco1    256    10 1.53  1.46   229. 0.00670   192.   7.79  0.0405
+10 draco2     64    10 0.346 0.329  207. 0.00168   213.   2.14  0.0100
+11 draco2    128    10 0.126 0.119  211. 0.000597  209.   0.744 0.00356
+12 draco2    256    10 1.14  1.08   200. 0.00567   220.   7.56  0.0344
+13 poti1      64    10 0.409 0.388  259. 0.00158   312.   2.96  0.00947
+14 poti1     128    10 1.04  0.984  361. 0.00287   224.   3.86  0.0172
+15 poti1     256    10 0.610 0.578  428. 0.00142   189.   1.61  0.00854
+16 poti2      64    10 0.569 0.540  239. 0.00238   338.   4.82  0.0143
+17 poti2     128    10 1.02  0.965  334. 0.00305   242.   4.44  0.0184
+18 poti2     256    10 0.596 0.566  381. 0.00157   212.   1.99  0.00940
+19 tupi3      64    10 0.933 0.885  335. 0.00279   372.   6.22  0.0167
+20 tupi3     128    10 2.44  2.31   454. 0.00537   274.   8.87  0.0324
+21 tupi3     256    10 1.38  1.31   499. 0.00278   250.   4.17  0.0167
+22 tupi4      64    10 0.340 0.323  310. 0.00110   401.   2.63  0.00656
+23 tupi4     128    10 0.830 0.787  413. 0.00201   302.   3.64  0.0121
+24 tupi4     256    10 0.241 0.229  435. 0.000555  287.   0.957 0.00334
+#+end_example
+
+**** Continuing
+
+[21:20:32; 09.02.2026]: I thinked about the possibility to run the HPL
+in the role cluster, as the idea is to extrapolate, I think that
+doesn't make sense to hard code the cluster velocity.
+
+[21:22:13; 09.02.2026]: I have know the results of the one that run
+faster, I think I will just run it several times to have a faithful
+result, I think the ambient is fully isolated by using the guix pure
+flag.
+
+[21:27:06; 09.02.2026]: The internet is awful, I can't connect to the
+pcad...
+
+**** Checking the results for all the runs together (1, 2 and 3)
+***** Loading data
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "./hpl"
+tibble(CSV = dir_ls(BASE, regexp = "csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |>
+  select(-CSV) -> df
+
+
+df |> print(n=36)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 4 × 1
+  CSV
+  <fs::path>
+1 ./hpl/hpl-results.csv
+2 ./hpl/results/hpl-results.csv
+3 ./hpl/run-1/hpl-results.csv
+4 ./hpl/run-2/hpl-results.csv
+# A tibble: 615 × 8
+   Machine     Run_ID      N    NB     P     Q  Time GFlops
+   <chr>        <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 cei1    1770349513  89404    64     4     6 1091.   437.
+ 2 cei1    1770349513  89404   128     4     6 1026.   464.
+ 3 cei1    1770349513  89404   256     4     6 1066.   447.
+ 4 cei1    1770324738  89404    64     4     6 1099.   433.
+ 5 cei1    1770324738  89404   128     4     6 1033.   461.
+ 6 cei1    1770324738  89404   256     4     6 1069.   445.
+ 7 cei1    1770345983  89404    64     4     6 1093.   436.
+ 8 cei1    1770345983  89404   128     4     6 1026.   464.
+ 9 cei1    1770345983  89404   256     4     6 1068.   446.
+10 cei1    1770342451  89404    64     4     6 1092.   436.
+11 cei1    1770342451  89404   128     4     6 1027.   464.
+12 cei1    1770342451  89404   256     4     6 1068.   446.
+13 cei1    1770338920  89404    64     4     6 1091.   437.
+14 cei1    1770338920  89404   128     4     6 1029.   463
+15 cei1    1770338920  89404   256     4     6 1068.   446.
+16 cei1    1770317538  89404    64     4     6 1146.   416.
+17 cei1    1770317538  89404   128     4     6 1035.   461.
+18 cei1    1770317538  89404   256     4     6 1071.   445.
+19 cei1    1770335381  89404    64     4     6 1092.   436.
+20 cei1    1770335381  89404   128     4     6 1029.   463.
+21 cei1    1770335381  89404   256     4     6 1071.   445.
+22 cei1    1770331831  89404    64     4     6 1092.   436.
+23 cei1    1770331831  89404   128     4     6 1030.   463.
+24 cei1    1770331831  89404   256     4     6 1071.   445.
+25 cei1    1770321134  89404    64     4     6 1154.   413.
+26 cei1    1770321134  89404   128     4     6 1033.   461.
+27 cei1    1770321134  89404   256     4     6 1072.   444.
+28 cei1    1770328283  89404    64     4     6 1095.   435
+29 cei1    1770328283  89404   128     4     6 1030.   462.
+30 cei1    1770328283  89404   256     4     6 1071.   445.
+31 tupi3   1770361914 103884    64     4     6 2224.   336.
+32 tupi3   1770361914 103884   128     4     6 1638.   456.
+33 tupi3   1770361914 103884   256     4     6 1494.   500.
+34 tupi3   1770328654 103884    64     4     6 2228.   335.
+35 tupi3   1770328654 103884   128     4     6 1643.   455.
+36 tupi3   1770328654 103884   256     4     6 1506.   496.
+# ℹ 579 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+***** Grouping
+#+begin_src R :results output :session *R* :exports both
+df |> mutate(Machine = gsub("[0-9]", "", Machine)) |> #[20:38:07; 11.02.2026]: I am reusing this code to see the results for all exps
+  group_by(Machine, NB) |>
+  summarize(
+    n = n(),
+    sd = sd(GFlops),
+    se = (3 * sd) / sqrt(n),
+    GF = mean(GFlops),
+    GFCV = sd/GF, # [19:57:04; 05.02.2026]: CV is pretty ok for most of the runs,
+    #                                       but this doesn't means that the variance is so low
+    time = sum(Time)/60,
+    sd_time = sd(Time),
+    CVTIME = sd_time/mean(time)
+  ) |> print(n=100)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'Machine'. You can override using the `.groups` argument.
+# A tibble: 12 × 10
+# Groups:   Machine [4]
+   Machine    NB     n    sd     se    GF    GFCV  time sd_time  CVTIME
+   <chr>   <dbl> <int> <dbl>  <dbl> <dbl>   <dbl> <dbl>   <dbl>   <dbl>
+ 1 cei        64    53 31.4  12.9    402. 0.0782  1055.   96.0  0.0911
+ 2 cei       128    53  3.93  1.62   459. 0.00856  917.    8.90 0.00971
+ 3 cei       256    52  1.87  0.779  445. 0.00421  929.    4.49 0.00483
+ 4 draco      64    53 13.8   5.67   222. 0.0620  1055.   75.3  0.0713
+ 5 draco     128    53 15.0   6.17   228. 0.0658  1030.   78.1  0.0758
+ 6 draco     256    52 14.2   5.92   216. 0.0659  1066.   82.2  0.0771
+ 7 poti       64    51  9.81  4.12   251. 0.0391  1644.   76.8  0.0467
+ 8 poti      128    51 13.5   5.69   350. 0.0387  1177.   54.5  0.0463
+ 9 poti      256    51 23.5   9.86   410. 0.0573  1009.   69.8  0.0692
+10 tupi       64    49 12.5   5.36   322. 0.0389  1900.   89.8  0.0472
+11 tupi      128    49 21.2   9.11   432. 0.0492  1416.   84.6  0.0597
+12 tupi      256    48 32.4  14.0    465. 0.0696  1291.  112.   0.0863
+#+end_example
+
+[21:31:50; 09.02.2026]: This full results don't show me a clear path,
+should I use the best machine on the cluster or the worst to model?
+I think that maybe the middle one, because then I am not too pessimist
+neither to optimist... So I have to test each of every cluster to see
+the results... OK
+
+**** Continuing 2
+
+[21:35:07; 09.02.2026]: I can pick a random machine or do a screening
+and find the middle one... Maybe the second options is the most
+correct, but I will need to stop all the cluster for a brief moment.
+
+[21:38:13; 09.02.2026]: This should be THE FIRST thing to do, and not
+just now...
+
+[21:40:04; 09.02.2026]: I need to see also the result of the network calibration.
+
+[21:42:23; 09.02.2026]: I take some time to read the conversation with
+Lucas because I remember he talking about something important: Use
+this proxy-apps and compare with the real platform:
+=Lulesh, coMd, minivite=.
+
+[21:45:59; 09.02.2026]: After use the StarPU and Cameleon, the thing
+that i talked about with Otho.
+
+[22:04:03; 09.02.2026]: direnv is not working and Julia is calling, I
+will go by now...
+
+*** 2026-02-11:
+:LOGBOOK:
+CLOCK: [2026-02-11 Wed 20:50]--[2026-02-11 Wed 22:10] =>  1:20
+:END:
+
+**** Checking the results for run 3
+***** Loading data
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "./hpl"
+tibble(CSV = dir_ls(BASE, regexp = "hpl\\/hpl.*csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |>
+  select(-CSV) -> df
+
+
+df |> print(n=36)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 ./hpl/hpl-results.csv
+# A tibble: 240 × 8
+   Machine     Run_ID      N    NB     P     Q  Time GFlops
+   <chr>        <dbl>  <dbl> <dbl> <dbl> <dbl> <dbl>  <dbl>
+ 1 cei1    1770349513  89404    64     4     6 1091.   437.
+ 2 cei1    1770349513  89404   128     4     6 1026.   464.
+ 3 cei1    1770349513  89404   256     4     6 1066.   447.
+ 4 cei1    1770324738  89404    64     4     6 1099.   433.
+ 5 cei1    1770324738  89404   128     4     6 1033.   461.
+ 6 cei1    1770324738  89404   256     4     6 1069.   445.
+ 7 cei1    1770345983  89404    64     4     6 1093.   436.
+ 8 cei1    1770345983  89404   128     4     6 1026.   464.
+ 9 cei1    1770345983  89404   256     4     6 1068.   446.
+10 cei1    1770342451  89404    64     4     6 1092.   436.
+11 cei1    1770342451  89404   128     4     6 1027.   464.
+12 cei1    1770342451  89404   256     4     6 1068.   446.
+13 cei1    1770338920  89404    64     4     6 1091.   437.
+14 cei1    1770338920  89404   128     4     6 1029.   463
+15 cei1    1770338920  89404   256     4     6 1068.   446.
+16 cei1    1770317538  89404    64     4     6 1146.   416.
+17 cei1    1770317538  89404   128     4     6 1035.   461.
+18 cei1    1770317538  89404   256     4     6 1071.   445.
+19 cei1    1770335381  89404    64     4     6 1092.   436.
+20 cei1    1770335381  89404   128     4     6 1029.   463.
+21 cei1    1770335381  89404   256     4     6 1071.   445.
+22 cei1    1770331831  89404    64     4     6 1092.   436.
+23 cei1    1770331831  89404   128     4     6 1030.   463.
+24 cei1    1770331831  89404   256     4     6 1071.   445.
+25 cei1    1770321134  89404    64     4     6 1154.   413.
+26 cei1    1770321134  89404   128     4     6 1033.   461.
+27 cei1    1770321134  89404   256     4     6 1072.   444.
+28 cei1    1770328283  89404    64     4     6 1095.   435
+29 cei1    1770328283  89404   128     4     6 1030.   462.
+30 cei1    1770328283  89404   256     4     6 1071.   445.
+31 tupi3   1770361914 103884    64     4     6 2224.   336.
+32 tupi3   1770361914 103884   128     4     6 1638.   456.
+33 tupi3   1770361914 103884   256     4     6 1494.   500.
+34 tupi3   1770328654 103884    64     4     6 2228.   335.
+35 tupi3   1770328654 103884   128     4     6 1643.   455.
+36 tupi3   1770328654 103884   256     4     6 1506.   496.
+# ℹ 204 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+***** Grouping
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(Machine, NB) |>
+  summarize(
+    n = n(),
+    sd = sd(GFlops),
+    se = (3 * sd) / sqrt(n),
+    GF = mean(GFlops),
+    GFCV = sd/GF,
+    time = sum(Time)/60,
+    sd_time = sd(Time),
+    CVTIME = sd_time/mean(time)
+  ) |> print(n=100)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'Machine'. You can override using the `.groups` argument.
+# A tibble: 24 × 10
+# Groups:   Machine [8]
+   Machine    NB     n    sd    se    GF     GFCV  time sd_time  CVTIME
+   <chr>   <dbl> <int> <dbl> <dbl> <dbl>    <dbl> <dbl>   <dbl>   <dbl>
+ 1 cei1       64    10 9.16  8.69   432. 0.0212    184.  24.2   0.131
+ 2 cei1      128    10 1.35  1.28   463. 0.00291   172.   3.00  0.0175
+ 3 cei1      256    10 0.863 0.819  445. 0.00194   178.   2.07  0.0116
+ 4 cei4       64    10 2.02  1.92   371. 0.00545   214.   6.99  0.0327
+ 5 cei4      128    10 0.521 0.494  456. 0.00114   174.   1.20  0.00687
+ 6 cei4      256    10 0.282 0.267  443. 0.000635  179.   0.682 0.00381
+ 7 draco1     64    10 0.259 0.246  234. 0.00111   188.   1.25  0.00663
+ 8 draco1    128    10 0.192 0.182  241. 0.000797  183.   0.879 0.00480
+ 9 draco1    256    10 1.53  1.46   229. 0.00670   192.   7.79  0.0405
+10 draco2     64    10 0.346 0.329  207. 0.00168   213.   2.14  0.0100
+11 draco2    128    10 0.126 0.119  211. 0.000597  209.   0.744 0.00356
+12 draco2    256    10 1.14  1.08   200. 0.00567   220.   7.56  0.0344
+13 poti1      64    10 0.409 0.388  259. 0.00158   312.   2.96  0.00947
+14 poti1     128    10 1.04  0.984  361. 0.00287   224.   3.86  0.0172
+15 poti1     256    10 0.610 0.578  428. 0.00142   189.   1.61  0.00854
+16 poti2      64    10 0.569 0.540  239. 0.00238   338.   4.82  0.0143
+17 poti2     128    10 1.02  0.965  334. 0.00305   242.   4.44  0.0184
+18 poti2     256    10 0.596 0.566  381. 0.00157   212.   1.99  0.00940
+19 tupi3      64    10 0.933 0.885  335. 0.00279   372.   6.22  0.0167
+20 tupi3     128    10 2.44  2.31   454. 0.00537   274.   8.87  0.0324
+21 tupi3     256    10 1.38  1.31   499. 0.00278   250.   4.17  0.0167
+22 tupi4      64    10 0.340 0.323  310. 0.00110   401.   2.63  0.00656
+23 tupi4     128    10 0.830 0.787  413. 0.00201   302.   3.64  0.0121
+24 tupi4     256    10 0.241 0.229  435. 0.000555  287.   0.957 0.00334
+#+end_example
+
+[20:27:20; 11.02.2026]: The results aren't that good but by the moment
+I will follow with these. I have an idea of the Gflops of one of the
+machines in the cluster
+
+**** Continuing
+
+[20:50:27; 11.02.2026]: I rerun the tupi mpi experiment because there is no need for it to be only there.
+
+[21:17:54; 11.02.2026]: There is some problems with the poetry that i
+don't know what are...
+
+[21:47:05; 11.02.2026]: I think the problem maybe is whit my python.
+
+[22:10:26; 11.02.2026]: I will try this later.
