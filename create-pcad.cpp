@@ -78,15 +78,15 @@ void load_platform(sg4::Engine& e)
   auto* root = e.get_netzone_root();
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 2 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t cei = {"cei", "100kf", "1Gbps", "50us", 6};
-  partition_t draco = {"draco", "50kf", "1Gbps", "50us", 6};
+  partition_t cei = {"cei", "459Gf", "1Gbps", "50us", 6};
+  partition_t draco = {"draco", "228Gf", "1Gbps", "50us", 6};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t tupi = {"tupi", "500kf", "1Gbps", "50us", 6};
-  partition_t poti = {"poti", "400kf", "1Gbps", "50us", 6};
+  partition_t tupi = {"tupi", "465Gf", "1Gbps", "50us", 6};
+  partition_t poti = {"poti", "410Gf", "1Gbps", "50us", 5};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
