@@ -63,23 +63,22 @@ these systems to balance performance with energy efficiency has become
 a priority for the community.
 
 
-On approach for this problem and many others in HPC is to use
-simulators. Simulators aims to address these issues by creating a
-model of the real system that can be used for predictive analysis in
-the place of using the actual system. This allows researchers to
-validate hypotheses and conduct "what-if" scenarios without accessing
-the physical machine. Using simulations don't only lowers the
-electricity consumption of HPC systems, but also targets the lack of
-reproducibility in HPC cite:repro2024, ensuring a controlled and
-reproducible environment for experiments and studies.
+One promising approach for these challenges is to make use of
+simulation. Simulators aim to address these issues by creating a
+faithful model of the real system, researchers can perform predictive
+analysis and validate 'what-if' scenarios without the operational
+costs or constraints of using the actual machine. Using simulations
+not only lowers the electricity consumption of HPC systems, but also
+targets the lack of reproducibility in HPC cite:repro2024, ensuring a
+controlled and reproducible environment for experiments.
 
 
 In this context, SimGrid is a computational framework capable of
-simulate several HPC scenarios while maintaining accuracy and
+simulating several HPC scenarios while maintaining accuracy and
 versatility cite:simgrid2025. *[talk more about simgrid]*
 
 
-We show in this work our efforts to create a simulator for the "Parque
+In this work, we present the development of a simulator for the "Parque
 Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
 cite:LPPD through the SimGrid programmatic interface Simgrid For You
 (S4U), focusing on the network topology. We show comparative results
@@ -108,7 +107,7 @@ Another uses... [Grabriela SimGrid/Batsim]
 
 [Look for some refs]
 
-Differently of the cited works, here we intend to demonstrate the
+Unlike of the cited works, here we intend to demonstrate the
 process of creation and validation of a heterogeneous HPC cluster
 using the SimGrid programmatic interface S4U.
 
