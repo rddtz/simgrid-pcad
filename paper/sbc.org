@@ -49,30 +49,72 @@
 Put the abstract here.
 #+end_abstract
 
+
+# keywords for look for: Energy Efficiency, Environmental Issues, HPC,
+# Power Usage, Simulation, Simulators.
+
 ** Introduction
+# [HPC, Sustainability and Enviroment]
+High-Performance Computing (HPC) infrastructures are critical for
+scientific advancement. However, with the increasing concern regarding
+environmental sustainability cluster and data centers are positioned
+as majors electricity consumers [cite...]. Consequently, optimizing
+these systems to balance performance with energy efficiency has become
+a priority for the community.
 
-[Current state of HPC]
-[Sustainability and Enviroment]
 
-[S4U and SimGrid]
+On approach for this problem and many others in HPC is to use
+simulators. Simulators aims to address these issues by creating a
+model of the real system that can be used for predictive analysis in
+the place of using the actual system. This allows researchers to
+validate hypotheses and conduct "what-if" scenarios without accessing
+the physical machine. Using simulations don't only lowers the
+electricity consumption of HPC systems, but also targets the lack of
+reproducibility in HPC cite:repro2024, ensuring a controlled and
+reproducible environment for experiments and studies.
 
-[Why use a simulator and not the cluster?]
-[Simulating with SimGrid]
 
-[This article]
+In this context, SimGrid is a computational framework capable of
+simulate several HPC scenarios while maintaining accuracy and
+versatility cite:simgrid2025. *[talk more about simgrid]*
+
+
+We show in this work our efforts to create a simulator for the "Parque
+Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
+cite:LPPD through the SimGrid programmatic interface Simgrid For You
+(S4U), focusing on the network topology. We show comparative results
+between the actual cluster and the platform created through
+simulation, including compute time, network statistics [and energy
+consumption?] [and what more we do...].
+
+
+This article is structured as follow. Section [[sec.relatedwork]]
+highlights related work. Section [[sec.methods]] discusses the experimental
+methodology used in this work, with details about the applications,
+tools, and systems used in the experiments. Lastly, Section [[sec.results]] shows
+and discusses the experimental results, while Section [[sec.conclusion]] concludes this
+work.
 
 
 ** Related Work
 <<sec.relatedwork>>
 
-[TCC Arthur?]
+Simulating computational through SimGrid is a well-know tool for study
+HPC infrastructure, [CITE ARTHUR]...
+
+Another uses... [Grabriela SimGrid/Batsim]
 
 [SimGrid paper]
 
 [Look for some refs]
 
+Differently of the cited works, here we intend to demonstrate the
+process of creation and validation of a heterogeneous HPC cluster
+using the SimGrid programmatic interface S4U.
+
 
 ** Methods and Materials
+<<sec.methods>>
 
 [Calibration]
 
@@ -82,10 +124,12 @@ Put the abstract here.
 
 
 ** Results
+<<sec.results>>
 
 [Results, differences: accuracy, time, etc...]
 
 ** Conclusion
+<<sec.conclusion>>
 
 [Is it worth and suitable to use simulators?]
 
@@ -112,30 +156,38 @@ bibliographystyle:sbc.bst
 
 Tangle this file with C-c C-v t
 #+begin_src bibtex :tangle refs.bib
-@article{orgmode,
-  author =	"Eric Schulte and Dan Davison and Thomas Dye and Carsten Dominik",
-  title =	"A Multi-Language Computing Environment for Literate Programming and Reproducible Research",
-  journal =	"J. of Stat. Soft.",
-  volume =	"46",
-  number =	"3",
-  day =  	"25",
-  year = 	"2012",
-  CODEN =	"JSSOBK",
-  ISSN = 	"1548-7660",
-  bibdate =	"2011-10-03",
-  accepted =	"2011-10-03",
-  acknowledgement = "",
-  submitted =	"2010-12-22",
+@article{simgrid2025,
+  title = {{Lowering entry barriers to developing custom simulators of distributed applications and platforms with SimGrid}},
+  journal = {Parallel Computing},
+  volume = {123},
+  pages = {103-125},
+  year = {2025},
+  issn = {0167-8191},
+  doi = {https://doi.org/10.1016/j.parco.2025.103125},
+  author = {Casanova, Henri and Giersch, Arnaud and Legrand, Arnaud and Quinson, Martin and Suter, Fr{\'e}d{\'e}ric},
+  keywords = {Simulation of distributed computing systems, SimGrid},
+  pdf = {https://hal.science/hal-04909441/file/paper.pdf}
 }
 
-@incollection{schnorr2013visualizing,
-  title={Visualizing More Performance Data Than What Fits on Your Screen},
-  author={Schnorr, Lucas M and Legrand, Arnaud},
-  booktitle={Tools for High Performance Computing 2012},
-  pages={149--162},
-  year={2013},
-  publisher={Springer}
+@article{repro2024,
+title = {Reproducibility, Replicability and Repeatability: A survey of reproducible research with a focus on high performance computing},
+journal = {Computer Science Review},
+volume = {53},
+pages = {100655},
+year = {2024},
+issn = {1574-0137},
+doi = {https://doi.org/10.1016/j.cosrev.2024.100655},
+url = {https://www.sciencedirect.com/science/article/pii/S157401372400039X},
+author = {Benjamin Antunes and David R.C. Hill}
 }
+
+@misc{LPPD,
+  title        = {Laboratório de Processamento Paralelo e Distribuído (LPPD)},
+  author       = {LPPD},
+  note         = {Accessed: 2026-02-16},
+  howpublished = {\url{https://pcad.inf.ufrgs.br/}}
+}
+
 #+end_src
 * Emacs setup                                                      :noexport:
 # Local Variables:
