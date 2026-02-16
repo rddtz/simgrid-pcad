@@ -1720,3 +1720,132 @@ don't know what are...
 [21:47:05; 11.02.2026]: I think the problem maybe is whit my python.
 
 [22:10:26; 11.02.2026]: I will try this later.
+
+*** 2026-02-12
+:LOGBOOK:
+CLOCK: [2026-02-12 Thu 18:00]--[2026-02-12 Thu 23:20] =>  5:20
+:END:
+[18:31:00; 12.02.2026]: I fixed the python to python3.7 with the nix
+and almost worked...
+
+[18:33:29; 12.02.2026]: It worked, I will know follow with the
+notebook. I need to change the shell.nix to:
+
+
+#+begin_src shell :results output :exports both
+cat calibration/shell.nix
+#+end_src
+
+#+RESULTS:
+#+begin_example
+let
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/21.05.tar.gz") {};
+in
+pkgs.mkShell {
+  buildInputs = [
+    pkgs.python37
+    pkgs.poetry
+    pkgs.zeromq
+    pkgs.pkg-config
+    pkgs.stdenv.cc
+    pkgs.zlib
+  ];
+
+  shellHook = ''
+    export LD_LIBRARY_PATH="${pkgs.stdenv.cc.cc.lib}/lib:$LD_LIBRARY_PATH"
+
+    export POETRY_VIRTUALENVS_IN_PROJECT=true
+    poetry env use ${pkgs.python37}/bin/python
+  '';
+}
+#+end_example
+
+[18:42:44; 12.02.2026]: The tupi results gone take some more time.
+
+[19:03:57; 12.02.2026]: I need the semantic brakpoints so I runned
+it. I will do some break for some moments.
+
+[20:19:40; 12.02.2026]: I am looking but I think that maybe if I want
+to create just one platform for the whole pcad don't make sense to use
+the platform calibration...
+
+I think this because the simgrid configurations are set for the whole
+simulation:
+#+begin_src C++ :results output :exports both
+simgrid::s4u::Engine::set_config("Item:Value");
+#+end_src
+
+[20:33:50; 12.02.2026]: It would be good to automatize the getting of
+information from the jupyter notebook to the platform...
+
+[20:42:23; 12.02.2026]: This data are a little strange, maybe I should
+create more experiments with more points...
+
+[20:51:29; 12.02.2026]: I am creating the iperf experiment
+
+
+#+begin_src shell :results output :exports both
+#!/bin/bash
+#SBATCH --job-name=calibracao_simgrid
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=00:10:00
+#SBATCH --output=calibracao_%j.out
+#SBATCH --error=calibracao_%j.err
+
+nodes=$(scontrol show hostnames $SLURM_JOB_NODELIST)
+nodes_array=($nodes)
+
+server=${nodes_array[0]}
+client=${nodes_array[1]}
+
+echo "Server: $server"
+echo "Client: $client"
+echo "Starting server at $server"
+srun --nodes=1 --nodelist=$server guix shell iperf -- iperf3 -s &
+SERVER_PID=$!
+
+sleep 1
+
+# Doing 3 executions of 10 seconds (is this in any possible way better then a execution of 30 seconds?)
+
+for i in 1 2 3; do
+    echo "Run $i at $client"
+    srun --nodes=1 --nodelist=$client guix shell iperf -- iperf3 -c $server -t 10 -O 3 --no-delay
+done
+
+kill $SERVER_PID
+#+end_src
+
+[21:30:32; 12.02.2026]: I will see if it runs and then after clean the
+paper of the Comp Sys Per Analysis.
+
+[23:33:33; 12.02.2026]: I spend some time refactoring our work to fit
+in the 4 pages, I have a hard time removing content from the things...
+
+
+** 2026 Week 08 [Feb]
+*** 2026-02-16
+:LOGBOOK:
+CLOCK: [2026-02-16 Mon 17:54]
+:END:
+
+[17:55:00; 16.02.2026]: I will start writing, I want to have a demo
+(everything but no results) by Wednesday.
+
+[18:08:31; 16.02.2026]: Is it true that run a simulation takes less
+energy than the original experiments?
+
+[18:22:24; 16.02.2026]: I am searching for some articles and
+inspiration, I am planning to go by the line of how simulators *helps
+to improve reproducibility, lower power consumption and test new scenarios.*
+
+[19:17:21; 16.02.2026]: Lucas sended me this:
+#+begin_quote
+simulação de sistemas computacionais e teus esforços de modelagem do
+PCAD. O título do artigo poderia ser essa ponte de assuntos.
+#+end_quote
+
+[19:29:22; 16.02.2026]: I have my introduction almost ready, I need to
+see how to run the simulation between now and tomorrow... I need to
+have everything almost done by Wednesday.
