@@ -3,7 +3,7 @@
 #+STARTUP: indent
 #+TITLE: Notes on implementing the PCAD Digital Twin with SimGrid.
 #+AUTHOR: Rayan Raddatz de Matos
-
+#+auto_tangle: t
 
 
 
@@ -190,20 +190,22 @@ typedef struct partition {
     std::string bw;
     std::string lat;
     int count;
+    int cores; // Only counting phisical cores
 } partition_t;
 #+end_src
+
 *** Generic function to create one partition
 #+begin_src C++ :results output :exports both
 
-/**
- ,* @brief Create a partition with N machines
- ,*
- ,* This function creates the any partition, adding the hosts and links properly.
- ,*
- ,* @param root Root netzone
- ,* @param switch_fatpipe Switch link for the rack to model the connection
- ,* @param partition Information about the hosts in the partition
- ,*/
+/*
+ @brief Create a partition with N machines
+
+ This function creates the any partition, adding the hosts and links properly.
+ @param root Root netzone
+ @param switch_fatpipe Switch link for the rack to model the connection
+ @param partition Information about the hosts in the partition
+*/
+
 void create_partition(sg4::NetZone* rack,
                       sg4::Link* switch_fatpipe,
 		      partition_t partition)
@@ -211,7 +213,7 @@ void create_partition(sg4::NetZone* rack,
   for (int id = 1; id <= partition.count; id++) {
     std::string hostname = partition.name + std::to_string(id);
 
-    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(10)->seal();
+    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores)->seal();
     auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
@@ -269,19 +271,31 @@ void load_platform(sg4::Engine& e)
   auto* root = e.get_netzone_root();
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 2 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t cei = {"cei", "459Gf", "1Gbps", "50us", 6};
-  partition_t draco = {"draco", "228Gf", "1Gbps", "50us", 6};
+
+  /*
+    I will divide the time by the core count.
+    Original:
+    | Partition | Gflops |
+    |-----------+--------|
+    | Cei       |    459 |
+    | Draco     |    226 |
+    | Poti      |    404 |
+    | Tupi      |    467 |
+
+  */
+
+  partition_t cei = {"cei", "19.125Gf", "9.413Gbps", "124us", 6, 24};
+  partition_t draco = {"draco", "14.125Gf", "941Mbps", "115us", 6, 16};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t tupi = {"tupi", "465Gf", "1Gbps", "50us", 6};
-  partition_t poti = {"poti", "410Gf", "1Gbps", "50us", 5};
+  partition_t poti = {"poti", "20.2Gf", "940Mbps", "117us", 5, 20};
+  partition_t tupi = {"tupi", "58.375Gf", "942Mbps", "87us", 6, 8};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
-
 
   // =-=-=-=-=-=-=-=-=-=-=-= CONNECTION BETWEEN THE RACKS (switchs) =-=-=-=-=-=-=-=-=-=-=-=
   std::string  inter_switch_bw = "10Gbps";
@@ -298,8 +312,8 @@ void load_platform(sg4::Engine& e)
 }
 #+end_src
 
-* Journal
 
+* Journal
 #+BEGIN: clocktable :scope subtree :maxlevel 3
 #+CAPTION: Clock summary at [2026-02-09 Mon 22:04]
 | Headline                                      | Time  |      |      |
@@ -1590,7 +1604,6 @@ will go by now...
 :LOGBOOK:
 CLOCK: [2026-02-11 Wed 20:50]--[2026-02-11 Wed 22:10] =>  1:20
 :END:
-
 **** Checking the results for run 3
 ***** Loading data
 #+begin_src R :results output :session *R* :exports both
@@ -1823,7 +1836,6 @@ paper of the Comp Sys Per Analysis.
 [23:33:33; 12.02.2026]: I spend some time refactoring our work to fit
 in the 4 pages, I have a hard time removing content from the things...
 
-
 ** 2026 Week 08 [Feb]
 *** 2026-02-16
 :LOGBOOK:
@@ -1849,3 +1861,543 @@ PCAD. O título do artigo poderia ser essa ponte de assuntos.
 [19:29:22; 16.02.2026]: I have my introduction almost ready, I need to
 see how to run the simulation between now and tomorrow... I need to
 have everything almost done by Wednesday.
+
+*** 2026-02-20
+
+I want to parse the exps to create the input for the network
+calibration notebook...
+
+#+begin_src shell :tangle data/mpi-calibration/create_zip.sh :tangle-mode (identity #o755) :results output :exports both
+for i in `find exps/ -type d`; do
+    exp=$i
+    if [[ -n `echo $exp | grep -- "-12-"` ]]; then
+	     echo $exp
+	     partition=$(echo $exp | cut -d- -f2 | sed "s/[0-9]*//g")
+	     for f in $exp/*; do
+		      exp_file=$(echo $f | rev | cut -d/ -f 1 | rev | sed "s/-[0-9]*//g")
+		      cp $f ./$exp_file
+	     done
+
+	     cp `echo $partition | tr -d '\r' | xargs`?.out breakpoints
+
+	     zip $partition.zip breakpoints exp_*
+	     rm breakpoints exp_*
+    fi;
+done
+
+#+end_src
+
+[20:30:44; 20.02.2026]: I will start to retrieve the data about mpi
+calibration. The order will be CEI, DRACO, POTI, TUPI
+
+[20:37:10; 20.02.2026]: It is taking so long to run in my computer, I
+will try to run in a better machine at pcad and do ssh port forward...
+
+[21:06:36; 20.02.2026]: I can use nix in the pcad though guix.
+
+[21:48:50; 20.02.2026]: I need to active the nix environment to run
+the app
+
+[22:06:46; 20.02.2026]: OK, to run without the mpi I need to get out
+of the nix enviroment. And to run with the smpi I need the nix.
+
+[22:12:09; 20.02.2026]: I will now focus on finalizing the platform
+and after in launching the experiments, and after in sleeping.
+
+[23:43:46; 20.02.2026]: yeah... It is not viable to use nix over
+guix... I will need to migrate everything to guix...
+
+[00:21:06; 21.02.2026]: It is very late now... I will end tomorrow
+morning maybe?
+
+*** 2026-02-21
+
+[10:30:24; 21.02.2026]: Tunel para o jupyter notebook do pcad:
+
+#+begin_src shell :results output :exports both
+ssh -L 8888:cei1:8888 rrdmatos@pcad
+#+end_src
+
+
+[22:24:24; 21.02.2026]: ... the numbers with the mpi calibration is
+very strange... By now I will ignore this...
+
+
+**** Host speed (HPL)
+#+begin_src shell :results output :exports both
+ls data/hpl
+#+end_src
+
+#+RESULTS:
+#+begin_example
+cei1-hpl-05-02-2026-1770317538
+cei4-hpl-05-02-2026-1770318511
+draco1-hpl-05-02-2026-1770317534
+draco2-hpl-05-02-2026-1770318519
+get-results-hpl.sh
+hpl-results.csv
+poti1-hpl-05-02-2026-1770317544
+poti2-hpl-05-02-2026-1770318503
+tupi3-hpl-05-02-2026-1770317542
+tupi4-hpl-05-02-2026-1770318508
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+load <- function(dir=".", regex="s\\/results.csv") {
+
+  options(crayon.enabled=FALSE)
+  suppressMessages(library(fs))
+  suppressMessages(library(tidyverse))
+
+  BASE <- dir
+  tibble(CSV = dir_ls(BASE, regexp = regex, recurse=TRUE)) |> print() |>
+    mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+    unnest(DATA)
+}
+
+df.machine <- load("data/hpl/", ".csv$") |>
+  group_by(machine, n, nb, p, q) |>
+  summarise(
+    N=n(),
+    mean_gflops=mean(gflops),
+    sd_g = sd(gflops),
+    se_g = (3 * sd_g) / sqrt(N),
+  ) |> print(n=100)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 data/hpl/hpl-results.csv
+`summarise()` has grouped output by 'machine', 'n', 'nb', 'p'. You can override using the `.groups`
+argument.
+# A tibble: 24 × 9
+# Groups:   machine, n, nb, p [24]
+   machine      n    nb     p     q     N mean_gflops  sd_g  se_g
+   <chr>    <dbl> <dbl> <dbl> <dbl> <int>       <dbl> <dbl> <dbl>
+ 1 cei1     89404    64     4     6    10        432. 9.16  8.69
+ 2 cei1     89404   128     4     6    10        463. 1.35  1.28
+ 3 cei1     89404   256     4     6    10        445. 0.863 0.819
+ 4 cei4     89404    64     4     6    10        371. 2.02  1.92
+ 5 cei4     89404   128     4     6    10        456. 0.521 0.494
+ 6 cei4     89404   256     4     6    10        443. 0.282 0.267
+ 7 draco1   73467    64     4     4    10        234. 0.259 0.246
+ 8 draco1   73467   128     4     4    10        241. 0.192 0.182
+ 9 draco1   73467   256     4     4    10        229. 1.53  1.46
+10 draco2   73467    64     4     4    10        207. 0.346 0.329
+11 draco2   73467   128     4     4    10        211. 0.126 0.119
+12 draco2   73467   256     4     4    10        200. 1.14  1.08
+13 poti1    89918    64     4     5    10        259. 0.409 0.388
+14 poti1    89918   128     4     5    10        361. 1.04  0.984
+15 poti1    89918   256     4     5    10        428. 0.610 0.578
+16 poti2    89918    64     4     5    10        239. 0.569 0.540
+17 poti2    89918   128     4     5    10        334. 1.02  0.965
+18 poti2    89918   256     4     5    10        381. 0.596 0.566
+19 tupi3   103884    64     4     6    10        335. 0.933 0.885
+20 tupi3   103884   128     4     6    10        454. 2.44  2.31
+21 tupi3   103884   256     4     6    10        499. 1.38  1.31
+22 tupi4   103878    64     4     6    10        310. 0.340 0.323
+23 tupi4   103878   128     4     6    10        413. 0.830 0.787
+24 tupi4   103878   256     4     6    10        435. 0.241 0.229
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+
+df.partition <- df.machine |> ungroup() |>
+  mutate(partition = gsub("[0-9]*", "", machine)) |>
+  group_by(partition, nb) |>
+  summarise(
+    N_super=sum(N),
+    super_mean_gflops=mean(mean_gflops),
+    super_sd = sd(sd_g),
+    super_se = (3 * super_sd) / sqrt(N_super)
+  )
+
+df.partition |> print(n=25)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'partition'. You can override using the `.groups` argument.
+# A tibble: 12 × 6
+# Groups:   partition [4]
+   partition    nb N_super super_mean_gflops super_sd super_se
+   <chr>     <dbl>   <int>             <dbl>    <dbl>    <dbl>
+ 1 cei          64      20              401.  5.05     3.39
+ 2 cei         128      20              459.  0.583    0.391
+ 3 cei         256      20              444.  0.411    0.276
+ 4 draco        64      20              220.  0.0617   0.0414
+ 5 draco       128      20              226.  0.0467   0.0313
+ 6 draco       256      20              215.  0.283    0.190
+ 7 poti         64      20              249.  0.113    0.0756
+ 8 poti        128      20              347.  0.0137   0.00922
+ 9 poti        256      20              404.  0.00963  0.00646
+10 tupi         64      20              323.  0.419    0.281
+11 tupi        128      20              434.  1.14     0.763
+12 tupi        256      20              467.  0.809    0.543
+#+end_example
+
+With this I will say:
+
+| Partition | Gflops |
+|-----------+--------|
+| Cei       |    459 |
+| Draco     |    226 |
+| Poti      |    404 |
+| Tupi      |    467 |
+
+The experiment was executed as 30 executions (10 from each nb) in two
+different machines for each partition.
+
+**** Bandwidth
+For the bandwidth based on the iperf3:
+
+#+begin_src shell :results output :exports both :tangle data/iperf3/create_csv.sh :tangle-mode (identity #o755)
+echo "client,server,mean_speed_mega"
+
+for f in *calibracao*; do
+    SER=$(cat $f | grep Server: | cut -d: -f2 | xargs)
+
+    CLI=$(cat $f | grep Client: | cut -d: -f2 | xargs)
+
+    cat $f | grep sender | \
+    sed -E "s/.* ([0-9.]+ .)bits.*/\1/g" | \
+    sed "s/ M//g" | sed "s/ G/\*1000/g" |\
+    bc -l | sed "s/^/$CLI,$SER,/g"
+done
+
+#+end_src
+
+[20:13:19; 21.02.2026]: The iperf experiment was consisted of 3
+executions of 10 seconds comm between two machines in the
+cluster. This experiment was execute twice. In total we have 60
+samples per partition
+
+#+begin_src R :results output :session *R* :exports both
+load <- function(dir=".", regex=".csv$") {
+
+  options(crayon.enabled=FALSE)
+  suppressMessages(library(fs))
+  suppressMessages(library(tidyverse))
+
+  BASE <- dir
+  tibble(CSV = dir_ls(BASE, regexp = regex, recurse=TRUE)) |> print() |>
+    mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+    unnest(DATA) |> select(-CSV)
+}
+
+df <- load("data/iperf3/", ".csv$") |>
+  mutate(partition = gsub("[0-9]*", "", client)) |>
+  group_by(partition)
+
+df |> print(n=100) |>
+  summarise(
+    N=n(),
+    mean_comm=mean(mean_speed_mega),
+    sd_c = sd(mean_speed_mega),
+    se_c = (3 * sd_c) / sqrt(N),
+    cv = sd_c/mean_comm
+  )
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 data/iperf3/iperf-results.csv
+# A tibble: 24 × 4
+# Groups:   partition [4]
+   client server mean_speed_mega partition
+   <chr>  <chr>            <dbl> <chr>
+ 1 cei3   cei2              9410 cei
+ 2 cei3   cei2              9420 cei
+ 3 cei3   cei2              9410 cei
+ 4 cei5   cei4              9410 cei
+ 5 cei5   cei4              9420 cei
+ 6 cei5   cei4              9410 cei
+ 7 draco4 draco3             940 draco
+ 8 draco4 draco3             941 draco
+ 9 draco4 draco3             942 draco
+10 draco4 draco3             942 draco
+11 draco4 draco3             941 draco
+12 draco4 draco3             942 draco
+13 poti2  poti1              940 poti
+14 poti2  poti1              940 poti
+15 poti2  poti1              941 poti
+16 poti4  poti3              941 poti
+17 poti4  poti3              940 poti
+18 poti4  poti3              941 poti
+19 tupi4  tupi3              941 tupi
+20 tupi4  tupi3              942 tupi
+21 tupi4  tupi3              942 tupi
+22 tupi4  tupi3              942 tupi
+23 tupi4  tupi3              942 tupi
+24 tupi4  tupi3              942 tupi
+# A tibble: 4 × 6
+  partition     N mean_comm  sd_c  se_c       cv
+  <chr>     <int>     <dbl> <dbl> <dbl>    <dbl>
+1 cei           6     9413. 5.16  6.32  0.000549
+2 draco         6      941. 0.816 1     0.000867
+3 poti          6      940. 0.548 0.671 0.000582
+4 tupi          6      942. 0.408 0.5   0.000433
+#+end_example
+
+We can see a very low variation in the experiment for the
+network... Let's use this results
+
+| partition | bandwidth   |
+|-----------+-------------|
+| cei       | 9.413 Gbits |
+| draco     | 0.941 Gbits |
+| poti      | 0.940 Gbits |
+| tupi      | 0.942 Gbits |
+
+**** Latency with ping
+
+[20:29:41; 21.02.2026]: To measure the latency with ping I will use
+half of the mean time for the ping command (ping gets the time to go
+and come back)
+
+[20:32:18; 21.02.2026]: I will run again because i used the quiet mode
+so I can't measure the variancy...
+
+[23:04:29; 21.02.2026]: The ping experience was made by running for
+executions of ping between to machines in each partition (sending 100
+packets). First one machine send 100 packets and after another. In
+total we have 200 packages being sended by each experiment.
+
+#+begin_src shell :results output :exports both :tangle data/ping/create_csv.sh :tangle-mode (identity #o755)
+echo "from,to,time"
+
+for f in *_ping_*; do
+
+    NODES=$(cat $f | grep Origem |\
+		sed -E "s/.*: ([a-z]+[0-9]).*: ([a-z]+[0-9])/\1\n\2/g")
+
+    ALMOST=$(cat $f | grep -A100 PING |\
+		 sed -E "s/.*( [a-z]+[0-9] ).*time=([0-9.]+).*/\1,\2/g" |\
+		 sed "s/ //g" | grep ,)
+
+    echo "$NODES" | while read name; do
+
+	echo "$ALMOST" | grep -v $name |\
+	    sed -E "s/^/$name,/g"
+    done
+ done
+
+#+end_src
+
+
+#+begin_src R :results output :session *R* :exports both
+load <- function(dir=".", regex=".csv$") {
+
+  options(crayon.enabled=FALSE)
+  suppressMessages(library(fs))
+  suppressMessages(library(tidyverse))
+
+  BASE <- dir
+  tibble(CSV = dir_ls(BASE, regexp = regex, recurse=TRUE)) |> print() |>
+    mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+    unnest(DATA) |> select(-CSV)
+}
+
+df <- load("data/ping/") |>
+  mutate(partition = gsub("[0-9]*", "", from)) |>
+  mutate(time = time/2) # [23:03:00; 21.02.2026]: ping gets the time to the
+                        # packet to come back... So the time to go is half of it
+
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 data/ping/ping_data.csv
+# A tibble: 1,600 × 4
+   from  to     time partition
+   <chr> <chr> <dbl> <chr>
+ 1 cei2  cei3  0.134 cei
+ 2 cei2  cei3  0.138 cei
+ 3 cei2  cei3  0.139 cei
+ 4 cei2  cei3  0.142 cei
+ 5 cei2  cei3  0.134 cei
+ 6 cei2  cei3  0.118 cei
+ 7 cei2  cei3  0.140 cei
+ 8 cei2  cei3  0.14  cei
+ 9 cei2  cei3  0.142 cei
+10 cei2  cei3  0.123 cei
+# ℹ 1,590 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+[23:00:56; 21.02.2026]: Stats by partition:
+
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(partition) |>
+  summarise(
+    N=n(),
+    mean_t = mean(time),
+    sd_t = sd(time),
+    se_t = (3 * sd_t) / sqrt(N),
+    cv = sd_t/mean_t
+  )
+
+#+end_src
+
+#+RESULTS:
+: # A tibble: 4 × 6
+:   partition     N mean_t    sd_t    se_t     cv
+:   <chr>     <int>  <dbl>   <dbl>   <dbl>  <dbl>
+: 1 cei         400 0.124  0.0146  0.00219 0.117
+: 2 draco       400 0.115  0.00987 0.00148 0.0859
+: 3 poti        400 0.117  0.0358  0.00537 0.305
+: 4 tupi        400 0.0870 0.0153  0.00229 0.176
+
+[23:04:08; 21.02.2026]: Poti was the one that showed higher variancy.
+
+[23:07:44; 21.02.2026]: Time by sending machine:
+
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(from) |>
+  summarise(
+    N=n(),
+    mean_t = mean(time),
+    sd_t = sd(time),
+    se_t = (3 * sd_t) / sqrt(N),
+    cv = sd_t/mean_t
+  )
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 14 × 6
+   from       N mean_t    sd_t     se_t     cv
+   <chr>  <int>  <dbl>   <dbl>    <dbl>  <dbl>
+ 1 cei2     100 0.131  0.00899 0.00270  0.0687
+ 2 cei3     100 0.128  0.0111  0.00332  0.0863
+ 3 cei4     100 0.133  0.00937 0.00281  0.0706
+ 4 cei5     100 0.106  0.0105  0.00314  0.0986
+ 5 draco2   100 0.116  0.00544 0.00163  0.0467
+ 6 draco3   100 0.126  0.00315 0.000944 0.0250
+ 7 draco4   100 0.115  0.00618 0.00185  0.0536
+ 8 draco5   100 0.102  0.00409 0.00123  0.0401
+ 9 poti1    100 0.115  0.0267  0.00801  0.232
+10 poti2    100 0.127  0.0197  0.00591  0.155
+11 poti3    100 0.0994 0.0220  0.00661  0.222
+12 poti4    100 0.128  0.0551  0.0165   0.430
+13 tupi1    200 0.0999 0.00926 0.00196  0.0927
+14 tupi4    200 0.0741 0.00705 0.00149  0.0951
+#+end_example
+
+[23:10:17; 21.02.2026]: In the tupi is was just possible to use two
+nodes...
+
+[23:11:22; 21.02.2026]: I thin the times are ok, all ~100
+
+**** Comparing...
+
+
+I executed with:
+#+begin_src shell :results output :exports both
+ smpirun -np 8 -hostfile hosts.txt -platform ./pcad.so --cfg=smpi/host-speed:100f ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 100
+#+end_src
+
+and got:
+
+#+begin_src shell :results output :exports both
+Run completed:
+   Problem size        =  30
+   MPI tasks           =  8
+   Iteration count     =  100
+   Final Origin Energy = 1.058138e+07
+   Testing Plane 0 of Energy Array on rank 0:
+        MaxAbsDiff   = 9.313226e-10
+        TotalAbsDiff = 5.450080e-09
+        MaxRelDiff   = 3.288444e-13
+
+
+Elapsed time         =       0.38 (s)
+Grind time (us/z/c)  = 0.14231421 (per dom)  (0.017789276 overall)
+FOM                  =  56213.643 (z/s)
+
+#+end_src
+
+I will run manually now...
+
+[23:47:04; 21.02.2026]: Compile Lulesh with normal mpi
+#+begin_src shell :results output :exports both
+make MPI_INC="" MPICXX="mpicxx -DUSE_MPI=1"
+#+end_src
+
+#+begin_src shell :results output :exports both
+mpirun -np 8 -hostfile hosts.txt ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 100
+#+end_src
+
+[23:52:00; 21.02.2026]: Parece que está bem errado...
+
+[23:57:15; 21.02.2026]: I may need to set the OpenMP env var for the
+runs...
+
+#+begin_src shell :results output :exports both
+export OMP_NUM_THREADS=1
+#+end_src
+
+#+begin_src shell :results output :exports both
+#!/bin/bash
+#SBATCH --job-name=compare
+#SBATCH --partition=cei
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --time=8:25:00
+#SBATCH --output=%N_compare_initial_%j.out
+#SBATCH --error=%N_compare_initial_%j.err
+
+set +eux
+
+date
+APP_DIR="/home/users/rrdmatos/compare/SMPI-proxy-apps/Benchmarks/Coral/Lulesh"
+
+echo "========= Starting with SMPI ============"
+
+(
+
+eval $(guix shell -m guix.scm --search-paths)
+
+make clean
+make pcad
+
+pushd $APP_DIR
+{
+    make clean
+    make MPI_INC="" MPICXX="smpicxx -DUSE_MPI=1"
+}
+popd
+
+export OMP_NUM_THREADS=4
+smpirun -np 8 -hostfile hosts.txt -platform ./pcad.so --cfg=smpi/host-speed:100f ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 100 -s 10
+
+)
+
+echo "========= Starting with Normal ============"
+
+make clean
+
+pushd $APP_DIR
+{
+    make clean
+    make MPI_INC="" MPICXX="mpicxx -DUSE_MPI=1"
+}
+popd
+
+export OMP_NUM_THREADS=4
+
+mpirun -np 8 ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 100 -s 10
+
+#+end_src
