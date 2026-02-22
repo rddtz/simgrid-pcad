@@ -17,6 +17,23 @@
 
 #+LATEX_HEADER: \sloppy
 
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \lstset{
+#+LATEX_HEADER:   language=C++,
+#+LATEX_HEADER:   basicstyle=\ttfamily\footnotesize,
+#+LATEX_HEADER:   keywordstyle=\color{blue}\bfseries,
+#+LATEX_HEADER:   stringstyle=\color{red},
+#+LATEX_HEADER:   commentstyle=\color{darkgray}\itshape,
+#+LATEX_HEADER:   numbers=left,
+#+LATEX_HEADER:   numberstyle=\tiny\color{gray},
+#+LATEX_HEADER:   stepnumber=1,
+#+LATEX_HEADER:   frame=single,
+#+LATEX_HEADER:   rulecolor=\color{black},
+#+LATEX_HEADER:   breaklines=true,
+#+LATEX_HEADER:   captionpos=b
+#+LATEX_HEADER: }
+
 # PDF generation can be done by make (thanks Luka Stanisic)
 #   or C-c C-e l p (thanks Vinicius Garcia)
 
@@ -38,7 +55,7 @@
 \address{
    Institute of Informatics, Federal University of Rio Grande do Sul (UFRGS)\\
    Caixa Postal 15.064 -- 91.501-970 -- Porto Alegre -- RS -- Brazil
-   \email{{rayan.raddatz, schnorr}@inf.ufrgs.br}}
+   \email{\{rayan.raddatz, schnorr\}@inf.ufrgs.br}}
 #+END_EXPORT
 
 #+LaTeX: \maketitle
@@ -46,7 +63,15 @@
 ** Abstract                                                         :ignore:
 
 #+begin_abstract
-Put the abstract here.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ante
+sapien, mollis eget dapibus vel, interdum eu erat. Vestibulum ante
+ipsum primis in faucibus orci luctus et ultrices posuere cubilia
+curae; Donec feugiat, massa sed vestibulum placerat, quam eros
+tincidunt metus, in malesuada ex lacus vel elit. Nam rhoncus accumsan
+est, et faucibus erat ultrices quis. Mauris ultricies euismod sem
+vitae mollis. Cras efficitur nec justo nec tempus. Aliquam quis velit
+non purus vulputate semper. Curabitur efficitur molestie diam eget
+pellentesque.
 #+end_abstract
 
 
@@ -54,28 +79,26 @@ Put the abstract here.
 # Power Usage, Simulation, Simulators.
 
 ** Introduction
+
+# In this scenario, one promising approach is to make use of
+# simulation to achieve scientific results.
+
 # [HPC, Sustainability and Enviroment]
 High-Performance Computing (HPC) infrastructures are critical for
-scientific advancement. However, with the increasing concern regarding
-environmental sustainability cluster and data centers are positioned
-as majors electricity consumers [cite...]. Consequently, optimizing
-these systems to balance performance with energy efficiency has become
-a priority for the community.
-
-
-One promising approach for these challenges is to make use of
-simulation. Simulators aim to address these issues by creating a
-faithful model of the real system, researchers can perform predictive
-analysis and validate 'what-if' scenarios without the operational
-costs or constraints of using the actual machine. Using simulations
-not only lowers the electricity consumption of HPC systems, but also
-targets the lack of reproducibility in HPC cite:repro2024, ensuring a
-controlled and reproducible environment for experiments.
-
-
-In this context, SimGrid is a computational framework capable of
-simulating several HPC scenarios while maintaining accuracy and
-versatility cite:simgrid2025. *[talk more about simgrid]*
+scientific advancement. However, with increasing concerns regarding
+environmental sustainability, HPC clusters and data centers are
+recognized as major electricity consumers cite:IAE2024. Simulators aim
+to address these issues by creating a faithful model of the real
+system, researchers can perform predictive analysis and validate
+'what-if' scenarios without the operational costs or constraints of
+using the actual machine. Using simulations not only lowers the
+electricity consumption of HPC systems, but also targets the lack of
+reproducibility in HPC cite:repro2024, ensuring a controlled and
+reproducible environment for experiments. In this context, SimGrid is
+a free and open-source computational framework capable of simulating
+several HPC scenarios with reproducibility and versatility, allowing
+researchers to simulate large platforms while maintaining accuracy
+cite:simgrid2025.
 
 
 In this work, we present the development of a simulator for the "Parque
@@ -83,46 +106,120 @@ Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
 cite:LPPD through the SimGrid programmatic interface Simgrid For You
 (S4U), focusing on the network topology. We show comparative results
 between the actual cluster and the platform created through
-simulation, including compute time, network statistics [and energy
-consumption?] [and what more we do...].
+simulation, including compute time, network statistics and energy
+consumption.
 
 
-Section [[sec.relatedwork]] highlights related work. Section [[sec.methods]]
+Section [[sec.relatedwork]] highlights related work. Section
 discusses the experimental methodology used in this work, with details
 about the applications, tools, and systems used in the
 experiments. Lastly, Section [[sec.results]] shows and discusses the
 experimental results, while Section [[sec.conclusion]] concludes this
 work.
 
-
 ** Related Work
 <<sec.relatedwork>>
 
-Simulating computational through SimGrid is a well-know tool for study
-HPC infrastructure, [CITE ARTHUR]...
+The simulation of HPC infrastructures is a well-established
+methodology for evaluating system behavior. In this context, SimGrid
+has emerged as a highly versatile and widely adopted framework for
+building custom simulators. ... CITE MORE WORKS ... . Additionally,
+the creation of the S4U API also enables the easier creation of
+complex simulators. As example, cite:arthur2025 used this API to model
+and simulate the Frontier cite:frontier network topology. In this work
+use SimGrid to demonstrate the process of creation and validation of a
+heterogeneous HPC cluster using the SimGrid programmatic interface
+S4U, making possible to replicate experiments and create /what-if/
+scenarios with in the cluster.
 
-Another uses... [Grabriela SimGrid/Batsim]
 
-[SimGrid paper]
+# Another uses... [Grabriela SimGrid/Batsim]
 
-[Look for some refs]
+# [SimGrid paper]
 
-Unlike of the cited works, here we intend to demonstrate the
-process of creation and validation of a heterogeneous HPC cluster
-using the SimGrid programmatic interface S4U.
+# [Look for some refs]
 
 
-** Methods and Materials
+** Platform Creation and Calibration
+
+We selected only the =cei=, =draco=, =tupi= e =poti= homogeneous partitions
+from PCAD infrastructure to simulate initially, with the three first
+having six nodes and the last having only five. We choose these
+partitions as they are the more used ones, aiming to first create a
+generic approach that later can be used in the whole cluster. The
+methodology for modeling was divided into programmatic platform
+generation and system calibration, focusing on hosts computational
+power and the network topology. The simulated environment was created
+programmatically using the SimGrid for You (S4U) C++ API with SimGrid
+v4.1. This approach allowed for the flexible definition of the cluster
+hierarchical structure, effectively mirroring the physical
+architecture of PCAD.
+
+
+Several different experiments were executed for the system
+calibration. All experiments were run using Guix to ensure
+reproducibility. The host calibration for the simulated partitions
+consisted on the execution of High-Performance Linpack (HPL)
+cite:HPL2003. For each partition this HPL was executed 10 times in two
+different machines. The mean results in Gflops was taken as the time
+for a node in the partition. For the network we used simple network
+tools such as =iperf3= and =ping= to measure information such as
+network bandwidth and latency.
+
+# We also make use of official SimGrid
+# material for calibrating MPI cite:calibration.
+
+
+The platform validation...
+
+
+# To ensure the accuracy of the simulator, empirical calibration was
+# performed on the real cluster. Host calibration consisted of executing
+# the High-Performance Linpack (HPL) benchmark to establish the baseline
+# computational speed (FLOP/s) of the individual nodes. Network
+# calibration required a two-step approach. First, iperf3 was used to
+# measure raw communication throughput, capturing baseline metrics such
+# as the ~9413 Mbps mean bandwidth observed on the 10 Gbps
+# partitions. Following this, the official SimGrid MPI calibration tools
+# were executed to determine internal simulation parameters,
+# specifically the bw-factor. This empirical process highlighted the
+# inherent complexities of modeling physical networks, as the calculated
+# bandwidth factors exhibited significant variance—ranging from 0.23 to
+# 3.42—due to real-world network contention, necessitating careful
+# parameter selection to validate the model.
+
+** COMMENT Methods and Materials
 <<sec.methods>>
 
-[Calibration]
+
+CRIAMOS APENAS ALGUMAS PARTIÇÕES DO PCAD PARA ESSE TRABALHO INICIAL
 
 [S4U]
+The Simgrid offers a Application Interface to create platform de forma
+pragramatica, this interface is called S4U. This enables the creation
+of platforms more flexibilizadamente by utilizing C++ per example.
+
+
+# #+begin_export latex
+# \begin{lstlisting}[language=C++, caption={Sua legenda do código aqui}, label={lst:codigo1}]
+# static sg4::NetZone* create_cabinet(sg4::NetZone* root, const std::string& name)
+# {
+#     auto* cluster = root->add_netzone_star(name);
+#     std::string prefix = "griffon-";
+#     // ... resto do seu codigo C++ ...
+#     return cluster;
+# }
+# \end{lstlisting}
+# #+end_export
+
 
 [Reproducibility]
 
 
-** Results
+*** Hardware and Software Configuration
+
+
+** Results / Platform Validation
 <<sec.results>>
 
 [Results, differences: accuracy, time, etc...]
@@ -181,10 +278,58 @@ author = {Benjamin Antunes and David R.C. Hill}
 }
 
 @misc{LPPD,
-  title        = {Laboratório de Processamento Paralelo e Distribuído (LPPD)},
-  author       = {LPPD},
-  note         = {Accessed: 2026-02-16},
-  howpublished = {\url{https://pcad.inf.ufrgs.br/}}
+title        = {Laboratório de Processamento Paralelo e Distribuído (LPPD)},
+author       = {LPPD},
+note         = {Accessed: 2026-02-16},
+year         = {2025},
+howpublished = {\url{https://pcad.inf.ufrgs.br/}}
+}
+
+@mastersthesis{arthur2025,
+title        = {Um simulador da rede do supercomputador frontier utilizando SimGrid},
+author       = {Arthur Alves Ferreira Melo},
+year         = {2025},
+type={Bachelor's Thesis}
+}
+
+@misc{frontier,
+  author = {{Top500}},
+  title = {Frontier},
+  howpublished = {\url{https://www.top500.org/system/180047/}},
+  year = {2022},
+  note = {Accessed: 2026-02-22}
+}
+
+@techreport{IAE2024,
+  author      = {{International Energy Agency (IEA)}},
+  title       = {Energy and AI},
+  institution = {IEA},
+  year        = {2024},
+  url         = {https://www.iea.org/reports/energy-and-ai}
+}
+
+@article{HPL2003,
+  author = {Dongarra, Jack J. and Luszczek, Piotr and Petitet, Antoine},
+  title = {The {LINPACK} Benchmark: past, present and future},
+  journal = {Concurrency and Computation: Practice and Experience},
+  volume = {15},
+  number = {9},
+  pages = {803--820},
+  year = {2003}
+}
+
+@phdthesis{calibration,
+  TITLE = {{High Performance Computing : towards better Performance Predictions and Experiments}},
+  AUTHOR = {Cornebize, Tom},
+  URL = {https://theses.hal.science/tel-03328956},
+  NUMBER = {2021GRALM016},
+  SCHOOL = {{Universit{\'e} Grenoble Alpes [2020-....]}},
+  YEAR = {2021},
+  MONTH = Jun,
+  TYPE = {Theses},
+  PDF = {https://theses.hal.science/tel-03328956v2/file/CORNEBIZE_2021_archivage.pdf},
+  HAL_ID = {tel-03328956},
+  HAL_VERSION = {v2},
 }
 
 #+end_src

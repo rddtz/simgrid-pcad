@@ -9,17 +9,18 @@ typedef struct partition {
     std::string bw;
     std::string lat;
     int count;
+    int cores; // Only counting phisical cores
 } partition_t;
 
-/**
- * @brief Create a partition with N machines
- *
- * This function creates the any partition, adding the hosts and links properly.
- *
- * @param root Root netzone
- * @param switch_fatpipe Switch link for the rack to model the connection
- * @param partition Information about the hosts in the partition
- */
+/*
+ @brief Create a partition with N machines
+
+ This function creates the any partition, adding the hosts and links properly.
+ @param root Root netzone
+ @param switch_fatpipe Switch link for the rack to model the connection
+ @param partition Information about the hosts in the partition
+*/
+
 void create_partition(sg4::NetZone* rack,
                       sg4::Link* switch_fatpipe,
 		      partition_t partition)
@@ -27,7 +28,7 @@ void create_partition(sg4::NetZone* rack,
   for (int id = 1; id <= partition.count; id++) {
     std::string hostname = partition.name + std::to_string(id);
 
-    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(10)->seal();
+    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores)->seal();
     auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
@@ -78,19 +79,31 @@ void load_platform(sg4::Engine& e)
   auto* root = e.get_netzone_root();
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 2 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t cei = {"cei", "459Gf", "1Gbps", "50us", 6};
-  partition_t draco = {"draco", "228Gf", "1Gbps", "50us", 6};
+
+  /*
+    I will divide the time by the core count.
+    Original:
+    | Partition | Gflops |
+    |-----------+--------|
+    | Cei       |    459 |
+    | Draco     |    226 |
+    | Poti      |    404 |
+    | Tupi      |    467 |
+
+  */
+
+  partition_t cei = {"cei", "19.125Gf", "9.413Gbps", "124us", 6, 24};
+  partition_t draco = {"draco", "14.125Gf", "941Mbps", "115us", 6, 16};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t tupi = {"tupi", "465Gf", "1Gbps", "50us", 6};
-  partition_t poti = {"poti", "410Gf", "1Gbps", "50us", 5};
+  partition_t poti = {"poti", "20.2Gf", "940Mbps", "117us", 5, 20};
+  partition_t tupi = {"tupi", "58.375Gf", "942Mbps", "87us", 6, 8};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
-
 
   // =-=-=-=-=-=-=-=-=-=-=-= CONNECTION BETWEEN THE RACKS (switchs) =-=-=-=-=-=-=-=-=-=-=-=
   std::string  inter_switch_bw = "10Gbps";
