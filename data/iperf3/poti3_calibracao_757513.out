@@ -1,0 +1,136 @@
+Server: poti3
+Client: poti4
+Starting server at poti3
+Run 1 at poti4
+Connecting to host poti3, port 5201
+[  5] local 192.168.30.50 port 36686 connected to 192.168.30.49 port 5201
+-----------------------------------------------------------
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+Server listening on 5201 (test #1)
+[  5]   0.00-1.00   sec   114 MBytes   952 Mbits/sec    0    365 KBytes       (omitted)
+-----------------------------------------------------------
+[  5]   1.00-2.00   sec   112 MBytes   944 Mbits/sec    0    365 KBytes       (omitted)
+Accepted connection from 192.168.30.50, port 36680
+[  5]   2.00-3.00   sec   112 MBytes   938 Mbits/sec    0    365 KBytes       (omitted)
+[  5] local 192.168.30.49 port 5201 connected to 192.168.30.50 port 36686
+[  5]   0.00-1.00   sec   113 MBytes   944 Mbits/sec    0    365 KBytes       
+[ ID] Interval           Transfer     Bitrate
+[  5]   1.00-2.00   sec   112 MBytes   938 Mbits/sec    0    365 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   940 Mbits/sec                  (omitted)
+[  5]   2.00-3.00   sec   113 MBytes   945 Mbits/sec    0    365 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   3.00-4.00   sec   112 MBytes   935 Mbits/sec    0    382 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   4.00-5.00   sec   113 MBytes   946 Mbits/sec    0    382 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   938 Mbits/sec    0    382 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   940 Mbits/sec    0    382 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   4.00-5.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   941 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   113 MBytes   945 Mbits/sec    0    382 KBytes       
+[  5]   8.00-9.00   sec   112 MBytes   940 Mbits/sec    0    382 KBytes       
+[  5]   9.00-10.00  sec   112 MBytes   939 Mbits/sec    0    382 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+
+iperf Done.
+Run 2 at poti4
+Connecting to host poti3, port 5201
+[  5] local 192.168.30.50 port 47372 connected to 192.168.30.49 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec   114 MBytes   954 Mbits/sec    0    366 KBytes       (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   944 Mbits/sec    0    366 KBytes       (omitted)
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec    0    366 KBytes       (omitted)
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec    0    366 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   936 Mbits/sec    0    366 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec    0    382 KBytes       
+[  5]   3.00-4.00   sec   113 MBytes   946 Mbits/sec    0    382 KBytes       
+[  5]   4.00-5.00   sec   112 MBytes   938 Mbits/sec    0    382 KBytes       
+[  5]   5.00-6.00   sec   112 MBytes   940 Mbits/sec    0    382 KBytes       
+[  5]   6.00-7.00   sec   113 MBytes   945 Mbits/sec    0    382 KBytes       
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+-----------------------------------------------------------
+Accepted connection from 192.168.30.50, port 47370
+[  5] local 192.168.30.49 port 5201 connected to 192.168.30.50 port 47372
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec   112 MBytes   940 Mbits/sec                  (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   1.00-1.00   sec   112 MBytes   471 Mbits/sec                  
+[  5]   1.00-2.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   4.00-5.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   941 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   112 MBytes   940 Mbits/sec    0    382 KBytes       
+[  5]   8.00-9.00   sec   112 MBytes   938 Mbits/sec    0    382 KBytes       
+[  5]   9.00-10.00  sec   112 MBytes   940 Mbits/sec    0    382 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.09 GBytes   940 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+
+iperf Done.
+Run 3 at poti4
+Connecting to host poti3, port 5201
+[  5] local 192.168.30.50 port 44242 connected to 192.168.30.49 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec   114 MBytes   955 Mbits/sec    0    329 KBytes       (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   941 Mbits/sec    0    365 KBytes       (omitted)
+[  5]   2.00-3.00   sec   112 MBytes   940 Mbits/sec    0    365 KBytes       (omitted)
+[  5]   0.00-1.00   sec   112 MBytes   939 Mbits/sec    0    365 KBytes       
+[  5]   1.00-2.00   sec   113 MBytes   945 Mbits/sec    0    365 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   939 Mbits/sec    0    365 KBytes       
+[  5]   3.00-4.00   sec   112 MBytes   940 Mbits/sec    0    365 KBytes       
+[  5]   4.00-5.00   sec   112 MBytes   940 Mbits/sec    0    365 KBytes       
+[  5]   5.00-6.00   sec   113 MBytes   945 Mbits/sec    0    365 KBytes       
+[  5]   6.00-7.00   sec   112 MBytes   938 Mbits/sec    0    365 KBytes       
+-----------------------------------------------------------
+Server listening on 5201 (test #3)
+-----------------------------------------------------------
+Accepted connection from 192.168.30.50, port 44234
+[  5] local 192.168.30.49 port 5201 connected to 192.168.30.50 port 44242
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec   112 MBytes   940 Mbits/sec                  (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   1.00-1.00   sec   112 MBytes   471 Mbits/sec                  
+[  5]   1.00-2.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   4.00-5.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   941 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   112 MBytes   938 Mbits/sec    0    365 KBytes       
+[  5]   8.00-9.00   sec   113 MBytes   945 Mbits/sec    0    365 KBytes       
+[  5]   9.00-10.00  sec   112 MBytes   939 Mbits/sec    0    365 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+
+iperf Done.

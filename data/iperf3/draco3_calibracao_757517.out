@@ -1,0 +1,140 @@
+Server: draco3
+Client: draco4
+Starting server at draco3
+Run 1 at draco4
+Connecting to host draco3, port 5201
+[  5] local 192.168.30.10 port 46048 connected to 192.168.30.9 port 5201
+-----------------------------------------------------------
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+Server listening on 5201 (test #1)
+[  5]   0.00-1.00   sec   114 MBytes   953 Mbits/sec    0    351 KBytes       (omitted)
+-----------------------------------------------------------
+[  5]   1.00-2.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       (omitted)
+Accepted connection from 192.168.30.10, port 46044
+[  5]   2.00-3.00   sec   112 MBytes   938 Mbits/sec    0    351 KBytes       (omitted)
+[  5] local 192.168.30.9 port 5201 connected to 192.168.30.10 port 46048
+[  5]   0.00-1.00   sec   113 MBytes   944 Mbits/sec    0    351 KBytes       
+[ ID] Interval           Transfer     Bitrate
+[  5]   1.00-2.00   sec   112 MBytes   937 Mbits/sec    0    351 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   2.00-3.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   3.00-4.00   sec   112 MBytes   938 Mbits/sec    0    351 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   4.00-5.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   938 Mbits/sec    0    351 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   6.00-7.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   4.00-5.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   942 Mbits/sec                  
+[  5]  10.00-10.00  sec   128 KBytes   696 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   112 MBytes   937 Mbits/sec    0    351 KBytes       
+[  5]   8.00-9.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       
+[  5]   9.00-10.00  sec   113 MBytes   950 Mbits/sec    0    574 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec                  receiver
+
+iperf Done.
+Run 2 at draco4
+-----------------------------------------------------------
+Server listening on 5201 (test #2)
+Connecting to host draco3, port 5201
+-----------------------------------------------------------
+[  5] local 192.168.30.10 port 60048 connected to 192.168.30.9 port 5201
+Accepted connection from 192.168.30.10, port 60042
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5] local 192.168.30.9 port 5201 connected to 192.168.30.10 port 60048
+[  5]   0.00-1.00   sec   114 MBytes   955 Mbits/sec    0    361 KBytes       (omitted)
+[ ID] Interval           Transfer     Bitrate
+[  5]   1.00-2.00   sec   112 MBytes   938 Mbits/sec    0    361 KBytes       (omitted)
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   2.00-3.00   sec   113 MBytes   945 Mbits/sec    0    361 KBytes       (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   0.00-1.00   sec   113 MBytes   944 Mbits/sec    0    361 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   1.00-2.00   sec   112 MBytes   937 Mbits/sec    0    361 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   2.00-3.00   sec   113 MBytes   945 Mbits/sec    0    361 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   938 Mbits/sec    0    361 KBytes       
+[  5]   2.00-3.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   4.00-5.00   sec   113 MBytes   945 Mbits/sec    0    361 KBytes       
+[  5]   3.00-4.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   938 Mbits/sec    0    361 KBytes       
+[  5]   4.00-5.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   944 Mbits/sec    0    361 KBytes       
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   942 Mbits/sec                  
+[  5]  10.00-10.00  sec   128 KBytes  1.09 Gbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   112 MBytes   938 Mbits/sec    0    361 KBytes       
+[  5]   8.00-9.00   sec   113 MBytes   945 Mbits/sec    0    361 KBytes       
+[  5]   9.00-10.00  sec   112 MBytes   939 Mbits/sec    0    361 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   941 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec                  receiver
+
+iperf Done.
+Run 3 at draco4
+Connecting to host draco3, port 5201
+[  5] local 192.168.30.10 port 59066 connected to 192.168.30.9 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-1.00   sec   114 MBytes   953 Mbits/sec    0    351 KBytes       (omitted)
+[  5]   1.00-2.00   sec   113 MBytes   945 Mbits/sec    0    351 KBytes       (omitted)
+[  5]   2.00-3.00   sec   112 MBytes   937 Mbits/sec    0    351 KBytes       (omitted)
+-----------------------------------------------------------
+[  5]   0.00-1.00   sec   113 MBytes   944 Mbits/sec    0    351 KBytes       
+Server listening on 5201 (test #3)
+[  5]   1.00-2.00   sec   112 MBytes   939 Mbits/sec    0    351 KBytes       
+-----------------------------------------------------------
+[  5]   2.00-3.00   sec   113 MBytes   945 Mbits/sec    0    368 KBytes       
+Accepted connection from 192.168.30.10, port 59062
+[  5]   3.00-4.00   sec   113 MBytes   945 Mbits/sec    0    368 KBytes       
+[  5] local 192.168.30.9 port 5201 connected to 192.168.30.10 port 59066
+[  5]   4.00-5.00   sec   112 MBytes   937 Mbits/sec    0    368 KBytes       
+[ ID] Interval           Transfer     Bitrate
+[  5]   5.00-6.00   sec   113 MBytes   945 Mbits/sec    0    368 KBytes       
+[  5]   0.00-1.00   sec   112 MBytes   941 Mbits/sec                  (omitted)
+[  5]   6.00-7.00   sec   112 MBytes   938 Mbits/sec    0    368 KBytes       
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  (omitted)
+[  5]   1.00-1.00   sec   112 MBytes   471 Mbits/sec                  
+[  5]   1.00-2.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   2.00-3.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   3.00-4.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   4.00-5.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   5.00-6.00   sec   112 MBytes   941 Mbits/sec                  
+[  5]   6.00-7.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   7.00-8.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   8.00-9.00   sec   112 MBytes   942 Mbits/sec                  
+[  5]   9.00-10.00  sec   112 MBytes   942 Mbits/sec                  
+[  5]  10.00-10.00  sec   128 KBytes   851 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec                  receiver
+[  5]   7.00-8.00   sec   113 MBytes   945 Mbits/sec    0    368 KBytes       
+[  5]   8.00-9.00   sec   112 MBytes   938 Mbits/sec    0    368 KBytes       
+[  5]   9.00-10.00  sec   112 MBytes   939 Mbits/sec    0    368 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec    0            sender
+[  5]   0.00-10.00  sec  1.10 GBytes   942 Mbits/sec                  receiver
+
+iperf Done.
