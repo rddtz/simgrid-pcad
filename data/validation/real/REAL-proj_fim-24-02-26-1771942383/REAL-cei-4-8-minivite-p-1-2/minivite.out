@@ -1,0 +1,1289 @@
+Average time to generate 12500 random numbers using LCG (in s): 0.00105407
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Edge list is not sorted.
+Processing edges for vertex: 0, range(0, 8)
+Processing edges for vertex: 0, range(0, 5)
+Processing edges for vertex: 0, range(0, 9)
+Processing edges for vertex: 0, range(0, 8)
+Processing edges for vertex: 0, range(0, 14)
+Processing edges for vertex: 0, range(0, 6)
+Processing edges for vertex: 0, range(0, 8)
+Processing edges for vertex: 0, range(0, 9)
+
+-------------------------------------------------------
+Graph edge distribution characteristics
+-------------------------------------------------------
+Number of vertices: 50000
+Number of edges: 425796
+Maximum number of edges: 53907
+Average number of edges: 53224.5
+Expected value of X^2: 2.83304e+09
+Variance: 197382
+Standard deviation: 444.277
+-------------------------------------------------------
+Time to generate distributed graph of 50000 vertices (in s): 0.238458
+[0]constantForSecondTerm: 2.34854e-06
+Threshold: 1e-06
+[1]constantForSecondTerm: 2.34854e-06
+[3]constantForSecondTerm: 2.34854e-06
+[7]constantForSecondTerm: 2.34854e-06
+[4]constantForSecondTerm: 2.34854e-06
+[6]constantForSecondTerm: 2.34854e-06
+[5]constantForSecondTerm: 2.34854e-06
+[2]constantForSecondTerm: 2.34854e-06
+[0]Initial communication setup time before Louvain iteration (in s): 0.00187823
+Starting Louvain iteration: 0
+[1]Initial communication setup time before Louvain iteration (in s): 0.00188135
+[2]Initial communication setup time before Louvain iteration (in s): 0.00196607
+[7]Initial communication setup time before Louvain iteration (in s): 0.00192008
+[4]Initial communication setup time before Louvain iteration (in s): 0.00194395
+[6]Initial communication setup time before Louvain iteration (in s): 0.00195996
+[5]Initial communication setup time before Louvain iteration (in s): 0.00199647
+[3]Initial communication setup time before Louvain iteration (in s): 0.00189863
+[0]Total communities to receive: 253
+[1]Total communities to receive: 483
+[4]Total communities to receive: 520
+[7]Total communities to receive: 272
+[2]Total communities to receive: 509
+[5]Total communities to receive: 541
+[3]Total communities to receive: 466
+[6]Total communities to receive: 568
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000770708
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000884228
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000878279
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000868737
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000979566
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000959782
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.00097483
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.00106932
+[0]Total number of remote communities to update: 236
+[1]Total number of remote communities to update: 512
+[0]Update remote community MPI time: 8.7417e-05
+[1]Update remote community MPI time: 5.0144e-05
+[7]Total number of remote communities to update: 283
+[4]Total number of remote communities to update: 518
+[6]Total number of remote communities to update: 532
+[5]Total number of remote communities to update: 556
+[2]Total number of remote communities to update: 476
+[7]Update remote community MPI time: 9.9787e-05
+[3]Total number of remote communities to update: 499
+[3]Update remote community MPI time: 5.1665e-05
+[0]le_xx: 0, la2_x: 1.3585e+06
+[0]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[0]Reduction time: 0.000169283
+Starting Louvain iteration: 1
+[1]le_xx: 0, la2_x: 1.35453e+06
+[1]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[1]Reduction time: 0.000152793
+[6]Update remote community MPI time: 6.0341e-05
+[4]Update remote community MPI time: 0.00016807
+[2]Update remote community MPI time: 9.1578e-05
+[7]le_xx: 0, la2_x: 1.21012e+06
+[7]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[7]Reduction time: 0.000153395
+[5]Update remote community MPI time: 9.1489e-05
+[6]le_xx: 0, la2_x: 1.32373e+06
+[6]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[6]Reduction time: 0.000105708
+[4]le_xx: 0, la2_x: 1.28627e+06
+[4]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[4]Reduction time: 0.000156348
+[2]le_xx: 0, la2_x: 1.36293e+06
+[2]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[2]Reduction time: 0.000130737
+[5]le_xx: 0, la2_x: 1.34917e+06
+[5]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[5]Reduction time: 9.5547e-05
+[3]le_xx: 0, la2_x: 1.36274e+06
+[3]e_xx: 0, a2_x: 1.0608e+07, currMod: 5.851e-05
+[3]Reduction time: 0.000212912
+[0]Total communities to receive: 200
+[1]Total communities to receive: 304
+[2]Total communities to receive: 302
+[6]Total communities to receive: 387
+[7]Total communities to receive: 118
+[5]Total communities to receive: 327
+[3]Total communities to receive: 298
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.00059043
+[4]Total communities to receive: 340
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000697291
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000642557
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000747786
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000702891
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000736291
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000657107
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000719864
+[0]Total number of remote communities to update: 93
+[1]Total number of remote communities to update: 310
+[0]Update remote community MPI time: 4.4614e-05
+[1]Update remote community MPI time: 6.9805e-05
+[5]Total number of remote communities to update: 378
+[7]Total number of remote communities to update: 249
+[7]Update remote community MPI time: 4.1306e-05
+[6]Total number of remote communities to update: 314
+[2]Total number of remote communities to update: 310
+[6]Update remote community MPI time: 8.2612e-05
+[4]Total number of remote communities to update: 330
+[0]le_xx: 10137, la2_x: 3.52334e+06
+[0]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[0]Reduction time: 0.000163274
+Starting Louvain iteration: 2
+[1]le_xx: 10062, la2_x: 3.69822e+06
+[1]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[1]Reduction time: 0.000126133
+[3]Total number of remote communities to update: 292
+[7]le_xx: 9413, la2_x: 3.20084e+06
+[5]Update remote community MPI time: 5.5766e-05
+[2]Update remote community MPI time: 5.8534e-05
+[6]le_xx: 10018, la2_x: 3.4144e+06
+[6]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[6]Reduction time: 0.000108764
+[4]Update remote community MPI time: 9.8205e-05
+[3]Update remote community MPI time: 5.8396e-05
+[7]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[7]Reduction time: 0.000174387
+[4]le_xx: 9392, la2_x: 3.61429e+06
+[4]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[4]Reduction time: 9.6502e-05
+[3]le_xx: 10132, la2_x: 3.44894e+06
+[5]le_xx: 9926, la2_x: 3.55568e+06
+[5]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[5]Reduction time: 0.000158259
+[2]le_xx: 10110, la2_x: 3.67798e+06
+[2]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[2]Reduction time: 0.000138859
+[3]e_xx: 79190, a2_x: 2.81337e+07, currMod: 0.185826
+[3]Reduction time: 0.000123316
+[1]Total communities to receive: 193
+[0]Total communities to receive: 108
+[6]Total communities to receive: 195
+[2]Total communities to receive: 174
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000494039
+[7]Total communities to receive: 75
+[4]Total communities to receive: 191
+[5]Total communities to receive: 179
+[3]Total communities to receive: 159
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000592264
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000560323
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.00062305
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000569244
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000616794
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000624045
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000601411
+[1]Total number of remote communities to update: 175
+[0]Total number of remote communities to update: 67
+[2]Total number of remote communities to update: 188
+[1]Update remote community MPI time: 8.1286e-05
+[0]Update remote community MPI time: 2.4389e-05
+[7]Total number of remote communities to update: 124
+[5]Total number of remote communities to update: 197
+[3]Total number of remote communities to update: 172
+[6]Total number of remote communities to update: 191
+[4]Total number of remote communities to update: 160
+[2]Update remote community MPI time: 0.000142575
+[7]Update remote community MPI time: 9.9474e-05
+[6]Update remote community MPI time: 5.8904e-05
+[3]Update remote community MPI time: 0.000116552
+[1]le_xx: 25659, la2_x: 5.15519e+06
+[1]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[1]Reduction time: 0.000200951
+[0]le_xx: 25254, la2_x: 4.9791e+06
+[0]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[0]Reduction time: 0.000190111
+Starting Louvain iteration: 3
+[5]Update remote community MPI time: 0.000108196
+[6]le_xx: 24962, la2_x: 4.7172e+06
+[6]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[6]Reduction time: 0.000136716
+[4]Update remote community MPI time: 4.63e-05
+[7]le_xx: 24201, la2_x: 4.54571e+06
+[7]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[7]Reduction time: 0.000173525
+[2]le_xx: 26055, la2_x: 5.25562e+06
+[2]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[2]Reduction time: 0.000167612
+[4]le_xx: 25014, la2_x: 5.12023e+06
+[4]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[3]le_xx: 24886, la2_x: 4.82851e+06
+[3]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[3]Reduction time: 0.000128861
+[5]le_xx: 25143, la2_x: 5.10944e+06
+[5]e_xx: 201174, a2_x: 3.9711e+07, currMod: 0.472247
+[5]Reduction time: 0.000145868
+[4]Reduction time: 0.000129973
+[1]Total communities to receive: 145
+[0]Total communities to receive: 89
+[2]Total communities to receive: 131
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000503343
+[6]Total communities to receive: 155
+[7]Total communities to receive: 60
+[3]Total communities to receive: 139
+[5]Total communities to receive: 145
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000584041
+[4]Total communities to receive: 138
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000581048
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000600299
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000644626
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000573035
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000614715
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000622901
+[0]Total number of remote communities to update: 50
+[0]Update remote community MPI time: 3.5221e-05
+[1]Total number of remote communities to update: 139
+[1]Update remote community MPI time: 4.6622e-05
+[4]Total number of remote communities to update: 138
+[7]Total number of remote communities to update: 96
+[2]Total number of remote communities to update: 149
+[6]Total number of remote communities to update: 152
+[5]Total number of remote communities to update: 151
+[3]Total number of remote communities to update: 127
+[7]Update remote community MPI time: 3.9081e-05
+[0]le_xx: 32718, la2_x: 5.90894e+06
+[0]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[0]Reduction time: 0.000165195
+Starting Louvain iteration: 4
+[1]le_xx: 32926, la2_x: 6.0529e+06
+[1]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[1]Reduction time: 0.000174254
+[6]Update remote community MPI time: 9.3567e-05
+[5]Update remote community MPI time: 5.2843e-05
+[2]Update remote community MPI time: 8.1957e-05
+[6]le_xx: 32092, la2_x: 5.6052e+06
+[6]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[6]Reduction time: 5.7975e-05
+[4]Update remote community MPI time: 0.000174553
+[3]Update remote community MPI time: 5.8715e-05
+[4]le_xx: 32759, la2_x: 6.03856e+06
+[4]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[4]Reduction time: 8.1877e-05
+[2]le_xx: 33776, la2_x: 6.31192e+06
+[2]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[2]Reduction time: 0.000139825
+[7]le_xx: 32040, la2_x: 5.40897e+06
+[7]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[7]Reduction time: 0.000150116
+[5]le_xx: 32622, la2_x: 6.02065e+06
+[5]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[5]Reduction time: 0.000105005
+[3]le_xx: 32443, la2_x: 5.71476e+06
+[3]e_xx: 261376, a2_x: 4.70619e+07, currMod: 0.613593
+[3]Reduction time: 0.000138655
+[0]Total communities to receive: 79
+[1]Total communities to receive: 132
+[6]Total communities to receive: 135
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000464875
+[7]Total communities to receive: 55
+[5]Total communities to receive: 116
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.00049811
+[4]Total communities to receive: 126
+[2]Total communities to receive: 109
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000517659
+[3]Total communities to receive: 121
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.00060257
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000545578
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.00055755
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000556498
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000613067
+[0]Total number of remote communities to update: 49
+[0]Update remote community MPI time: 3.3155e-05
+[1]Total number of remote communities to update: 122
+[1]Update remote community MPI time: 4.6834e-05
+[7]Total number of remote communities to update: 82
+[4]Total number of remote communities to update: 118
+[6]Total number of remote communities to update: 126
+[2]Total number of remote communities to update: 131
+[7]Update remote community MPI time: 8.645e-05
+[5]Total number of remote communities to update: 138
+[3]Total number of remote communities to update: 107
+[6]Update remote community MPI time: 5.3782e-05
+[4]Update remote community MPI time: 0.000163151
+[2]Update remote community MPI time: 7.9885e-05
+[0]le_xx: 36503, la2_x: 6.55187e+06
+[0]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[0]Reduction time: 0.000182611
+Starting Louvain iteration: 5
+[1]le_xx: 36350, la2_x: 6.52427e+06
+[1]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[1]Reduction time: 0.000195877
+[3]Update remote community MPI time: 5.2747e-05
+[6]le_xx: 35809, la2_x: 6.16411e+06
+[6]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[6]Reduction time: 8.3702e-05
+[5]Update remote community MPI time: 7.7855e-05
+[7]le_xx: 35635, la2_x: 6.0067e+06
+[7]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[7]Reduction time: 0.000136122
+[4]le_xx: 36166, la2_x: 6.59231e+06
+[4]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[4]Reduction time: 9.5121e-05
+[2]le_xx: 37631, la2_x: 6.86423e+06
+[2]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[2]Reduction time: 0.000170794
+[5]le_xx: 36294, la2_x: 6.55869e+06
+[5]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[5]Reduction time: 8.142e-05
+[3]le_xx: 36124, la2_x: 6.25594e+06
+[3]e_xx: 290512, a2_x: 5.15181e+07, currMod: 0.681996
+[3]Reduction time: 0.000177317
+[0]Total communities to receive: 76
+[1]Total communities to receive: 116
+[7]Total communities to receive: 52
+[2]Total communities to receive: 116
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000487982
+[6]Total communities to receive: 126
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000522564
+[5]Total communities to receive: 106
+[3]Total communities to receive: 112
+[4]Total communities to receive: 114
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000543605
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000559088
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000620821
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000603113
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000556683
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000633206
+[0]Total number of remote communities to update: 42
+[0]Update remote community MPI time: 3.4405e-05
+[1]Total number of remote communities to update: 122
+[1]Update remote community MPI time: 4.2854e-05
+[4]Total number of remote communities to update: 105
+[2]Total number of remote communities to update: 120
+[5]Total number of remote communities to update: 126
+[3]Total number of remote communities to update: 108
+[7]Total number of remote communities to update: 76
+[6]Total number of remote communities to update: 119
+[6]Update remote community MPI time: 4.6969e-05
+[4]Update remote community MPI time: 0.000166941
+[0]le_xx: 38543, la2_x: 6.95974e+06
+[0]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[0]Reduction time: 0.000167861
+[7]Update remote community MPI time: 8.5721e-05
+[2]Update remote community MPI time: 8.4888e-05
+[1]le_xx: 38112, la2_x: 6.79759e+06
+[1]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[1]Reduction time: 0.000190452
+Starting Louvain iteration: 6
+[5]Update remote community MPI time: 7.79e-05
+[3]Update remote community MPI time: 5.3626e-05
+[6]le_xx: 37815, la2_x: 6.5256e+06
+[6]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[6]Reduction time: 8.4186e-05
+[4]le_xx: 38167, la2_x: 6.9484e+06
+[4]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[4]Reduction time: 8.1326e-05
+[2]le_xx: 39207, la2_x: 7.19436e+06
+[2]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[2]Reduction time: 0.000163862
+[5]le_xx: 38218, la2_x: 6.89162e+06
+[5]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[5]Reduction time: 7.9945e-05
+[3]le_xx: 38048, la2_x: 6.60065e+06
+[3]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[7]le_xx: 37606, la2_x: 6.36656e+06
+[7]e_xx: 305716, a2_x: 5.42845e+07, currMod: 0.717688
+[7]Reduction time: 0.000115519
+[3]Reduction time: 0.000172754
+[1]Total communities to receive: 110
+[0]Total communities to receive: 72
+[7]Total communities to receive: 52
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000499329
+[2]Total communities to receive: 113
+[6]Total communities to receive: 116
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000536503
+[5]Total communities to receive: 103
+[3]Total communities to receive: 112
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000541026
+[4]Total communities to receive: 109
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000604699
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000539842
+[5]Remote community map size: 556
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000536184
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.00060789
+[5]Iteration communication time: 0.000582752
+[0]Total number of remote communities to update: 41
+[0]Update remote community MPI time: 3.1737e-05
+[1]Total number of remote communities to update: 118
+[1]Update remote community MPI time: 4.3058e-05
+[4]Total number of remote communities to update: 104
+[5]Total number of remote communities to update: 119
+[2]Total number of remote communities to update: 117
+[6]Total number of remote communities to update: 115
+[3]Total number of remote communities to update: 103
+[7]Total number of remote communities to update: 70
+[7]Update remote community MPI time: 4.0123e-05
+[4]Update remote community MPI time: 0.00017403
+[2]Update remote community MPI time: 8.2452e-05
+[0]le_xx: 39494, la2_x: 7.19077e+06
+[0]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[0]Reduction time: 0.000175143
+Starting Louvain iteration: 7
+[1]le_xx: 39053, la2_x: 6.92908e+06
+[1]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[1]Reduction time: 0.00019519
+[6]Update remote community MPI time: 9.4262e-05
+[5]Update remote community MPI time: 5.5257e-05
+[3]Update remote community MPI time: 5.84e-05
+[2]le_xx: 40116, la2_x: 7.36e+06
+[2]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[2]Reduction time: 0.000146556
+[6]le_xx: 38878, la2_x: 6.71524e+06
+[6]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[6]Reduction time: 6.3093e-05
+[4]le_xx: 39256, la2_x: 7.1752e+06
+[4]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[4]Reduction time: 9.203e-05
+[7]le_xx: 38879, la2_x: 6.55053e+06
+[7]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[5]le_xx: 39173, la2_x: 7.07344e+06
+[5]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[5]Reduction time: 0.000104646
+[3]le_xx: 39227, la2_x: 6.79655e+06
+[3]e_xx: 314076, a2_x: 5.57908e+07, currMod: 0.737313
+[3]Reduction time: 0.000142131
+[7]Reduction time: 0.0001552
+[0]Total communities to receive: 71
+[1]Total communities to receive: 108
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000460192
+[6]Total communities to receive: 119
+[7]Total communities to receive: 50
+[5]Total communities to receive: 96
+[3]Total communities to receive: 108
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000490594
+[4]Total communities to receive: 110
+[2]Total communities to receive: 114
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000524859
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000593969
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000549472
+[3]Remote community map size: 499
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000552553
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000590035
+[3]Iteration communication time: 0.000549855
+[0]Total number of remote communities to update: 40
+[1]Total number of remote communities to update: 118
+[0]Update remote community MPI time: 3.3463e-05
+[1]Update remote community MPI time: 4.2421e-05
+[4]Total number of remote communities to update: 99
+[2]Total number of remote communities to update: 113
+[5]Total number of remote communities to update: 120
+[3]Total number of remote communities to update: 103
+[7]Total number of remote communities to update: 73
+[7]Update remote community MPI time: 4.1655e-05
+[6]Total number of remote communities to update: 110
+[2]Update remote community MPI time: 8.322e-05
+[6]Update remote community MPI time: 9.5691e-05
+[4]Update remote community MPI time: 0.000161509
+[0]le_xx: 40058, la2_x: 7.28554e+06
+[0]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[0]Reduction time: 0.000189136
+Starting Louvain iteration: 8
+[1]le_xx: 39487, la2_x: 7.07861e+06
+[1]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[1]Reduction time: 0.000194137
+[6]le_xx: 39425, la2_x: 6.82765e+06
+[6]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[6]Reduction time: 5.5779e-05
+[5]Update remote community MPI time: 6.1336e-05
+[3]Update remote community MPI time: 4.8039e-05
+[7]le_xx: 39493, la2_x: 6.6359e+06
+[7]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[7]Reduction time: 0.000144458
+[4]le_xx: 39855, la2_x: 7.30357e+06
+[4]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[4]Reduction time: 0.000103219
+[2]le_xx: 40561, la2_x: 7.45928e+06
+[2]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[2]Reduction time: 0.000141112
+[5]le_xx: 39642, la2_x: 7.16569e+06
+[5]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[5]Reduction time: 0.000102133
+[3]le_xx: 39791, la2_x: 6.93492e+06
+[3]e_xx: 318312, a2_x: 5.66911e+07, currMod: 0.747257
+[3]Reduction time: 0.000137889
+[1]Total communities to receive: 109
+[0]Total communities to receive: 68
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000464684
+[2]Total communities to receive: 111
+[6]Total communities to receive: 114
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000507179
+[7]Total communities to receive: 50
+[3]Total communities to receive: 106
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000551453
+[4]Total communities to receive: 108
+[5]Total communities to receive: 94
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000617554
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000544182
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000554872
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000582496
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000586846
+[1]Total number of remote communities to update: 114
+[0]Total number of remote communities to update: 41
+[1]Update remote community MPI time: 4.1639e-05
+[0]Update remote community MPI time: 3.1245e-05
+[4]Total number of remote communities to update: 97
+[2]Total number of remote communities to update: 113
+[5]Total number of remote communities to update: 115
+[6]Total number of remote communities to update: 108
+[7]Total number of remote communities to update: 70
+[7]Update remote community MPI time: 4.2695e-05
+[3]Total number of remote communities to update: 102
+[6]Update remote community MPI time: 8.6314e-05
+[1]le_xx: 39828, la2_x: 7.20161e+06
+[1]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[1]Reduction time: 0.000190523
+[0]le_xx: 40319, la2_x: 7.35932e+06
+[0]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[0]Reduction time: 0.000172609
+Starting Louvain iteration: 9
+[4]Update remote community MPI time: 0.000174726
+[3]Update remote community MPI time: 4.2774e-05
+[7]le_xx: 39746, la2_x: 6.69662e+06
+[7]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[7]Reduction time: 0.000136037
+[5]Update remote community MPI time: 5.1573e-05
+[2]Update remote community MPI time: 9.5623e-05
+[6]le_xx: 39694, la2_x: 6.89653e+06
+[6]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[6]Reduction time: 7.0542e-05
+[4]le_xx: 40124, la2_x: 7.42297e+06
+[2]le_xx: 40839, la2_x: 7.544e+06
+[2]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[2]Reduction time: 0.000135426
+[5]le_xx: 39928, la2_x: 7.25249e+06
+[5]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[5]Reduction time: 0.000111411
+[3]le_xx: 40178, la2_x: 6.98939e+06
+[3]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[3]Reduction time: 0.000123888
+[4]e_xx: 320656, a2_x: 5.73629e+07, currMod: 0.752758
+[4]Reduction time: 8.4971e-05
+[1]Total communities to receive: 109
+[0]Total communities to receive: 68
+[7]Total communities to receive: 47
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000470234
+[6]Total communities to receive: 115
+[3]Total communities to receive: 105
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000491606
+[5]Total communities to receive: 94
+[2]Total communities to receive: 110
+[4]Total communities to receive: 108
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000527708
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000552245
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000555369
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000591951
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000570086
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000558814
+[0]Total number of remote communities to update: 40
+[1]Total number of remote communities to update: 114
+[4]Total number of remote communities to update: 98
+[0]Update remote community MPI time: 7.2784e-05
+[1]Update remote community MPI time: 3.129e-05
+[2]Total number of remote communities to update: 112
+[3]Total number of remote communities to update: 101
+[5]Total number of remote communities to update: 115
+[7]Total number of remote communities to update: 71
+[7]Update remote community MPI time: 4.0551e-05
+[4]Update remote community MPI time: 0.000169896
+[3]Update remote community MPI time: 4.3181e-05
+[0]le_xx: 40525, la2_x: 7.38676e+06
+[0]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[0]Reduction time: 0.000136122
+Starting Louvain iteration: 10
+[1]le_xx: 40089, la2_x: 7.24265e+06
+[1]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[1]Reduction time: 0.000138177
+[6]Total number of remote communities to update: 105
+[5]Update remote community MPI time: 5.1545e-05
+[6]Update remote community MPI time: 8.7152e-05
+[2]Update remote community MPI time: 0.000132327
+[7]le_xx: 39919, la2_x: 6.72006e+06
+[7]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[7]Reduction time: 0.000141516
+[4]le_xx: 40306, la2_x: 7.49474e+06
+[4]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[4]Reduction time: 0.000113743
+[2]le_xx: 41050, la2_x: 7.58142e+06
+[2]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[2]Reduction time: 8.7135e-05
+[6]le_xx: 39923, la2_x: 6.94176e+06
+[6]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[6]Reduction time: 7.7886e-05
+[5]le_xx: 40099, la2_x: 7.2932e+06
+[5]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[5]Reduction time: 0.000119339
+[3]le_xx: 40361, la2_x: 7.01275e+06
+[3]e_xx: 322272, a2_x: 5.76733e+07, currMod: 0.756551
+[3]Reduction time: 0.0001234
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[7]Total communities to receive: 47
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000473964
+[2]Total communities to receive: 109
+[6]Total communities to receive: 111
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000518483
+[4]Total communities to receive: 109
+[3]Total communities to receive: 106
+[5]Total communities to receive: 94
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000566573
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000549763
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000605922
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000557345
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000564423
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000581782
+[0]Total number of remote communities to update: 41
+[1]Total number of remote communities to update: 113
+[0]Update remote community MPI time: 3.0773e-05
+[1]Update remote community MPI time: 4.8611e-05
+[4]Total number of remote communities to update: 97
+[2]Total number of remote communities to update: 110
+[7]Total number of remote communities to update: 69
+[5]Total number of remote communities to update: 113
+[3]Total number of remote communities to update: 102
+[6]Total number of remote communities to update: 105
+[6]Update remote community MPI time: 4.0897e-05
+[4]Update remote community MPI time: 0.000163405
+[0]le_xx: 40582, la2_x: 7.42041e+06
+[0]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[0]Reduction time: 0.000170328
+Starting Louvain iteration: 11
+[1]le_xx: 40194, la2_x: 7.25452e+06
+[1]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[1]Reduction time: 0.00016852
+[7]Update remote community MPI time: 9.2388e-05
+[3]Update remote community MPI time: 5.2206e-05
+[7]le_xx: 39983, la2_x: 6.73066e+06
+[7]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[5]Update remote community MPI time: 8.7761e-05
+[2]Update remote community MPI time: 9.2513e-05
+[6]le_xx: 40050, la2_x: 6.96575e+06
+[6]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[6]Reduction time: 0.000102843
+[4]le_xx: 40458, la2_x: 7.53093e+06
+[4]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[4]Reduction time: 8.7146e-05
+[2]le_xx: 41112, la2_x: 7.61524e+06
+[2]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[7]Reduction time: 0.000115132
+[5]le_xx: 40179, la2_x: 7.3118e+06
+[5]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[5]Reduction time: 8.0307e-05
+[3]le_xx: 40444, la2_x: 7.02258e+06
+[3]e_xx: 323002, a2_x: 5.78519e+07, currMod: 0.758265
+[3]Reduction time: 0.00014717
+[2]Reduction time: 0.000154036
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[2]Total communities to receive: 110
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000482986
+[7]Total communities to receive: 47
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000515132
+[6]Total communities to receive: 112
+[4]Total communities to receive: 108
+[3]Total communities to receive: 104
+[5]Total communities to receive: 92
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000560069
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000528424
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.00060259
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000562131
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000613275
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000596906
+[0]Total number of remote communities to update: 40
+[0]Update remote community MPI time: 3.6782e-05
+[1]Total number of remote communities to update: 114
+[1]Update remote community MPI time: 4.1085e-05
+[4]Total number of remote communities to update: 96
+[2]Total number of remote communities to update: 109
+[7]Total number of remote communities to update: 71
+[6]Total number of remote communities to update: 104
+[5]Total number of remote communities to update: 111
+[0]le_xx: 40681, la2_x: 7.42694e+06
+[0]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[0]Reduction time: 0.000166418
+Starting Louvain iteration: 12
+[1]le_xx: 40230, la2_x: 7.27416e+06
+[1]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[1]Reduction time: 0.000176866
+[7]Update remote community MPI time: 8.4873e-05
+[3]Total number of remote communities to update: 102
+[6]Update remote community MPI time: 4.8591e-05
+[4]Update remote community MPI time: 0.000159263
+[2]Update remote community MPI time: 9.3186e-05
+[6]le_xx: 40137, la2_x: 6.98024e+06
+[6]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[6]Reduction time: 7.9439e-05
+[5]Update remote community MPI time: 7.1435e-05
+[3]Update remote community MPI time: 4.9594e-05
+[7]le_xx: 40002, la2_x: 6.73774e+06
+[7]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[7]Reduction time: 0.000117231
+[4]le_xx: 40490, la2_x: 7.54177e+06
+[4]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[4]Reduction time: 8.8008e-05
+[2]le_xx: 41178, la2_x: 7.6173e+06
+[5]le_xx: 40212, la2_x: 7.30587e+06
+[5]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[5]Reduction time: 0.000117416
+[2]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[2]Reduction time: 0.000150239
+[3]le_xx: 40454, la2_x: 7.03216e+06
+[3]e_xx: 323384, a2_x: 5.79162e+07, currMod: 0.759162
+[3]Reduction time: 0.000146409
+[1]Total communities to receive: 106
+[0]Total communities to receive: 68
+[7]Total communities to receive: 47
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000481005
+[2]Total communities to receive: 109
+[6]Total communities to receive: 110
+[5]Total communities to receive: 93
+[3]Total communities to receive: 106
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000533024
+[4]Total communities to receive: 108
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000527209
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000589189
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.00053684
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000538199
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000546392
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000597903
+[0]Total number of remote communities to update: 41
+[0]Update remote community MPI time: 7.2802e-05
+[1]Total number of remote communities to update: 113
+[1]Update remote community MPI time: 3.1827e-05
+[4]Total number of remote communities to update: 97
+[7]Total number of remote communities to update: 69
+[7]Update remote community MPI time: 3.982e-05
+[5]Total number of remote communities to update: 111
+[2]Total number of remote communities to update: 110
+[0]le_xx: 40698, la2_x: 7.44264e+06
+[0]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[0]Reduction time: 0.000122367
+[6]Total number of remote communities to update: 104
+[5]Update remote community MPI time: 5.1158e-05
+[3]Total number of remote communities to update: 102
+[1]le_xx: 40249, la2_x: 7.28818e+06
+[1]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[1]Reduction time: 0.000138852
+Starting Louvain iteration: 13
+[6]Update remote community MPI time: 8.9511e-05
+[4]Update remote community MPI time: 0.000176609
+[2]Update remote community MPI time: 0.000129366
+[7]le_xx: 40007, la2_x: 6.74329e+06
+[7]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[7]Reduction time: 0.00013812
+[5]le_xx: 40229, la2_x: 7.30845e+06
+[5]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[3]Update remote community MPI time: 4.3348e-05
+[6]le_xx: 40147, la2_x: 7.00559e+06
+[6]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[6]Reduction time: 7.6312e-05
+[4]le_xx: 40515, la2_x: 7.56542e+06
+[4]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[4]Reduction time: 0.000101722
+[2]le_xx: 41195, la2_x: 7.62835e+06
+[2]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[2]Reduction time: 0.000100544
+[3]le_xx: 40480, la2_x: 7.03973e+06
+[3]e_xx: 323520, a2_x: 5.80217e+07, currMod: 0.75948
+[3]Reduction time: 0.000120792
+[5]Reduction time: 0.000115981
+[1]Total communities to receive: 106
+[0]Total communities to receive: 68
+[7]Total communities to receive: 47
+[6]Total communities to receive: 112
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000489572
+[5]Total communities to receive: 91
+[3]Total communities to receive: 104
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000508385
+[2]Total communities to receive: 110
+[4]Total communities to receive: 108
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000555036
+[6]Remote community map size: 532
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000551018
+[6]Iteration communication time: 0.000591293
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000553386
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000577673
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000585865
+[0]Total number of remote communities to update: 40
+[0]Update remote community MPI time: 7.0907e-05
+[1]Total number of remote communities to update: 114
+[1]Update remote community MPI time: 3.1731e-05
+[4]Total number of remote communities to update: 95
+[2]Total number of remote communities to update: 109
+[7]Total number of remote communities to update: 71
+[7]Update remote community MPI time: 4.0209e-05
+[5]Total number of remote communities to update: 111
+[3]Total number of remote communities to update: 102
+[6]Total number of remote communities to update: 104
+[0]le_xx: 40731, la2_x: 7.44351e+06
+[0]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[0]Reduction time: 0.000134766
+Starting Louvain iteration: 14
+[1]le_xx: 40318, la2_x: 7.29917e+06
+[1]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[1]Reduction time: 0.000143374
+[6]Update remote community MPI time: 9.5559e-05
+[4]Update remote community MPI time: 0.000168113
+[2]Update remote community MPI time: 0.000125124
+[6]le_xx: 40221, la2_x: 7.00986e+06
+[6]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[6]Reduction time: 7.708e-05
+[5]Update remote community MPI time: 4.5175e-05
+[3]Update remote community MPI time: 4.3471e-05
+[7]le_xx: 40024, la2_x: 6.74413e+06
+[7]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[7]Reduction time: 0.00015268
+[4]le_xx: 40524, la2_x: 7.57976e+06
+[4]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[4]Reduction time: 8.5771e-05
+[2]le_xx: 41222, la2_x: 7.62455e+06
+[2]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[2]Reduction time: 0.000124767
+[5]le_xx: 40240, la2_x: 7.30874e+06
+[5]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[5]Reduction time: 0.000106112
+[3]le_xx: 40484, la2_x: 7.04284e+06
+[3]e_xx: 323764, a2_x: 5.80526e+07, currMod: 0.760053
+[3]Reduction time: 0.000138224
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[2]Total communities to receive: 109
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000479726
+[7]Total communities to receive: 47
+[5]Total communities to receive: 92
+[6]Total communities to receive: 110
+[3]Total communities to receive: 106
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000549629
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000536604
+[4]Total communities to receive: 108
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000539664
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000615097
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000567869
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.00058119
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000593002
+[0]Total number of remote communities to update: 41
+[0]Update remote community MPI time: 3.3877e-05
+[1]Total number of remote communities to update: 113
+[1]Update remote community MPI time: 3.7415e-05
+[2]Total number of remote communities to update: 110
+[7]Total number of remote communities to update: 69
+[5]Total number of remote communities to update: 111
+[3]Total number of remote communities to update: 102
+[6]Total number of remote communities to update: 104
+[2]Update remote community MPI time: 0.000143627
+[6]Update remote community MPI time: 4.5125e-05
+[4]Total number of remote communities to update: 96
+[3]Update remote community MPI time: 9.6591e-05
+[0]le_xx: 40724, la2_x: 7.4501e+06
+[0]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[0]Reduction time: 0.000218364
+Starting Louvain iteration: 15
+[1]le_xx: 40343, la2_x: 7.29732e+06
+[1]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[1]Reduction time: 0.000256154
+[7]Update remote community MPI time: 8.2433e-05
+[5]Update remote community MPI time: 9.4417e-05
+[6]le_xx: 40198, la2_x: 7.02261e+06
+[6]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[4]Update remote community MPI time: 3.6512e-05
+[2]le_xx: 41219, la2_x: 7.63195e+06
+[2]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[2]Reduction time: 0.000141888
+[7]le_xx: 40019, la2_x: 6.74329e+06
+[7]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[7]Reduction time: 0.000160254
+[6]Reduction time: 0.000145014
+[5]le_xx: 40247, la2_x: 7.31406e+06
+[5]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[5]Reduction time: 0.000135274
+[3]le_xx: 40500, la2_x: 7.04102e+06
+[3]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[3]Reduction time: 0.000120305
+[4]le_xx: 40556, la2_x: 7.59135e+06
+[4]e_xx: 323806, a2_x: 5.80917e+07, currMod: 0.760152
+[4]Reduction time: 0.000137659
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[2]Total communities to receive: 110
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000485263
+[7]Total communities to receive: 47
+[6]Total communities to receive: 112
+[5]Total communities to receive: 91
+[3]Total communities to receive: 104
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000511044
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000544974
+[4]Total communities to receive: 108
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000585475
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000544826
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.00056157
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000555354
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000552609
+[0]Total number of remote communities to update: 40
+[0]Update remote community MPI time: 3.6152e-05
+[1]Total number of remote communities to update: 114
+[1]Update remote community MPI time: 3.6736e-05
+[2]Total number of remote communities to update: 109
+[7]Total number of remote communities to update: 71
+[5]Total number of remote communities to update: 111
+[3]Total number of remote communities to update: 102
+[6]Total number of remote communities to update: 104
+[6]Update remote community MPI time: 3.4116e-05
+[2]Update remote community MPI time: 0.000139691
+[7]Update remote community MPI time: 8.6093e-05
+[4]Total number of remote communities to update: 95
+[0]le_xx: 40749, la2_x: 7.44711e+06
+[0]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[0]Reduction time: 0.00021061
+Starting Louvain iteration: 16
+[1]le_xx: 40356, la2_x: 7.30103e+06
+[1]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[1]Reduction time: 0.000225103
+[5]Update remote community MPI time: 9.2438e-05
+[3]Update remote community MPI time: 9.6628e-05
+[6]le_xx: 40226, la2_x: 7.04479e+06
+[6]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[6]Reduction time: 0.000144378
+[4]Update remote community MPI time: 3.7241e-05
+[2]le_xx: 41230, la2_x: 7.6272e+06
+[2]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[2]Reduction time: 0.000133293
+[3]le_xx: 40486, la2_x: 7.0428e+06
+[3]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[3]Reduction time: 9.823e-05
+[7]le_xx: 40024, la2_x: 6.74413e+06
+[7]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[7]Reduction time: 0.000153723
+[4]le_xx: 40562, la2_x: 7.59135e+06
+[4]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[4]Reduction time: 0.000134078
+[5]le_xx: 40267, la2_x: 7.31322e+06
+[5]e_xx: 323900, a2_x: 5.81116e+07, currMod: 0.760372
+[5]Reduction time: 0.000152323
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[0]Remote community map size: 236
+[4]Total communities to receive: 108
+[2]Total communities to receive: 109
+[0]Iteration communication time: 0.000500243
+[7]Total communities to receive: 47
+[6]Total communities to receive: 110
+[5]Total communities to receive: 91
+[3]Total communities to receive: 106
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000594003
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000607124
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000618526
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000636027
+[3]Remote community map size: 499
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000629554
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000603425
+[3]Iteration communication time: 0.000643918
+[0]Total number of remote communities to update: 41
+[0]Update remote community MPI time: 3.3345e-05
+[1]Total number of remote communities to update: 113
+[1]Update remote community MPI time: 3.5903e-05
+[2]Total number of remote communities to update: 110
+[7]Total number of remote communities to update: 69
+[7]Update remote community MPI time: 4.0414e-05
+[6]Total number of remote communities to update: 103
+[4]Total number of remote communities to update: 96
+[3]Total number of remote communities to update: 102
+[6]Update remote community MPI time: 8.7175e-05
+[5]Total number of remote communities to update: 111
+[2]Update remote community MPI time: 0.000143232
+[0]le_xx: 40738, la2_x: 7.45463e+06
+[0]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[0]Reduction time: 0.000192443
+Starting Louvain iteration: 17
+[1]le_xx: 40343, la2_x: 7.29732e+06
+[1]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[1]Reduction time: 0.000207779
+[5]Update remote community MPI time: 4.881e-05
+[3]Update remote community MPI time: 6.7e-05
+[6]le_xx: 40228, la2_x: 7.0454e+06
+[6]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[6]Reduction time: 0.000123718
+[4]Update remote community MPI time: 9.4603e-05
+[3]le_xx: 40502, la2_x: 7.04053e+06
+[3]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[7]le_xx: 40019, la2_x: 6.74329e+06
+[7]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[7]Reduction time: 0.00018495
+[5]le_xx: 40271, la2_x: 7.31924e+06
+[2]le_xx: 41225, la2_x: 7.63617e+06
+[2]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[2]Reduction time: 0.000148568
+[3]Reduction time: 0.000114595
+[4]le_xx: 40582, la2_x: 7.5979e+06
+[4]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[4]Reduction time: 9.1232e-05
+[5]e_xx: 323908, a2_x: 5.81345e+07, currMod: 0.760391
+[5]Reduction time: 0.000155523
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[7]Total communities to receive: 47
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.000485167
+[6]Total communities to receive: 112
+[2]Total communities to receive: 110
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000547648
+[4]Total communities to receive: 108
+[3]Total communities to receive: 104
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.00054535
+[5]Total communities to receive: 90
+[6]Remote community map size: 532
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000535759
+[6]Iteration communication time: 0.000583362
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000589458
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000577757
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000596147
+[0]Total number of remote communities to update: 40
+[0]Update remote community MPI time: 3.5161e-05
+[1]Total number of remote communities to update: 114
+[1]Update remote community MPI time: 4.0722e-05
+[7]Total number of remote communities to update: 71
+[5]Total number of remote communities to update: 111
+[6]Total number of remote communities to update: 103
+[4]Total number of remote communities to update: 95
+[4]Update remote community MPI time: 4.2226e-05
+[2]Total number of remote communities to update: 109
+[0]le_xx: 40775, la2_x: 7.45119e+06
+[0]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[0]Reduction time: 0.000178179
+Starting Louvain iteration: 18
+[1]le_xx: 40356, la2_x: 7.30103e+06
+[1]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[1]Reduction time: 0.000190826
+[7]Update remote community MPI time: 3.4448e-05
+[5]Update remote community MPI time: 8.3513e-05
+[3]Total number of remote communities to update: 102
+[6]Update remote community MPI time: 5.549e-05
+[2]Update remote community MPI time: 7.6545e-05
+[3]Update remote community MPI time: 0.000150099
+[6]le_xx: 40253, la2_x: 7.04399e+06
+[6]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[6]Reduction time: 0.000122544
+[2]le_xx: 41242, la2_x: 7.62995e+06
+[2]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[2]Reduction time: 0.000153871
+[7]le_xx: 40024, la2_x: 6.74413e+06
+[7]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[7]Reduction time: 0.000187514
+[4]le_xx: 40572, la2_x: 7.592e+06
+[4]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[5]le_xx: 40276, la2_x: 7.31636e+06
+[5]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[5]Reduction time: 0.000149314
+[3]le_xx: 40486, la2_x: 7.0428e+06
+[3]e_xx: 323984, a2_x: 5.81215e+07, currMod: 0.76057
+[4]Reduction time: 0.000132645
+[3]Reduction time: 9.2369e-05
+[0]Total communities to receive: 68
+[1]Total communities to receive: 106
+[6]Total communities to receive: 110
+[3]Total communities to receive: 106
+[0]Remote community map size: 236
+[0]Iteration communication time: 0.00055725
+[7]Total communities to receive: 47
+[1]Remote community map size: 512
+[1]Iteration communication time: 0.000580909
+[5]Total communities to receive: 91
+[2]Total communities to receive: 109
+[7]Remote community map size: 283
+[7]Iteration communication time: 0.000591616
+[4]Total communities to receive: 108
+[2]Remote community map size: 476
+[2]Iteration communication time: 0.000653965
+[6]Remote community map size: 532
+[6]Iteration communication time: 0.000708889
+[5]Remote community map size: 556
+[5]Iteration communication time: 0.000639062
+[3]Remote community map size: 499
+[3]Iteration communication time: 0.000664607
+[4]Remote community map size: 518
+[4]Iteration communication time: 0.000660304
+[0]Total number of remote communities to update: 41
+[0]Update remote community MPI time: 3.4728e-05
+[1]Total number of remote communities to update: 113
+[1]Update remote community MPI time: 4.1489e-05
+[7]Total number of remote communities to update: 69
+[2]Total number of remote communities to update: 110
+[6]Total number of remote communities to update: 103
+[5]Total number of remote communities to update: 111
+[3]Total number of remote communities to update: 102
+[7]Update remote community MPI time: 3.2212e-05
+[2]Update remote community MPI time: 8.1995e-05
+[0]le_xx: 40764, la2_x: 7.45607e+06
+[0]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[0]Reduction time: 0.000165132
+[1]le_xx: 40343, la2_x: 7.29732e+06
+[1]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[1]Reduction time: 0.000196137
+[6]Update remote community MPI time: 5.3598e-05
+[6]le_xx: 40226, la2_x: 7.0454e+06
+[6]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[6]Reduction time: 0.000142894
+[4]Total number of remote communities to update: 96
+[3]Update remote community MPI time: 8.9972e-05
+[7]le_xx: 40019, la2_x: 6.74329e+06
+[7]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[7]Reduction time: 0.000190544
+[5]Update remote community MPI time: 7.3762e-05
+[2]le_xx: 41233, la2_x: 7.63617e+06
+[2]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[2]Reduction time: 0.000157166
+[4]Update remote community MPI time: 6.9971e-05
+[3]le_xx: 40502, la2_x: 7.04053e+06
+[3]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[3]Reduction time: 9.5716e-05
+[4]le_xx: 40586, la2_x: 7.5979e+06
+[5]le_xx: 40275, la2_x: 7.31924e+06
+[5]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[5]Reduction time: 0.000162714
+[4]e_xx: 323948, a2_x: 5.81359e+07, currMod: 0.760485
+[4]Reduction time: 9.2418e-05
+-------------------------------------------------------
+64-bit datatype
+-------------------------------------------------------
+Average total time (in s), #Processes: 0.123606, 8
+Modularity, #Iterations: 0.76057, 19
+MODS (final modularity * average time): 0.094011
+-------------------------------------------------------

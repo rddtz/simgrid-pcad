@@ -1,0 +1,12 @@
+slurmstepd: error: *** JOB 760877 ON poti1 CANCELLED AT 2026-02-24T15:15:59 DUE TO TIME LIMIT ***
+--------------------------------------------------------------------------
+ORTE has lost communication with a remote daemon.
+
+  HNP daemon   : [[5324,0],0] on node poti1
+  Remote daemon: [[5324,0],1] on node poti2
+
+This is usually due to either a failure of the TCP network
+connection to the node, or possibly an internal failure of
+the daemon itself. We cannot recover from this failure, and
+therefore will terminate the job.
+--------------------------------------------------------------------------

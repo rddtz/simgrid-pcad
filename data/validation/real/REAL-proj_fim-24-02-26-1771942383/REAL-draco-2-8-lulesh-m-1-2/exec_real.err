@@ -1,0 +1,12 @@
+slurmstepd: error: *** JOB 761004 ON draco5 CANCELLED AT 2026-02-24T13:18:59 DUE TO TIME LIMIT ***
+--------------------------------------------------------------------------
+ORTE has lost communication with a remote daemon.
+
+  HNP daemon   : [[5176,0],0] on node draco5
+  Remote daemon: [[5176,0],1] on node draco6
+
+This is usually due to either a failure of the TCP network
+connection to the node, or possibly an internal failure of
+the daemon itself. We cannot recover from this failure, and
+therefore will terminate the job.
+--------------------------------------------------------------------------

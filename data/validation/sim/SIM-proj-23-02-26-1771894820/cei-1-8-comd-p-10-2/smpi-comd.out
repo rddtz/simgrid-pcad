@@ -1,0 +1,42 @@
+Mon Feb 23 22:51:13 2026: Starting Initialization
+
+
+Mini-Application Name    : CoMD-mpi
+Mini-Application Version : 1.1
+Platform:
+  hostname: cei1
+  kernel name: 'Linux'
+  kernel release: '6.1.0-40-amd64'
+  processor: 'unknown'
+Build:
+  CC: '/gnu/store/nhy23d877jvc1s5c190baaa4y1papnni-profile/bin/smpicc'
+  compiler version: 'SimGrid version 4.1'
+  CFLAGS: '-std=c99 -DDOUBLE -DDO_MPI -g -O5  '
+  LDFLAGS: ' -lm '
+  using MPI: true
+  Threading: none
+  Double Precision: true
+Run Date/Time: 2026-02-23, 22:51:13
+
+Command Line Parameters:
+  doeam: 0
+  potDir: pots
+  potName: Cu_u6.eam
+  potType: funcfl
+  nx: 10
+  ny: 10
+  nz: 10
+  xproc: 1
+  yproc: 1
+  zproc: 1
+  Lattice constant: -1 Angstroms
+  nSteps: 100
+  printRate: 10
+  Time step: 1 fs
+  Initial Temperature: 600 K
+  Initial Delta: 0 Angstroms
+
+
+Number of MPI ranks must match xproc * yproc * zproc
+./SMPI-proxy-apps/Benchmarks/ECP/CoMD/bin/CoMD-mpi --cfg=smpi/privatization:ON  --cfg=precision/timing:1e-9 --cfg=network/model:SMPI --cfg=smpi/host-speed:19.125Gf --cfg=smpi/tmpdir:/tmp ./pcad.so
+Execution failed with code 1.
