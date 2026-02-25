@@ -89,25 +89,25 @@ scientific advancement. However, with increasing concerns regarding
 environmental sustainability, HPC clusters and data centers are
 recognized as major electricity consumers cite:IAE2024. Simulators aim
 to address these issues by creating a faithful model of the real
-system, researchers can perform predictive analysis and validate
-'what-if' scenarios without the operational costs or constraints of
-using the actual machine. Using simulations not only lowers the
-electricity consumption of HPC systems, but also targets the lack of
-reproducibility in HPC cite:repro2024, ensuring a controlled and
-reproducible environment for experiments. In this context, SimGrid is
-a free and open-source computational framework capable of simulating
-several HPC scenarios with reproducibility and versatility, allowing
-researchers to simulate large platforms while maintaining accuracy
-cite:simgrid2025.
+system, allowing researchers to perform predictive analysis and
+validate 'what-if' scenarios without the operational costs or
+constraints of using the actual machine.
+
+Using simulations not only lowers the electricity consumption, but
+also targets the lack of reproducibility in HPC cite:repro2024,
+ensuring a controlled and reproducible environment for experiments. In
+this context, SimGrid is a free and open-source computational
+framework capable of simulating several HPC scenarios with
+reproducibility and versatility, allowing researchers to simulate
+large platforms while maintaining accuracy cite:simgrid2025.
 
 
-In this work, we present the development of a simulator for the "Parque
-Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
-cite:LPPD through the SimGrid programmatic interface Simgrid For You
-(S4U), focusing on the network topology. We show comparative results
-between the actual cluster and the platform created through
-simulation, including compute time, network statistics and energy
-consumption.
+In this work, we present the development of a simulator for the
+"Parque Computacional de Alto Desempenho" infrastructure present at
+INF/UFRGS cite:LPPD through the SimGrid programmatic interface Simgrid
+For You (S4U), focusing on the network topology. We show comparative
+results between the platform created through simulation and the real
+cluster, including compute time and energy consumption.
 
 
 Section [[sec.relatedwork]] highlights related work. Section
@@ -116,6 +116,18 @@ about the applications, tools, and systems used in the
 experiments. Lastly, Section [[sec.results]] shows and discusses the
 experimental results, while Section [[sec.conclusion]] concludes this
 work.
+
+
+#+latex: \noindent
+*Software and Data Availability*. We endeavor to make our analysis
+reproducible for a better science. We made available a companion
+material hosted in a public GitHub repository at
+#+latex: {\scriptsize\url{https://github.com/rddtz/simgrid-pcad}}.
+Our companion contains the source code of this article and the
+software necessary to handle the created datasets. We also include
+instructions to run the experiment and figures.
+# An archive is also available in Zenodo at URL.
+
 
 ** Related Work
 <<sec.relatedwork>>
@@ -142,18 +154,18 @@ scenarios with in the cluster.
 
 ** Platform Creation and Calibration
 
-We selected only the =cei=, =draco=, =tupi= e =poti= homogeneous partitions
-from PCAD infrastructure to simulate initially, with the three first
-having six nodes and the last having only five. We choose these
-partitions as they are the more used ones, aiming to first create a
-generic approach that later can be used in the whole cluster. The
-methodology for modeling was divided into programmatic platform
-generation and system calibration, focusing on hosts computational
-power and the network topology. The simulated environment was created
-programmatically using the SimGrid for You (S4U) C++ API with SimGrid
-v4.1. This approach allowed for the flexible definition of the cluster
-hierarchical structure, effectively mirroring the physical
-architecture of PCAD.
+The PCAD platform is composed of different homogeneous partitions, we
+initially selected only the =cei=, =draco=, =tupi= e =poti= partitions from
+PCAD infrastructure to simulate, with the three first having
+six nodes and the last having only five. We choose these partitions as
+they are the more used ones, aiming to first create a generic approach
+that later can be used in the whole cluster. The methodology for
+modeling was divided into programmatic platform generation and system
+calibration, focusing on hosts computational power and the network
+topology. The simulated environment was created programmatically using
+the SimGrid for You (S4U) C++ API with SimGrid v4.1. This approach
+allowed for the flexible definition of the cluster hierarchical
+structure, effectively mirroring the physical architecture of PCAD.
 
 
 Several different experiments were executed for the system
@@ -162,31 +174,48 @@ reproducibility. The host calibration for the simulated partitions
 consisted on the execution of High-Performance Linpack (HPL)
 cite:HPL2003. For each partition this HPL was executed 10 times in two
 different machines. The mean results in Gflops was taken as the time
-for a node in the partition. For the network we used simple network
-tools such as =iperf3= and =ping= to measure information such as
-network bandwidth and latency.
+for a node in the partition. Simple network tools such as =iperf3= and
+=ping= were used to initially measure information such as network
+bandwidth and latency. This initial information as latter used
+together with official SimGrid material for calibrating the network
+and MPI factors for each partition cite:calibration.
 
-# We also make use of official SimGrid
-# material for calibrating MPI cite:calibration.
+** Platform Validation
+
+# , each application focusing in one
+# point of the model such as computation, communication bandwidth and
+# latency.
+
+After calibrating the platform we used different proxy applications to
+verify and validate the create model. Proxy apps are scale models of
+real HPC applications, exhibiting the same computation and
+communication patterns as the massive application that it stands
+for. We chose three different proxy applications [fn::
+https://framagit.org/simgrid/SMPI-proxy-apps]. Lulesh cite:lulesh,
+that simulates shock hydrodynamics on unstructured meshes, widely used
+to evaluate compute performance. MiniVite cite:minivite, that
+implements distributed graph clustering, stressing the network through
+highly irregular MPI communication patterns. CoMD cite:comd, that
+simulates atomic forces, designed to stress system memory and regular
+MPI communication.
 
 
-The platform validation...
+We then created a experimental design using these applications. The
+three applications were executed in all the target partitions (cei,
+draco, poti and tupi). We varied the number of nodes used for the
+execution between one, two or four. Also, for each application we
+executed with different problems sizes, one small that takes
+approximately 1 second to execute and one medium that take
+approximately 30 seconds to execute, all executed with eight MPI
+processes. Lastly, as SimGrid does not simulate threads parallelism,
+we defined =OMP_NUM_THREADS= as 1 in all experiments. It gives us a
+total of 480 unique configurations. We randomly executed each
+configuration ten times to tackle variety. This experimental design
+was applied to both the SimGrid simulation and the real-world cluster,
+and the SimGrid simulation was execute in one machine of the Cei
+partition. The RAPL tool was used the measure the energy consumed in
+each experiment.
 
-
-# To ensure the accuracy of the simulator, empirical calibration was
-# performed on the real cluster. Host calibration consisted of executing
-# the High-Performance Linpack (HPL) benchmark to establish the baseline
-# computational speed (FLOP/s) of the individual nodes. Network
-# calibration required a two-step approach. First, iperf3 was used to
-# measure raw communication throughput, capturing baseline metrics such
-# as the ~9413 Mbps mean bandwidth observed on the 10 Gbps
-# partitions. Following this, the official SimGrid MPI calibration tools
-# were executed to determine internal simulation parameters,
-# specifically the bw-factor. This empirical process highlighted the
-# inherent complexities of modeling physical networks, as the calculated
-# bandwidth factors exhibited significant variance—ranging from 0.23 to
-# 3.42—due to real-world network contention, necessitating careful
-# parameter selection to validate the model.
 
 ** COMMENT Methods and Materials
 <<sec.methods>>
@@ -219,10 +248,353 @@ of platforms more flexibilizadamente by utilizing C++ per example.
 *** Hardware and Software Configuration
 
 
-** Results / Platform Validation
+** Loading data                                            :noexport:ignore:
+
+*** Load data
+[00:09:54; 25.02.2026]: This data is in [[data/validation]]
+#+begin_src R :results output :session *R* :exports both
+
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "."
+tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  separate(CSV, into=paste0("XX", 1:2), sep="_") |>
+  unnest(DATA) |>
+  select(where=XX1, everything()) |>
+  select(-XX2) -> df
+
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 2 × 1
+  CSV
+  <fs::path>
+1 real_results.csv
+2 sim_results.csv
+# A tibble: 2,355 × 11
+   where partition nodes    np app    size    omp   run   time      start_uj        end_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <dbl>  <dbl>         <dbl>         <dbl>
+ 1 real  cei           1     1 lulesh m        10     3  17.1    13229405096   14422687015
+ 2 real  poti          1     8 lulesh p        10     3 153.    113938202336  136224025044
+ 3 real  cei           4     8 lulesh m         1     4   9.52 1239734164831 1253885309146
+ 4 real  draco         2     8 lulesh m        10     2   9.95  215620049457  155725549073
+ 5 real  cei           1     1 lulesh p         1     3   0.2   222942431280  223041396846
+ 6 real  cei           4     8 lulesh p         1     5   0.27 1304491919338 1316087870182
+ 7 real  draco         2     8 lulesh p         1     5   0.26  165495966818  169273161864
+ 8 real  draco         4     8 lulesh m         1     5  11.7   354540703446  364216185962
+ 9 real  cei           1     1 lulesh m         1     2   9.21   11392355051   12074426913
+10 real  tupi          1     1 lulesh p        10     3   4.37   88938339639   89044241589
+# ℹ 2,345 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+*** Statistics
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(where, partition, nodes, np, app, size, omp) |>
+  filter(!is.na(time)) |>
+  mutate(start_uj=ifelse(start_uj < 0, end_uj, start_uj)) |>
+  mutate(end_uj=ifelse(end_uj < 0, start_uj, end_uj)) |>
+  summarise(
+    N=n(),
+    mean_time = mean(time),
+    sd = sd(time),
+    cv_time = sd/mean_time,
+    mean_uj = mean(end_uj - start_uj),
+    sd_uj = sd(end_uj - start_uj),
+    cv_uj = sd_uj/mean_uj,
+  ) |>
+  arrange(-sd) |>
+  print(n=150) -> df.stats
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'where', 'partition', 'nodes', 'np', 'app', 'size'. You can override
+using the `.groups` argument.
+# A tibble: 280 × 14
+# Groups:   where, partition, nodes, np, app, size [168]
+    where partition nodes    np app      size    omp     N mean_time       sd cv_time  mean_uj      sd_uj
+    <chr> <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl>    <dbl>   <dbl>    <dbl>      <dbl>
+  1 real  poti          1     8 lulesh   p        10     5   221.    152.     0.685   -3.00e10    1.16e11
+  2 real  cei           1     8 lulesh   p        10     5   167.     18.1    0.109   -1.41e11    2.35e11
+  3 real  cei           1     8 lulesh   m        10     5   197.     17.9    0.0909   1.96e10    2.03e 9
+  4 real  draco         1     8 lulesh   m        10     4   116.     17.8    0.154    9.76e 9    1.64e 9
+  5 real  tupi          1     8 lulesh   m        10     5   192.     16.7    0.0872   8.58e 9    7.26e 8
+  6 real  poti          1     8 lulesh   m        10     5   169.     12.1    0.0715   2.45e10    1.72e 9
+  7 real  tupi          1     8 lulesh   p        10     5   178.      9.82   0.0551   7.90e 9    4.49e 8
+  8 real  draco         1     8 lulesh   p        10     5    71.6     7.68   0.107   -6.59e 9    2.89e10
+  9 real  draco         1     1 comd     m        10     5    33.2     3.55   0.107    1.41e 9    1.30e 8
+ 10 real  poti          1     1 lulesh   m        10     5     7.06    1.26   0.179    2.08e 8    6.82e 7
+ 11 real  draco         1     1 lulesh   m         1     5     9.81    1.14   0.116    4.49e 8    4.04e 7
+ 12 real  draco         2     8 lulesh   m         1     4    11.4     0.878  0.0768   4.86e 9    5.08e 7
+ 13 real  poti          1     1 lulesh   p        10     5     3.93    0.687  0.175    1.16e 8    3.66e 7
+ 14 real  draco         1     8 lulesh   m         1     5    10.6     0.659  0.0620   7.56e 8    3.74e 7
+ 15 real  poti          1     1 lulesh   m         1     5     3.21    0.574  0.179    1.01e 8    1.98e 7
+ 16 real  tupi          1     8 lulesh   m         1     5     6.26    0.424  0.0679   3.03e 8    1.46e 7
+ 17 sim   draco         1     1 minivite m         1    10     3.94    0.424  0.107    4.74e 9    2.42e 8
+ 18 real  draco         2     8 comd     m         1     5     5.51    0.405  0.0735   4.29e 9    8.33e 7
+ 19 real  draco         2     8 comd     m        10     5     5.67    0.398  0.0702   4.25e 9    1.12e 8
+ 20 real  draco         1     8 comd     m         1     5     5.15    0.398  0.0772   3.90e 8    3.81e 7
+ 21 real  draco         1     8 comd     m        10     4     5.06    0.397  0.0784   3.87e 8    4.32e 7
+ 22 real  draco         2     8 lulesh   m        10     5    10.5     0.348  0.0331  -2.08e10    3.58e10
+ 23 sim   cei           1     1 minivite m         1    10     2.91    0.311  0.107    4.74e 9    2.41e 8
+ 24 sim   poti          1     1 minivite m         1    10     2.75    0.291  0.106   -2.15e10    8.30e10
+ 25 real  tupi          1     8 comd     m        10     5     2.87    0.271  0.0945   1.54e 8    1.14e 7
+ 26 real  draco         1     1 minivite m         1     5     3.17    0.270  0.0852   4.77e 9    4.14e 8
+ 27 real  tupi          1     8 comd     m         1     5     2.67    0.218  0.0814   1.46e 8    1.10e 7
+ 28 real  draco         2     8 lulesh   p        10     5     4.25    0.211  0.0495   4.37e 9    1.11e 8
+ 29 real  draco         1     1 comd     p        10     5     1.49    0.178  0.119    1.13e 8    9.43e 6
+ 30 sim   draco         1     1 comd     m        10    10    42.3     0.138  0.00326  1.93e 9    1.02e 8
+ 31 real  cei           1     1 comd     m        10     5    34.1     0.124  0.00364  2.36e 9    9.51e 7
+ 32 sim   draco         1     8 lulesh   m         1    10    16.0     0.118  0.00734  4.37e 9    2.55e 8
+ 33 sim   draco         1     1 comd     m         1    10    42.3     0.117  0.00278 -5.05e10    1.11e11
+ 34 sim   cei           1     1 comd     m        10    10    31.3     0.114  0.00364  1.94e 9    1.06e 8
+ 35 real  cei           1     1 comd     m         1     5    34.0     0.106  0.00312  2.42e 9    1.87e 7
+ 36 sim   draco         1     1 lulesh   m         1    10    12.5     0.106  0.00849  5.77e 8    3.19e 7
+ 37 sim   cei           1     1 comd     m         1    10    31.3     0.105  0.00335  1.93e 9    1.04e 8
+ 38 sim   tupi          1     1 minivite m         1    10     0.953   0.102  0.107    4.74e 9    2.35e 8
+ 39 sim   draco         2     8 lulesh   m         1    10    15.0     0.100  0.00666 -2.18e10    8.30e10
+ 40 real  poti          1     8 lulesh   m         1     5     4.7     0.0962 0.0205   7.30e 8    4.89e 7
+ 41 real  draco         1     1 lulesh   m        10     5    13.9     0.0938 0.00673  6.49e 8    6.53e 7
+ 42 sim   poti          1     1 comd     m         1    10    29.6     0.0877 0.00297  1.93e 9    1.01e 8
+ 43 real  tupi          1     1 comd     m        10     5    13.6     0.0808 0.00595  3.20e 8    1.34e 7
+ 44 sim   poti          1     1 comd     m        10    10    29.5     0.0743 0.00252  1.93e 9    1.05e 8
+ 45 real  cei           2     8 lulesh   m         1     5     9.53    0.0684 0.00718  7.24e 9    4.13e 7
+ 46 real  draco         1     1 comd     m         1     5    31.7     0.0677 0.00214  1.36e 9    1.19e 8
+ 47 real  cei           1     1 lulesh   m        10     5    17.1     0.0669 0.00391  1.23e 9    4.35e 7
+ 48 real  poti          1     1 comd     m         1     5    12.8     0.0660 0.00515  2.83e 8    4.72e 6
+ 49 sim   poti          1     8 lulesh   m         1    10    12.4     0.0643 0.00521  4.37e 9    2.46e 8
+ 50 real  cei           2     8 lulesh   p        10     5     0.418   0.0638 0.153    5.81e 9    7.69e 7
+ 51 sim   cei           4     8 lulesh   m         1    10    10.0     0.0627 0.00627  4.40e 9    2.38e 8
+ 52 real  tupi          1     1 lulesh   m        10     5     7.91    0.0604 0.00764  1.94e 8    9.53e 6
+ 53 real  draco         4     8 lulesh   m        10     5     3.86    0.0581 0.0150   8.79e 9    5.85e 7
+ 54 real  draco         1     1 minivite p         1     5     0.606   0.0566 0.0934   3.73e 8    3.49e 7
+ 55 sim   cei           1     1 lulesh   m         1    10     9.23    0.0564 0.00611  5.78e 8    2.96e 7
+ 56 sim   draco         1     1 lulesh   m        10    10     2.82    0.0558 0.0198   1.85e 8    5.89e 6
+ 57 sim   draco         1     1 minivite p         1    10     0.772   0.0558 0.0722   3.24e 8    2.10e 7
+ 58 real  cei           1     1 lulesh   m         1     5     9.18    0.0555 0.00604  7.07e 8    2.45e 7
+ 59 sim   draco         2     8 lulesh   m        10    10     5.44    0.0510 0.00937  1.53e 9    6.44e 7
+ 60 real  tupi          1     1 comd     m         1     5    13.6     0.0506 0.00373  3.04e 8    1.41e 7
+ 61 real  cei           4     8 minivite m         1     5     0.426   0.0493 0.116    1.26e10    7.70e 7
+ 62 sim   cei           2     8 lulesh   m        10    10     2.83    0.0492 0.0174   1.53e 9    5.96e 7
+ 63 sim   draco         4     8 lulesh   m        10    10     4.72    0.0489 0.0104   1.53e 9    5.76e 7
+ 64 real  cei           1     8 minivite m         1     5     0.447   0.0470 0.105    4.99e 8    4.84e 6
+ 65 sim   cei           1     8 lulesh   m         1    10     9.84    0.0467 0.00475  4.39e 9    2.35e 8
+ 66 sim   tupi          1     1 lulesh   m         1    10     3.00    0.0448 0.0149   5.74e 8    2.84e 7
+ 67 sim   draco         1     8 lulesh   m        10    10     6.47    0.0435 0.00673  1.52e 9    5.70e 7
+ 68 real  cei           4     8 lulesh   m         1     5     9.48    0.0428 0.00451  1.42e10    1.58e 7
+ 69 sim   cei           1     1 minivite p         1    10     0.570   0.0415 0.0728   3.24e 8    2.12e 7
+ 70 sim   poti          4     8 lulesh   m        10    10     3.86    0.0408 0.0106   1.53e 9    5.23e 7
+ 71 sim   draco         1     1 lulesh   p        10    10     0.572   0.0402 0.0703   3.74e 7    1.38e 6
+ 72 sim   cei           1     8 lulesh   m        10    10     2.73    0.0394 0.0144   1.53e 9    7.06e 7
+ 73 real  cei           2     8 comd     m        10     5     4.70    0.0394 0.00840  6.48e 9    2.46e 7
+ 74 sim   poti          1     8 lulesh   m        10    10     5.60    0.0387 0.00691  1.51e 9    6.34e 7
+ 75 sim   cei           4     8 lulesh   m        10    10     2.89    0.0386 0.0134   1.53e 9    5.80e 7
+ 76 sim   poti          1     1 minivite p         1    10     0.539   0.0384 0.0713   3.24e 8    2.17e 7
+ 77 sim   cei           2     8 lulesh   m         1    10     9.95    0.0381 0.00383  4.39e 9    2.32e 8
+ 78 real  tupi          1     1 lulesh   p        10     5     4.38    0.0371 0.00847  1.08e 8    5.81e 6
+ 79 sim   tupi          1     1 comd     m         1    10    10.2     0.0361 0.00353  1.94e 9    1.06e 8
+ 80 real  cei           2     8 minivite m         1     5     0.430   0.0359 0.0834   6.36e 9    7.29e 7
+ 81 sim   poti          1     1 lulesh   m         1    10     8.73    0.0353 0.00404  5.78e 8    3.02e 7
+ 82 real  poti          1     1 comd     m        10     5    12.8     0.0353 0.00275  2.86e 8    3.89e 6
+ 83 sim   draco         4     8 lulesh   m         1    10    14.3     0.0350 0.00244  4.39e 9    2.39e 8
+ 84 real  draco         1     1 lulesh   p         1     5     0.194   0.0329 0.169    6.70e 7    8.48e 6
+ 85 sim   draco         4     8 lulesh   p        10    10     0.872   0.0326 0.0374   2.79e 8    2.03e 7
+ 86 real  cei           4     8 lulesh   m        10     5     2.21    0.0324 0.0147   1.25e10    5.52e 7
+ 87 sim   cei           1     1 lulesh   m        10    10     2.05    0.0317 0.0154   1.83e 8    5.95e 6
+ 88 sim   poti          4     8 lulesh   m         1    10    10.6     0.0303 0.00286  4.38e 9    2.37e 8
+ 89 real  draco         2     8 minivite m         1     5     0.432   0.0303 0.0700   4.35e 9    8.90e 7
+ 90 sim   cei           1     1 lulesh   p        10    10     0.422   0.0297 0.0705   3.67e 7    1.16e 6
+ 91 real  cei           1     8 lulesh   m         1     5     9.61    0.0292 0.00303  1.02e 9    5.12e 6
+ 92 sim   draco         2     8 lulesh   p        10    10     0.893   0.0283 0.0317   2.77e 8    1.66e 7
+ 93 sim   poti          2     8 lulesh   p        10    10     0.747   0.0283 0.0379   2.84e 8    2.32e 7
+ 94 sim   draco         1     8 lulesh   p        10    10     0.913   0.0279 0.0306   2.89e 8    1.70e 7
+ 95 sim   poti          1     1 lulesh   p        10    10     0.4     0.0279 0.0697   3.68e 7    9.11e 5
+ 96 sim   poti          1     1 lulesh   m        10    10     1.98    0.0278 0.0141   1.85e 8    6.42e 6
+ 97 real  tupi          1     1 minivite p         1     5     0.245   0.0271 0.111    8.03e 7    5.08e 6
+ 98 sim   poti          2     8 lulesh   m        10    10     4.60    0.0267 0.00582  1.53e 9    5.27e 7
+ 99 real  draco         4     8 lulesh   m         1     5    11.7     0.0261 0.00222  9.67e 9    2.67e 7
+100 sim   cei           4     8 lulesh   p        10    10     0.745   0.0259 0.0348   2.71e 8    2.05e 7
+101 sim   draco         2     8 minivite m         1    10     0.596   0.0255 0.0428   1.58e 9    8.97e 7
+102 sim   poti          2     8 minivite m         1    10     0.433   0.0253 0.0584   1.58e 9    9.72e 7
+103 sim   tupi          1     1 comd     m        10    10    10.2     0.0250 0.00244  1.94e 9    1.07e 8
+104 real  cei           2     8 lulesh   m        10     5     3.50    0.0249 0.00711  6.71e 9    6.83e 7
+105 sim   cei           4     8 minivite m         1    10     0.474   0.0225 0.0475   1.58e 9    9.26e 7
+106 real  cei           1     1 lulesh   p        10     5     8.51    0.0219 0.00257  6.60e 8    1.75e 7
+107 sim   cei           1     8 minivite m         1    10     0.437   0.0210 0.0479   1.58e 9    9.22e 7
+108 sim   cei           2     8 lulesh   p        10    10     0.726   0.0207 0.0285   2.82e 8    1.68e 7
+109 real  draco         1     8 lulesh   p         1     4     0.242   0.0206 0.0850   8.66e 7    9.41e 6
+110 sim   poti          4     8 minivite m         1    10     0.466   0.0197 0.0423   1.59e 9    8.83e 7
+111 sim   poti          2     8 lulesh   m         1    10    11.3     0.0195 0.00172  4.39e 9    2.37e 8
+112 real  draco         1     1 lulesh   p        10     5     4.65    0.0192 0.00414  2.53e 8    2.46e 7
+113 real  cei           1     8 comd     m         1     5     4.64    0.0191 0.00412  5.34e 8    3.00e 6
+114 sim   poti          4     8 lulesh   p        10    10     0.729   0.0191 0.0262   2.84e 8    1.93e 7
+115 real  cei           2     8 comd     m         1     5     4.67    0.0190 0.00407  6.44e 9    1.74e 7
+116 sim   poti          1     8 minivite m         1    10     0.456   0.0189 0.0415   1.59e 9    9.04e 7
+117 sim   cei           1     8 lulesh   p        10    10     0.607   0.0189 0.0311   2.76e 8    1.91e 7
+118 real  draco         2     8 lulesh   p         1     5     0.28    0.0187 0.0668   3.72e 9    1.26e 8
+119 real  cei           4     8 comd     m        10     5     4.65    0.0186 0.00399  1.29e10    2.05e 8
+120 real  draco         1     8 comd     p         1     5     0.278   0.0184 0.0662   8.78e 7    9.28e 6
+121 real  tupi          1     8 minivite m         1     5     0.195   0.0179 0.0918   1.83e 8    8.09e 6
+122 real  draco         1     8 comd     p        10     5     0.265   0.0171 0.0646   9.20e 7    9.21e 6
+123 sim   draco         1     8 minivite m         1    10     0.606   0.0167 0.0276   1.59e 9    8.89e 7
+124 sim   tupi          4     8 lulesh   m         1    10     4.73    0.0165 0.00348  4.40e 9    2.52e 8
+125 sim   poti          1     8 lulesh   p        10    10     0.747   0.0157 0.0210   2.85e 8    1.97e 7
+126 sim   tupi          2     8 lulesh   m         1    10     5.52    0.0157 0.00284  4.38e 9    2.35e 8
+127 real  cei           1     8 comd     p        10     5     0.269   0.0156 0.0580   1.30e 8    5.30e 6
+128 real  cei           1     8 lulesh   p         1     5     0.246   0.0152 0.0616   1.29e 8    1.80e 6
+129 sim   tupi          1     8 lulesh   m         1    10     6.59    0.0149 0.00226  4.39e 9    2.41e 8
+130 real  tupi          1     8 comd     p        10     5     0.149   0.0137 0.0922   3.58e 7    9.16e 5
+131 sim   tupi          1     1 minivite p         1    10     0.186   0.0136 0.0728   3.23e 8    2.15e 7
+132 sim   draco         2     8 comd     m        10     5     9.68    0.0135 0.00139  2.17e 9    1.80e 7
+133 real  cei           4     8 comd     m         1     5     4.64    0.0133 0.00286  1.28e10    6.64e 7
+134 real  cei           2     8 minivite p         1     5     0.148   0.0131 0.0883   5.77e 9    2.02e 7
+135 real  tupi          1     1 lulesh   m         1     5     3.64    0.0130 0.00358  1.01e 8    3.16e 6
+136 real  poti          1     1 lulesh   p         1     5     0.062   0.0130 0.210    2.48e 7    3.88e 6
+137 real  draco         2     8 comd     p         1     5     0.418   0.0130 0.0312   3.82e 9    1.13e 8
+138 real  cei           2     8 comd     p        10     5     0.294   0.0130 0.0442  -4.66e10    1.17e11
+139 sim   draco         4     8 comd     m         1     5     8.88    0.0128 0.00145  2.16e 9    1.39e 7
+140 real  cei           2     8 comd     p         1     5     0.287   0.0121 0.0421   5.76e 9    2.65e 7
+141 real  poti          1     8 comd     m        10     5     1.89    0.0116 0.00615  3.44e 8    9.47e 6
+142 real  tupi          1     8 comd     p         1     5     0.150   0.0115 0.0768   3.43e 7    1.14e 6
+143 sim   tupi          1     8 lulesh   m        10    10     4.26    0.0114 0.00267  1.53e 9    5.73e 7
+144 real  poti          1     8 comd     m         1     5     1.90    0.0112 0.00590  3.21e 8    1.53e 7
+145 real  draco         4     8 comd     m        10     5     5.88    0.0111 0.00189 -4.61e 9    2.93e10
+146 sim   cei           2     8 minivite m         1    10     0.472   0.0110 0.0233   1.59e 9    8.95e 7
+147 sim   tupi          4     8 lulesh   m        10    10     2.39    0.0110 0.00460  1.51e 9    5.03e 7
+148 sim   draco         4     8 minivite p         1    10     0.195   0.0110 0.0564   1.40e 8    1.02e 7
+149 real  tupi          1     8 lulesh   p         1     5     0.118   0.0110 0.0928   3.47e 7    1.06e 6
+150 sim   tupi          2     8 minivite m         1    10     0.194   0.0107 0.0553   1.58e 9    9.34e 7
+# ℹ 130 more rows
+# ℹ 1 more variable: cv_uj <dbl>
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+** Results
 <<sec.results>>
 
-[Results, differences: accuracy, time, etc...]
+Figure [[fig:results]] show the mean time for execution of the medium
+sized experiments (represented as a bigger circle) in function of the
+number of nodes. Small circles represents our observations. The time
+is given by the application as output at the end of the
+computation. The black bars centered around the mean represents the
+standard error with a CI of 99%. The figure shows the results faceted
+by partition and applications, whit the colors identifying where the
+execution takes place, in the real cluster (=real=) or in the SimGrid
+(=sim=).
+
+WAIT FOR FINAL DATA TOMORROW...
+Maybe rerun with large scale experiments now that I have more time?
+
+Figure [[fig:energy]] follows the same structure as the previous to show the energy
+consumption in joules. We can see that initially the energy consumed
+by the simulation can overcome the real execution for this smalls
+scales simulations. However, as expected, as the number of nodes
+increase the number the energy consumed also increases. As the
+simulation run on only one machine, the energy consumption remained
+almost the same no matter the number of nodes simulated.
+
+#+begin_src R :results graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 10 :height 6 :session *R*
+appl="minivite"
+part="cei"
+s="m"
+
+df.jitter <- df |> filter(
+                     ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np == 8
+                   )
+
+df.stats |> filter(
+        ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np==8) |>
+  ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where)) +
+
+    geom_errorbar(
+    aes(ymin = mean_time - sd, ymax = mean_time + sd),
+    width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+    linewidth = 0.8, alpha = 1,
+    color="black"
+  ) +
+
+  geom_point(size=4, alpha=0.8) +
+
+ geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes), y = time, color=where),
+    # Set the transparency (alpha) to 0.3 for a faint look
+    alpha = 0.3,
+    size = 1
+  ) +
+  facet_grid(app ~ partition) +
+  scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
+  labs(
+    x="Nodes",
+    y="Mean Time (s)"
+  ) +
+  meu_estilo(25)
+
+#+end_src
+
+#+CAPTION: Mean of time results.
+#+NAME:fig:results
+#+attr_latex: :placement [!htb] :width 0.8\textwidth
+#+RESULTS:
+[[file:/tmp/babel-SkCmZC/figuredDockH.pdf]]
+
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 10 :height 6 :session *R*
+df.stats |>
+  mutate(mean_uj = ifelse(mean_uj < 0, 0, mean_uj)) |>
+  filter(mean_uj > 0) |>
+  filter(omp==1 & np==8 & size=="m") |>
+
+  ggplot(aes(x=as.factor(nodes), y=mean_uj/1e6, color=where)) +
+
+  geom_point(size=4, alpha=0.8) +
+
+
+    geom_errorbar(
+    aes(ymin = mean_uj/1e6 - sd_uj/1e6, ymax = mean_uj/1e6 + sd_uj/1e6),
+    width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+    linewidth = 0.8, alpha = 1,
+    color="black"
+  ) +
+
+   geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes),
+        y = ifelse(end_uj-start_uj >= 0, (end_uj-start_uj)/1e6, 0),
+        color=where),
+    alpha = 0.3,
+    size = 1
+  ) +
+  facet_grid(app ~ partition) +
+  labs(
+    x="Nodes",
+    y="Energy Consumption (J)"
+  ) +
+  scale_color_manual(values = c("real" = "#ff9922", "sim" = "#497543")) +
+  meu_estilo(25)
+#+end_src
+
+
+#+CAPTION: Mean of energy consumption.
+#+NAME:fig:energy
+#+attr_latex: :placement [!htb] :width 0.8\textwidth
+#+RESULTS:
+[[file:/tmp/babel-SkCmZC/figure0HXbvp.pdf]]
 
 ** Conclusion
 <<sec.conclusion>>
@@ -279,7 +651,7 @@ author = {Benjamin Antunes and David R.C. Hill}
 
 @misc{LPPD,
 title        = {Laboratório de Processamento Paralelo e Distribuído (LPPD)},
-author       = {LPPD},
+author       = {INF/UFRGS},
 note         = {Accessed: 2026-02-16},
 year         = {2025},
 howpublished = {\url{https://pcad.inf.ufrgs.br/}}
@@ -330,6 +702,35 @@ type={Bachelor's Thesis}
   PDF = {https://theses.hal.science/tel-03328956v2/file/CORNEBIZE_2021_archivage.pdf},
   HAL_ID = {tel-03328956},
   HAL_VERSION = {v2},
+}
+
+@techreport{lulesh,
+  author       = {Karlin, I. and Keasler, J. and Neely, J. R.},
+  title        = {LULESH 2.0 Updates and Changes},
+  institution  = {Lawrence Livermore National Laboratory (LLNL), Livermore, CA (United States)},
+  annote       = {Abstract not provided.},
+  doi          = {10.2172/1090032},
+  url          = {https://www.osti.gov/biblio/1090032},
+  place        = {United States},
+  year         = {2013},
+  month        = {07}}
+
+@INPROCEEDINGS{minivite,
+  author={Ghosh, Sayan and Halappanavar, Mahantesh and Tumeo, Antonino and Kalyanaraman, Ananth and Gebremedhin, Assefaw H.},
+  booktitle={2018 IEEE/ACM PMBS},
+  title={MiniVite: A Graph Analytics Benchmarking Tool for Massively Parallel Systems},
+  year={2018},
+  volume={},
+  number={},
+  pages={51-56},
+  keywords={Benchmark testing;Tools;Clustering algorithms;Partitioning algorithms;Analytical models;Generators;Two dimensional displays},
+  doi={10.1109/PMBS.2018.8641631}}
+
+@misc{comd,
+  author = {{ExMatEx}},
+  title = "{CoMD}: A Classical Molecular Dynamics Proxy Application",
+  howpublished = {\url{https://github.com/exmatex/CoMD}},
+  year = {2013}
 }
 
 #+end_src
