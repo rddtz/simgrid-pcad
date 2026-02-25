@@ -178,6 +178,7 @@ fully configurated). Based on the simgrid example.
 #+begin_src C++ :results output :exports both
 #include <numeric>
 #include <simgrid/s4u.hpp>
+#include <fstream>
 
 namespace sg4 = simgrid::s4u;
 #+end_src
@@ -185,15 +186,36 @@ namespace sg4 = simgrid::s4u;
 *** Structs
 #+begin_src C++ :results output :exports both
 typedef struct partition {
-    std::string name;
-    std::string speed;
-    std::string bw;
-    std::string lat;
-    int count;
-    int cores; // Only counting phisical cores
+  std::string name;
+  std::string calib_file;
+  std::string speed;
+  std::string bw;
+  std::string lat;
+  int count;
+  int cores; // Only counting phisical cores
 } partition_t;
 #+end_src
 
+*** Helper function to load calibration
+#+begin_src C++ :results output :exports both
+std::map<std::string, std::string> load_calibration(const std::string& filename) {
+  std::map<std::string, std::string> props;
+  if (filename.empty()) return props; // Retorna vazio se não houver arquivo
+
+  std::ifstream file(filename);
+  std::string line;
+
+  while (std::getline(file, line)) {
+    auto delim = line.find('=');
+    if (delim != std::string::npos) {
+      std::string key = line.substr(0, delim);
+      std::string value = line.substr(delim + 1);
+      props[key] = value;
+    }
+  }
+  return props;
+}
+#+end_src
 *** Generic function to create one partition
 #+begin_src C++ :results output :exports both
 
@@ -204,16 +226,26 @@ typedef struct partition {
  @param root Root netzone
  @param switch_fatpipe Switch link for the rack to model the connection
  @param partition Information about the hosts in the partition
-*/
+,*/
 
 void create_partition(sg4::NetZone* rack,
                       sg4::Link* switch_fatpipe,
 		      partition_t partition)
 {
+
+  auto calib_props = load_calibration(partition.calib_file);
+
   for (int id = 1; id <= partition.count; id++) {
     std::string hostname = partition.name + std::to_string(id);
 
-    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores)->seal();
+    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores);
+
+    for (const auto& [key, value] : calib_props) {
+        host->set_property(key, value);
+    }
+
+    host->seal();
+
     auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
@@ -260,7 +292,6 @@ sg4::NetZone *create_rack(sg4::NetZone *root, std::string rack_name,
       return rack_zone;
 }
 #+end_src
-
 *** MAIN: Creating two racks with some partitions (cei, draco, poti, tupi)
 #+begin_src C++ :results output :exports both
 
@@ -282,17 +313,20 @@ void load_platform(sg4::Engine& e)
     | Poti      |    404 |
     | Tupi      |    467 |
 
-  */
+  ,*/
 
-  partition_t cei = {"cei", "19.125Gf", "9.413Gbps", "124us", 6, 24};
-  partition_t draco = {"draco", "14.125Gf", "941Mbps", "115us", 6, 16};
+  // partition_t cei = {"cei", "", "19.125Gf", "9.413Gbps", "124us", 6, 24};
+  partition_t cei = {"cei", "cei.txt", "19.125Gf", "10Gbps", "124us", 6, 24};
+  // partition_t draco = {"draco", "draco.txt", "14.125Gf", "941Mbps", "115us", 6, 16};
+  partition_t draco = {"draco", "draco.txt", "14.125Gf", "1Gbps", "115us", 6, 16};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t poti = {"poti", "20.2Gf", "940Mbps", "117us", 5, 20};
-  partition_t tupi = {"tupi", "58.375Gf", "942Mbps", "87us", 6, 8};
+  partition_t poti = {"poti", "", "20.2Gf", "940Mbps", "117us", 5, 20};
+  // partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "942Mbps", "87us", 6, 8};
+  partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "1Gbps", "87us", 6, 8};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
@@ -2401,3 +2435,1213 @@ export OMP_NUM_THREADS=4
 mpirun -np 8 ./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/lulesh2.0 -i 100 -s 10
 
 #+end_src
+
+
+** 2026 Week 09 [Feb]
+
+*** 2026-02-23:
+
+Finishing calibration and experiments...
+
+#+begin_src python :results output :exports both
+out = '''
+        smpi/os={reg_send_str}
+        smpi/or={reg_recv_str}
+        smpi/ois={reg_isend_str}
+        smpi/bw-factor={bandwidth_str}
+        smpi/lat-factor"{latency_str}
+        smpi/async-small-thresh={semantic_breaks[0]}
+        smpi/send-is-detached-thresh"={semantic_breaks[1]}
+        smpi/iprobe={iprobe_mean}
+        smpi/test={test_mean}
+'''
+#+end_src
+
+[20:40:56; 23.02.2026]: The calibration is ok!!!!! (at least for CEI)
+
+[20:41:11; 23.02.2026]: I am doing some final tests before sending the
+full experiment
+
+[20:41:41; 23.02.2026]: Will I creat one csv per application?
+
+
+[20:49:03; 23.02.2026]: project to run in the cluster:
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+library(DoE.base)
+library(tidyverse)
+
+fator_partition = c("cei", "draco", "poti", "tupi")
+fator_app = c("lulesh", "comd", "minivite")
+fator_nodes = c(1, 2, 4)
+fator_np = c(1, 8)
+fator_exp_size = c("p", "m")
+fator_omp = c(1, 10)
+
+fac.design(nfactors=6,
+           replications=5,
+           repeat.only= FALSE ,
+           randomize=TRUE,
+           seed=17366,
+           nlevels=c(length(fator_partition),
+                     length(fator_nodes),
+                     length(fator_np),
+                     length(fator_app),
+                     length(fator_exp_size),
+                     length(fator_omp)),
+           factor.names=list(
+             partition = fator_partition,
+             nodes = fator_nodes,
+             np = fator_np,
+             app = fator_app,
+             exp_size = fator_exp_size,
+             omp = fator_omp
+           )) |>
+  as_tibble() |>
+  mutate_at(vars(nodes:np), as.character) |>
+  mutate_at(vars(nodes:np), as.numeric) |>
+  filter(np >= nodes) |>
+  print() |>
+  write_csv("proj.csv", progress=FALSE)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+creating full factorial with 288 runs ...
+
+# A tibble: 960 × 7
+   partition nodes    np app      exp_size omp   Blocks
+   <fct>     <dbl> <dbl> <fct>    <fct>    <fct> <fct>
+ 1 draco         1     8 lulesh   p        10    .1
+ 2 draco         2     8 lulesh   p        1     .1
+ 3 cei           1     8 lulesh   p        10    .1
+ 4 draco         4     8 lulesh   m        10    .1
+ 5 cei           4     8 minivite p        10    .1
+ 6 poti          4     8 minivite m        10    .1
+ 7 cei           2     8 minivite p        10    .1
+ 8 cei           1     1 comd     m        10    .1
+ 9 tupi          1     1 lulesh   m        1     .1
+10 cei           1     1 lulesh   m        1     .1
+# ℹ 950 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src shell :results output :tangle scripts/run-real.sh :tangle-mode (identity #o755) :exports both
+#!/bin/bash
+set +euxo pipefail
+date
+
+PROJECT=${1:-}
+if [[ -z $PROJECT ]]; then
+    echo "Path for project file not informed."
+    exit 1
+fi
+
+echo "[REAL] Initializing Environment and Compiling"
+# Carrega o Guix (use o Profile se já o tiver configurado para ser mais rápido!)
+eval $(guix time-machine -C channels.scm -- shell -m guix.scm --search-paths)
+
+# 1. Compila todas as aplicações UMA VEZ com o MPI Real antes do loop
+echo "Compiling LULESH..."
+pushd ./SMPI-proxy-apps-real/Benchmarks/Coral/Lulesh/
+make clean
+make MPI_INC="" MPICXX="mpicxx -DUSE_MPI=1" -j 20
+popd
+
+echo "Compiling miniVite..."
+pushd ./SMPI-proxy-apps-real/Benchmarks/ECP/miniVite
+make clean
+make CXX=mpicxx OPTFLAGS="-O3 -fopenmp -DPRINT_DIST_STATS -DDEBUG_PRINTF" -j 20
+popd
+
+echo "Compiling CoMD..."
+pushd ./SMPI-proxy-apps-real/Benchmarks/ECP/CoMD/src-mpi
+make clean
+make CC=mpicc -j 20
+popd
+
+
+BASEDIR="logs/$(basename -- PROJECT .csv)-$(date +%d-%m-%y)"
+mkdir -p $BASEDIR
+
+echo "[REAL] Reading CSV and Submitting Jobs"
+
+tail -n +2 "$PROJECT" | while IFS=, read -r PARTICAO NODOS NP APP TAMANHO OMP B; do
+
+    # Extrai o nível
+    NIVEL=$(echo "$B" | sed -E "s/.*([0-9]+)/\1/g")
+    DIR="${BASEDIR}/REAL-${PARTICAO}-${NODOS}-${NP}-${APP}-${TAMANHO}-${OMP}-${NIVEL}"
+    mkdir -p "$DIR"
+
+    HOSTFILE="$DIR/hosts.txt"
+
+    # CORREÇÃO: O srun vai espalhar 8 tarefas e cada uma vai escrever
+    # onde está rodando. Isso cria um arquivo com exatamente 8 linhas!
+    srun hostname | sort > $HOSTFILE
+
+    # Seleciona o executável e parâmetros com base na app
+    case "$APP" in
+        "lulesh")
+            EXEC_BIN="./SMPI-proxy-apps-real/Benchmarks/Coral/Lulesh/lulesh2.0"
+            case $TAMANHO in
+                "p") PARAMETERS="-i 100 -s 10" ;;
+                "m") PARAMETERS="-i 100 -s 40" ;;
+                "g") PARAMETERS="-i 100 -s 60" ;;
+            esac
+            ;;
+
+        "minivite")
+            EXEC_BIN="./SMPI-proxy-apps-real/Benchmarks/ECP/miniVite/miniVite"
+            case $TAMANHO in
+                "p") PARAMETERS="-n 50000" ;;
+                "m") PARAMETERS="-n 200000" ;;
+                "g") PARAMETERS="-n 300000" ;;
+            esac
+            ;;
+
+        "comd")
+            EXEC_BIN="./SMPI-proxy-apps-real/Benchmarks/ECP/CoMD/bin/CoMD-mpi"
+            case $TAMANHO in
+                "p") PARAMETERS="-N 100 -x 10 -y 10 -z 10" ;;
+                "m") PARAMETERS="-N 100 -x 30 -y 30 -z 30" ;;
+                "g") PARAMETERS="-N 100 -x 50 -y 50 -z 50" ;;
+            esac
+            ;;
+
+        ,*)
+            echo "Unknown application: $APP. Skipping..."
+            continue
+            ;;
+    esac
+
+    # ========================================================
+    # CRIAÇÃO DINÂMICA DO SCRIPT DO SLURM
+    # ========================================================
+    SLURM_SCRIPT="$DIR/job.slurm"
+
+    # O comando 'cat <<EOF' gera um arquivo de texto preenchendo as variáveis instantaneamente
+    cat <<EOF > "$SLURM_SCRIPT"
+#!/bin/bash
+#SBATCH --job-name=Real_${APP}_${NIVEL}
+#SBATCH --partition=${PARTICAO}
+#SBATCH --nodes=${NODOS}
+#SBATCH --ntasks=${NP}
+#SBATCH --cpus-per-task=${OMP}
+#SBATCH --output=${DIR}/exec_real.out
+#SBATCH --error=${DIR}/exec_real.err
+#SBATCH --time=01:00:00
+
+# Carrega o ambiente no nó de execução
+eval \$(guix time-machine -C channels.scm -- shell -m guix.scm --search-paths)
+
+export OMP_NUM_THREADS=${OMP}
+
+echo "[REAL] Starting execution..."
+
+# Medição de Energia Inicial (Distribuída por todos os nós alocados pelo Slurm)
+srun --nodes=${NODOS} --ntasks=${NODOS} bash -c "hostname; cat /sys/class/powercap/intel-rapl/intel-rapl\:*/energy_uj"  > "${DIR}/start_uj"
+
+# O mpirun nativo lê a alocação do Slurm automaticamente (sem necessidade de hostfile)
+mpirun -np $NP -hostfile $HOSTFILE ${EXEC_BIN} ${PARAMETERS} > "${DIR}/$APP.out"
+
+# Medição de Energia Final
+srun --nodes=${NODOS} --ntasks=${NODOS} bash -c "hostname; cat /sys/class/powercap/intel-rapl/intel-rapl\:*/energy_uj"  > "${DIR}/end_uj"
+
+echo "[REAL] Execution finished."
+EOF
+
+    # Submete o script recém-criado para a fila do Slurm!
+    sbatch "$SLURM_SCRIPT"
+    echo "Submetido: $APP ($NODOS nós) -> Partição $PARTICAO"
+
+    # Pausa de meio segundo para não sobrecarregar o Slurm Controller
+    sleep 0.5
+
+done
+#+end_src
+
+#+begin_src shell :results output :tangle scripts/run-sim.sh :tangle-mode (identity #o755) :exports both
+#!/bin/bash
+
+set +euxo pipefail
+date
+
+PROJECT=${1:-}
+if [[ -z $PROJECT ]]; then
+    echo "Path for project file not informed."
+fi
+
+eval $(guix time-machine -C channels.scm -- shell -m guix.scm --search-paths)
+
+make clean
+make pcad
+
+BASEDIR="logs/$(basename -- PROJECT .csv)-$(date +%d-%m-%y)"
+mkdir -p $BASEDIR
+
+tail -n +2 "$PROJECT" | while IFS=, read -r PARTICAO NODOS NP APP TAMANHO OMP B; do
+
+    echo "[SMPI] Initializaion of simulation"
+
+    DIR="${BASEDIR}/${PARTICAO}-${NODOS}-${NP}-${APP}-${TAMANHO}-${OMP}-$(echo "$B" | sed -E "s/.*([0-9]+)/\1/g")"
+    mkdir -p $DIR
+
+    echo "[SMPI] $APP with $NODOS ($NP process) in $PARTICAO"
+
+    HOSTFILE="$DIR/hostfile.txt"
+    rm -f "$HOSTFILE"
+
+    RANKS_PER_NODE=$(( NP / NODOS ))
+    REMAINDER=$(( NP % NODOS ))
+
+    for ((i=1; i<=NODOS; i++)); do
+        RANKS=$RANKS_PER_NODE
+        if (( i <= REMAINDER )); then
+	    RANKS=$((RANKS + 1))
+        fi
+
+        for ((j=1; j<=RANKS; j++)); do
+	    echo "${PARTICAO}${i}" >> "$HOSTFILE"
+        done
+    done
+
+    case "$APP" in
+	"lulesh")
+
+	    APP_DIR="./SMPI-proxy-apps/Benchmarks/Coral/Lulesh/"
+	    pushd $APP_DIR
+	    {
+		make clean
+		make MPI_INC="" MPICXX="smpicxx -DUSE_MPI=1" -j 20
+	    }
+	    popd
+
+	    APP="${APP_DIR}/lulesh2.0 -i 100"
+
+	    case $TAMANHO in
+		"p") PARAMETERS="-s 10" ;;
+		"m") PARAMETERS="-s 40" ;;
+		"g") PARAMETERS="-s 60" ;;
+	    esac
+	    ;;
+
+	"minivite")
+
+	    APP_DIR="./SMPI-proxy-apps/Benchmarks/ECP/miniVite"
+	    pushd $APP_DIR
+	    {
+		make clean
+		make CXX=smpicxx OPTFLAGS="-O3 -fopenmp -DPRINT_DIST_STATS -DDEBUG_PRINTF" -j 20
+	    }
+	    popd
+
+	    APP="${APP_DIR}/miniVite"
+	    case $TAMANHO in
+		"p") PARAMETERS="-n 50000" ;;
+		"m") PARAMETERS="-n 200000" ;;
+		"g") PARAMETERS="-n 300000" ;;
+	    esac
+	    ;;
+
+	"comd")
+
+	    APP_DIR="./SMPI-proxy-apps/Benchmarks/ECP/CoMD"
+	    pushd $APP_DIR/src-mpi
+	    {
+		make clean
+		make CC=smpicc -j 20
+	    }
+	    popd
+
+	    APP="${APP_DIR}/bin/CoMD-mpi -N 100"
+	    case $TAMANHO in
+		"p") PARAMETERS="-x 10 -y 10 -z 10" ;;
+		"m") PARAMETERS="-x 30 -y 30 -z 30" ;;
+		"g") PARAMETERS="-x 50 -y 50 -z 50" ;;
+	    esac
+	    ;;
+
+	,*)
+	    echo "Unknow application. Exiting..."
+	    exit
+	    ;;
+    esac
+
+
+    export OMP_NUM_THREADS=$OMP
+    echo "[SMPI] Starting simulation..."
+    cat /sys/class/powercap/intel-rapl/intel-rapl\:*/energy_uj > "$DIR/start_uj"
+
+    # Cei speed as I will run all in cei.
+    smpirun -np $NP -hostfile $HOSTFILE -platform ./pcad.so --cfg=smpi/host-speed:19.125Gf $APP $PARAMETERS > "$DIR/smpi-$APP.out"
+
+    cat /sys/class/powercap/intel-rapl/intel-rapl\:*/energy_uj > "$DIR/end_uj"
+done
+
+date
+#+end_src
+
+[22:57:37; 23.02.2026]: To compile:
+
+#+begin_src shell :results output :exports both
+# Lulesh:
+make MPI_INC="" MPICXX="smpicxx -DUSE_MPI=1" -j $NUMBER_OF_PROCESSORS
+
+# MiniVite:
+make CXX=smpicxx OPTFLAGS="-O3 -fopenmp -DPRINT_DIST_STATS -DDEBUG_PRINTF" -j $NUMBER_OF_PROCESSORS
+
+# CoMD
+make CC=smpicc -j $NUMBER_OF_PROCESSORS
+
+#+end_src
+
+
+[23:06:10; 23.02.2026]: Os tempos dessa tabela foram criados se
+baseando na execução sequencial das aplicações...
+| Application    | rapido ~1s         | medio ~[2, 10]s    | demorado ~[20-60]s  |
+|----------------+--------------------+--------------------+---------------------|
+| Lulesh (i,s)   | i=100,s=10 -> 0.20 | i=100,s=30 -> 4.40 | i=100,s=75 -> 56.16 |
+| MiniVite (n)   | n=50000 -> 0.63s   | n=180000 -> ~2     | n=180000 -> ~30     |
+| CoMD (x=y=z,N) | x=10, N=100        | x=25, N=100        | x=50, n=100         |
+
+[00:42:40; 24.02.2026]: I reduced the project because I fear that the
+time taken to run everything will be really high...
+
+*** 2026-02-24
+Parsing the results:
+
+#+begin_src shell :results output :tangle data/validation/parse.sh :tangle-mode (identity #o755) :exports both
+
+BASE=${1:-}
+
+if [[ "$BASE" == "" ]]; then
+    BASE="."
+fi
+
+echo "partition,nodes,np,app,size,omp,run,time,start_uj,end_uj";
+
+for i in `find $BASE -name *lulesh* -type d`; do
+
+    config=$(echo $i | rev | cut -d/ -f1 | rev | sed s/-/,/g | sed s/REAL,//g)
+
+    empty=$(find $i -name "*_uj" | wc -l)
+
+    if [[ "$empty" == "2" ]]; then
+
+	time=$(cat $i/*.out | grep "Elapsed time" | sed -E "s/.* ([0-9]+.[0-9]+) .*/\1/g")
+
+	start_uj=$(cat $i/start_uj | awk '{s+=$1} END {print s}')
+	end_uj=$(cat $i/end_uj | awk '{s+=$1} END {print s}')
+
+	echo $config,$time,$start_uj,$end_uj
+
+    fi
+
+
+done
+
+
+for i in `find $BASE -name *minivite* -type d`; do
+    config=$(echo $i | rev | cut -d/ -f1 | rev | sed s/-/,/g | sed s/REAL,//g)
+
+    empty=$(find $i -name "*_uj" | wc -l)
+
+    if [[ "$empty" == "2" ]]; then
+
+    time=$(cat $i/*.out | grep "Average total time" | sed -E "s/.* ([0-9]+.[0-9]+),.*/\1/g" | xargs)
+
+    start_uj=$(cat $i/start_uj | awk '{s+=$1} END {print s}')
+    end_uj=$(cat $i/end_uj | awk '{s+=$1} END {print s}')
+
+    echo $config,$time,$start_uj,$end_uj
+
+    fi
+
+done
+
+for i in `find $BASE -name *comd* -type d`; do
+    config=$(echo $i | rev | cut -d/ -f1 | rev | sed s/-/,/g  | sed s/REAL,//g)
+
+    empty=$(find $i -name "*_uj" | wc -l)
+
+    if [[ "$empty" == "2" ]]; then
+
+    time=$(cat $i/*.out | grep "^total" | tail -n 1 | awk '{print $6}')
+
+    start_uj=$(cat $i/start_uj | awk '{s+=$1} END {print s}')
+    end_uj=$(cat $i/end_uj | awk '{s+=$1} END {print s}')
+
+    echo $config,$time,$start_uj,$end_uj
+
+    fi
+done
+
+
+#+end_src
+
+[12:45:07; 24.02.2026]: Half of minivite was not execute due to error
+in the parameters, looks like there is a restriction for the number of
+process to be equal to an app parameter...
+
+[13:19:27; 24.02.2026]: minivite didnt worked with OMP_NUM_THREADS=10,
+good to know then.
+
+#+begin_src R :results output :session *R* :exports both
+
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "."
+tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |> select(-CSV) -> df
+
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 sim/sim_results.csv
+# A tibble: 960 × 10
+   partition nodes    np app    size    omp   run  time     start_uj       end_uj
+   <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <dbl> <dbl>        <dbl>        <dbl>
+ 1 cei           1     1 lulesh p         1     5  0.21 411766005385 411780600684
+ 2 poti          4     8 lulesh m         1     4 10.6  243067771360 247211189829
+ 3 tupi          2     8 lulesh p        10     3  0.46 139366905182 139623809798
+ 4 draco         2     8 lulesh p        10     2  0.87 276983452296 277237059252
+ 5 cei           4     8 lulesh p        10     2  0.79 252777534772 253063068526
+ 6 draco         1     1 lulesh p        10     2  0.61 277517022525 277554584807
+ 7 tupi          1     1 lulesh p         1     2  0.07 124859051758 124874495871
+ 8 cei           2     8 lulesh m         1     3  9.99 318406791870 322576680426
+ 9 cei           1     8 lulesh m         1     4  9.83 330730660406 334874714068
+10 tupi          1     1 lulesh m         1     5  3.02 382969587587 383516252509
+# ℹ 950 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(partition, nodes, np, app, size, omp) |>
+  filter(!is.na(time)) |> summarise( N=n(), mean_time = mean(time), sd
+  = sd(time), cv_time = sd/mean_time, mean_uj = mean(end_uj -
+  start_uj), sd_uj = sd(end_uj - start_uj), cv_uj = sd_uj/mean_uj,
+
+  ) |> arrange(-sd) |> print(n=150) -> df.stats
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'partition', 'nodes', 'np', 'app', 'size'. You can override using
+the `.groups` argument.
+# A tibble: 112 × 13
+# Groups:   partition, nodes, np, app, size [72]
+    partition nodes    np app      size    omp     N mean_time       sd cv_time  mean_uj   sd_uj    cv_uj
+    <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl>    <dbl>   <dbl>    <dbl>   <dbl>    <dbl>
+  1 draco         1     8 lulesh   m         1     5   16.0    0.151    9.45e-3  4.14e 9 7.06e 7  1.71e-2
+  2 draco         1     1 comd     m         1     5   42.3    0.145    3.44e-3 -5.06e10 1.17e11 -2.32e+0
+  3 draco         1     1 comd     m        10     5   42.3    0.137    3.24e-3  1.84e 9 8.04e 6  4.38e-3
+  4 cei           1     1 comd     m         1     5   31.3    0.123    3.93e-3  1.84e 9 9.50e 6  5.18e-3
+  5 draco         2     8 lulesh   m         1     5   15.0    0.119    7.91e-3 -4.83e10 1.17e11 -2.43e+0
+  6 draco         1     1 lulesh   m         1     5   12.5    0.115    9.18e-3  5.47e 8 4.25e 6  7.76e-3
+  7 poti          1     1 comd     m         1     5   29.6    0.112    3.77e-3  1.83e 9 7.35e 6  4.01e-3
+  8 poti          1     1 comd     m        10     5   29.6    0.101    3.42e-3  1.83e 9 3.23e 6  1.76e-3
+  9 cei           1     1 comd     m        10     5   31.2    0.0971   3.11e-3  1.84e 9 8.17e 6  4.45e-3
+ 10 cei           4     8 lulesh   m         1     5   10.0    0.0885   8.84e-3  4.18e 9 3.59e 7  8.60e-3
+ 11 draco         2     8 lulesh   m        10     5    5.43   0.0638   1.17e-2  1.47e 9 2.83e 7  1.92e-2
+ 12 cei           2     8 lulesh   m        10     5    2.84   0.0583   2.05e-2  1.49e 9 3.50e 7  2.35e-2
+ 13 draco         1     8 lulesh   m        10     5    6.46   0.0498   7.70e-3  1.47e 9 1.77e 7  1.20e-2
+ 14 poti          1     8 lulesh   m        10     5    5.59   0.0497   8.89e-3  1.45e 9 3.21e 7  2.21e-2
+ 15 draco         1     1 lulesh   m        10     5    2.84   0.0449   1.58e-2  1.80e 8 1.83e 6  1.02e-2
+ 16 poti          1     1 lulesh   m         1     5    8.75   0.0436   4.98e-3  5.49e 8 4.74e 6  8.63e-3
+ 17 cei           1     8 lulesh   m        10     5    2.71   0.0432   1.59e-2  1.47e 9 2.57e 7  1.75e-2
+ 18 poti          4     8 lulesh   m        10     5    3.87   0.04     1.03e-2  1.48e 9 2.25e 7  1.52e-2
+ 19 draco         4     8 lulesh   m        10     5    4.72   0.0396   8.40e-3  1.48e 9 2.09e 7  1.41e-2
+ 20 draco         1     8 lulesh   p        10     5    0.912  0.0390   4.27e-2  2.78e 8 1.66e 7  5.96e-2
+ 21 cei           1     8 lulesh   m         1     5    9.85   0.0370   3.76e-3  4.16e 9 2.23e 7  5.37e-3
+ 22 cei           2     8 lulesh   m         1     5    9.97   0.0365   3.66e-3  4.17e 9 4.12e 7  9.87e-3
+ 23 cei           1     1 lulesh   m        10     5    2.07   0.0354   1.71e-2  1.77e 8 2.27e 6  1.28e-2
+ 24 draco         2     8 minivite m         1     5    0.587  0.0353   6.01e-2  1.50e 9 1.75e 7  1.17e-2
+ 25 tupi          1     1 comd     m         1     5   10.2    0.0337   3.30e-3  1.84e 9 1.39e 7  7.53e-3
+ 26 draco         4     8 lulesh   m         1     5   14.3    0.0336   2.34e-3  4.16e 9 2.57e 7  6.18e-3
+ 27 cei           4     8 minivite m         1     5    0.468  0.0325   6.95e-2  1.50e 9 1.10e 7  7.34e-3
+ 28 draco         4     8 lulesh   p        10     5    0.872  0.0311   3.57e-2  2.68e 8 1.43e 7  5.35e-2
+ 29 poti          2     8 lulesh   m        10     5    4.61   0.0311   6.76e-3  1.48e 9 2.78e 7  1.87e-2
+ 30 poti          4     8 lulesh   m         1     5   10.6    0.0297   2.80e-3  4.16e 9 3.93e 7  9.44e-3
+ 31 cei           4     8 lulesh   m        10     5    2.89   0.0277   9.60e-3  1.48e 9 1.69e 7  1.15e-2
+ 32 poti          2     8 lulesh   p        10     5    0.742  0.0277   3.74e-2  2.71e 8 1.88e 7  6.92e-2
+ 33 poti          4     8 minivite m         1     5    0.464  0.0271   5.84e-2  1.50e 9 1.77e 7  1.18e-2
+ 34 cei           4     8 lulesh   p        10     5    0.744  0.0270   3.63e-2  2.60e 8 1.58e 7  6.10e-2
+ 35 poti          1     8 lulesh   m         1     5   12.4    0.0268   2.17e-3  4.14e 9 9.28e 6  2.24e-3
+ 36 cei           1     8 minivite m         1     5    0.430  0.0260   6.06e-2  1.49e 9 5.73e 6  3.83e-3
+ 37 tupi          1     1 comd     m        10     5   10.2    0.0257   2.51e-3  1.84e 9 4.30e 6  2.34e-3
+ 38 draco         2     8 lulesh   p        10     5    0.9    0.0255   2.83e-2  2.69e 8 1.06e 7  3.96e-2
+ 39 poti          1     8 minivite m         1     5    0.458  0.0249   5.42e-2  1.50e 9 9.62e 6  6.41e-3
+ 40 poti          2     8 minivite m         1     5    0.415  0.0248   5.97e-2  1.49e 9 2.07e 7  1.39e-2
+ 41 draco         1     8 minivite m         1     5    0.608  0.0243   4.00e-2  1.50e 9 1.16e 7  7.75e-3
+ 42 cei           1     1 lulesh   m         1     5    9.25   0.0241   2.60e-3  5.50e 8 3.68e 6  6.69e-3
+ 43 tupi          1     1 lulesh   m         1     5    3.01   0.0235   7.79e-3  5.48e 8 2.55e 6  4.65e-3
+ 44 cei           2     8 lulesh   p        10     5    0.728  0.0228   3.13e-2  2.72e 8 1.35e 7  4.95e-2
+ 45 poti          4     8 lulesh   p        10     5    0.722  0.0228   3.16e-2  2.69e 8 1.32e 7  4.93e-2
+ 46 poti          2     8 lulesh   m         1     5   11.3    0.0195   1.72e-3  4.17e 9 2.41e 7  5.77e-3
+ 47 tupi          4     8 lulesh   m         1     5    4.73   0.0192   4.07e-3  4.16e 9 2.84e 7  6.82e-3
+ 48 draco         1     1 minivite m         1     5    3.54   0.0170   4.79e-3  4.51e 9 1.13e 7  2.50e-3
+ 49 poti          1     8 lulesh   p        10     5    0.736  0.0152   2.06e-2  2.68e 8 9.85e 6  3.68e-2
+ 50 tupi          1     8 minivite m         1     5    0.204  0.0140   6.87e-2  1.50e 9 2.16e 7  1.44e-2
+ 51 poti          1     1 lulesh   m        10     5    1.99   0.0130   6.56e-3  1.80e 8 2.20e 6  1.22e-2
+ 52 tupi          1     8 lulesh   m        10     5    4.26   0.0122   2.87e-3  1.48e 9 2.41e 7  1.63e-2
+ 53 cei           1     8 lulesh   p        10     5    0.6    0.0122   2.04e-2  2.61e 8 6.27e 6  2.40e-2
+ 54 tupi          1     8 lulesh   m         1     5    6.59   0.0122   1.86e-3  4.16e 9 2.47e 7  5.94e-3
+ 55 draco         4     8 minivite m         1     5    0.622  0.0121   1.95e-2  1.50e 9 1.24e 7  8.25e-3
+ 56 tupi          4     8 lulesh   m        10     5    2.39   0.0114   4.76e-3  1.47e 9 1.91e 7  1.30e-2
+ 57 tupi          2     8 lulesh   m        10     5    3.20   0.0114   3.57e-3  1.48e 9 2.01e 7  1.36e-2
+ 58 tupi          2     8 minivite m         1     5    0.187  0.0110   5.88e-2  1.49e 9 1.62e 7  1.09e-2
+ 59 poti          4     8 minivite p         1     5    0.164  0.00993  6.07e-2  1.33e 8 2.87e 6  2.16e-2
+ 60 draco         1     1 comd     p         1     5    1.75   0.00862  4.93e-3  8.08e 7 8.22e 5  1.02e-2
+ 61 poti          1     1 minivite m         1     5    2.48   0.00826  3.33e-3 -4.79e10 1.17e11 -2.45e+0
+ 62 tupi          4     8 minivite m         1     5    0.200  0.00823  4.12e-2  1.49e 9 5.21e 6  3.49e-3
+ 63 cei           2     8 minivite m         1     5    0.467  0.00786  1.68e-2  1.50e 9 1.78e 7  1.18e-2
+ 64 cei           4     8 minivite p         1     5    0.167  0.00782  4.68e-2  1.33e 8 1.69e 6  1.27e-2
+ 65 draco         2     8 minivite p         1     5    0.182  0.00757  4.17e-2  1.32e 8 2.77e 6  2.10e-2
+ 66 cei           1     1 minivite m         1     5    2.62   0.00723  2.76e-3  4.51e 9 9.60e 6  2.13e-3
+ 67 draco         1     1 comd     p        10     5    1.75   0.00660  3.77e-3  8.03e 7 6.75e 5  8.41e-3
+ 68 draco         2     8 lulesh   p         1     5    0.636  0.00548  8.61e-3  1.31e 8 1.55e 6  1.19e-2
+ 69 poti          1     1 lulesh   p        10     5    0.426  0.00548  1.29e-2  3.75e 7 6.25e 5  1.67e-2
+ 70 tupi          2     8 lulesh   p        10     5    0.464  0.00548  1.18e-2  2.67e 8 1.31e 7  4.92e-2
+ 71 tupi          1     1 lulesh   m        10     5    0.684  0.00548  8.01e-3  1.79e 8 1.52e 6  8.48e-3
+ 72 poti          1     8 minivite p         1     5    0.141  0.00451  3.21e-2  1.33e 8 2.04e 6  1.53e-2
+ 73 cei           1     1 lulesh   p         1     5    0.212  0.00447  2.11e-2  1.50e 7 4.61e 5  3.08e-2
+ 74 cei           2     8 lulesh   p         1     5    0.548  0.00447  8.16e-3  1.32e 8 9.25e 5  7.03e-3
+ 75 draco         1     8 lulesh   p         1     5    0.658  0.00447  6.80e-3  1.32e 8 3.16e 5  2.40e-3
+ 76 draco         4     8 lulesh   p         1     5    0.648  0.00447  6.90e-3  1.30e 8 1.19e 5  9.17e-4
+ 77 poti          2     8 lulesh   p         1     5    0.552  0.00447  8.10e-3  1.30e 8 1.30e 6  1.00e-2
+ 78 poti          1     1 lulesh   p         1     5    0.202  0.00447  2.21e-2  1.46e 7 2.74e 5  1.88e-2
+ 79 draco         1     1 lulesh   p         1     5    0.282  0.00447  1.59e-2  1.48e 7 3.63e 5  2.45e-2
+ 80 tupi          1     8 minivite p         1     5    0.0785 0.00438  5.58e-2  1.33e 8 3.01e 6  2.26e-2
+ 81 poti          1     1 comd     p         1     5    1.23   0.00284  2.31e-3  8.06e 7 4.63e 5  5.74e-3
+ 82 draco         4     8 minivite p         1     5    0.185  0.00279  1.51e-2  1.31e 8 1.11e 6  8.52e-3
+ 83 cei           1     1 comd     p        10     5    1.30   0.00210  1.62e-3  8.05e 7 5.98e 5  7.42e-3
+ 84 poti          1     1 comd     p        10     5    1.23   0.00206  1.68e-3  8.11e 7 5.54e 5  6.83e-3
+ 85 cei           1     8 minivite p         1     5    0.131  0.00185  1.41e-2  1.32e 8 1.29e 6  9.77e-3
+ 86 tupi          1     1 minivite m         1     5    0.857  0.00153  1.79e-3  4.52e 9 8.14e 6  1.80e-3
+ 87 tupi          1     1 comd     p         1     5    0.423  0.00130  3.07e-3  8.02e 7 6.51e 5  8.12e-3
+ 88 poti          1     1 minivite p         1     5    0.503  0.00110  2.19e-3  3.03e 8 2.69e 6  8.87e-3
+ 89 draco         1     1 minivite p         1     5    0.719  0.00105  1.45e-3  3.04e 8 3.34e 6  1.10e-2
+ 90 cei           2     8 minivite p         1     5    0.158  0.000948 5.99e-3  1.32e 8 1.27e 6  9.56e-3
+ 91 cei           1     1 comd     p         1     5    1.30   0.000792 6.11e-4  8.05e 7 2.19e 5  2.73e-3
+ 92 poti          2     8 minivite p         1     5    0.147  0.000706 4.80e-3  1.31e 8 1.19e 6  9.08e-3
+ 93 draco         1     8 minivite p         1     5    0.164  0.000655 3.99e-3  1.31e 8 8.50e 5  6.47e-3
+ 94 cei           1     1 minivite p         1     5    0.531  0.000550 1.04e-3  3.04e 8 4.15e 6  1.36e-2
+ 95 tupi          1     1 comd     p        10     5    0.425  0.000365 8.58e-4  8.01e 7 7.32e 5  9.14e-3
+ 96 tupi          1     1 minivite p         1     5    0.174  0.000235 1.35e-3  3.03e 8 1.35e 6  4.47e-3
+ 97 tupi          2     8 minivite p         1     5    0.0811 0.000173 2.13e-3  1.31e 8 1.06e 6  8.10e-3
+ 98 tupi          4     8 minivite p         1     5    0.0859 0.000112 1.31e-3  1.31e 8 1.85e 6  1.41e-2
+ 99 cei           1     1 lulesh   p        10     5    0.45   0        0        3.77e 7 7.24e 5  1.92e-2
+100 cei           1     8 lulesh   p         1     5    0.44   0        0        1.32e 8 1.21e 6  9.19e-3
+101 cei           4     8 lulesh   p         1     5    0.58   0        0        1.30e 8 3.17e 5  2.44e-3
+102 draco         1     1 lulesh   p        10     5    0.61   0        0        3.82e 7 8.86e 5  2.32e-2
+103 poti          1     8 lulesh   p         1     5    0.57   0        0        1.31e 8 1.59e 6  1.22e-2
+104 poti          4     8 lulesh   p         1     5    0.56   0        0        1.30e 8 1.47e 6  1.13e-2
+105 tupi          1     1 lulesh   p         1     5    0.07   0        0        1.52e 7 4.67e 5  3.08e-2
+106 tupi          1     1 lulesh   p        10     5    0.15   0        0        3.77e 7 8.00e 5  2.12e-2
+107 tupi          1     8 lulesh   p         1     5    0.41   0        0        1.32e 8 9.93e 5  7.51e-3
+108 tupi          1     8 lulesh   p        10     5    0.48   0        0        2.80e 8 5.43e 6  1.94e-2
+109 tupi          2     8 lulesh   m         1     5    5.53   0        0        4.16e 9 4.10e 7  9.84e-3
+110 tupi          2     8 lulesh   p         1     5    0.41   0        0        1.31e 8 1.44e 6  1.11e-2
+111 tupi          4     8 lulesh   p         1     5    0.35   0        0        1.31e 8 1.29e 6  9.83e-3
+112 tupi          4     8 lulesh   p        10     5    0.42   0        0        2.81e 8 5.16e 6  1.84e-2
+#+end_example
+
+
+#+begin_src R :results output :session *R* :exports both
+df.stats
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 112 × 13
+# Groups:   partition, nodes, np, app, size [72]
+   partition nodes    np app    size    omp     N mean_time     sd cv_time       mean_uj   sd_uj    cv_uj
+   <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <int>     <dbl>  <dbl>   <dbl>         <dbl>   <dbl>    <dbl>
+ 1 draco         1     8 lulesh m         1     5      16.0 0.151  0.00945   4135548544. 7.06e 7  0.0171
+ 2 draco         1     1 comd   m         1     5      42.3 0.145  0.00344 -50591213406. 1.17e11 -2.32
+ 3 draco         1     1 comd   m        10     5      42.3 0.137  0.00324   1837108017  8.04e 6  0.00438
+ 4 cei           1     1 comd   m         1     5      31.3 0.123  0.00393   1835406520. 9.50e 6  0.00518
+ 5 draco         2     8 lulesh m         1     5      15.0 0.119  0.00791 -48294483580  1.17e11 -2.43
+ 6 draco         1     1 lulesh m         1     5      12.5 0.115  0.00918    547239090. 4.25e 6  0.00776
+ 7 poti          1     1 comd   m         1     5      29.6 0.112  0.00377   1834045219  7.35e 6  0.00401
+ 8 poti          1     1 comd   m        10     5      29.6 0.101  0.00342   1833940996  3.23e 6  0.00176
+ 9 cei           1     1 comd   m        10     5      31.2 0.0971 0.00311   1835597181. 8.17e 6  0.00445
+10 cei           4     8 lulesh m         1     5      10.0 0.0885 0.00884   4175225579. 3.59e 7  0.00860
+# ℹ 102 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+
+*** Parcial results
+
+#+begin_src R :results output :session *R* :exports both
+
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "."
+tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |> print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  separate(CSV, into=paste0("XX", 1:2), sep="_") |>
+  unnest(DATA) |>
+  select(where=XX1, everything()) |>
+  select(-XX2) -> df
+
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 2 × 1
+  CSV
+  <fs::path>
+1 real_results.csv
+2 sim_results.csv
+# A tibble: 2,355 × 11
+   where partition nodes    np app    size    omp   run   time      start_uj        end_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <dbl>  <dbl>         <dbl>         <dbl>
+ 1 real  cei           1     1 lulesh m        10     3  17.1    13229405096   14422687015
+ 2 real  poti          1     8 lulesh p        10     3 153.    113938202336  136224025044
+ 3 real  cei           4     8 lulesh m         1     4   9.52 1239734164831 1253885309146
+ 4 real  draco         2     8 lulesh m        10     2   9.95  215620049457  155725549073
+ 5 real  cei           1     1 lulesh p         1     3   0.2   222942431280  223041396846
+ 6 real  cei           4     8 lulesh p         1     5   0.27 1304491919338 1316087870182
+ 7 real  draco         2     8 lulesh p         1     5   0.26  165495966818  169273161864
+ 8 real  draco         4     8 lulesh m         1     5  11.7   354540703446  364216185962
+ 9 real  cei           1     1 lulesh m         1     2   9.21   11392355051   12074426913
+10 real  tupi          1     1 lulesh p        10     3   4.37   88938339639   89044241589
+# ℹ 2,345 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+df |> print()
+#+end_src
+
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(where, partition, nodes, np, app, size, omp) |>
+  filter(!is.na(time)) |>
+  mutate(start_uj=ifelse(start_uj < 0, end_uj, start_uj)) |>
+  mutate(end_uj=ifelse(end_uj < 0, start_uj, end_uj)) |>
+  summarise(
+    N=n(),
+    mean_time = mean(time),
+    sd = sd(time),
+    cv_time = sd/mean_time,
+    mean_uj = mean(end_uj - start_uj),
+    sd_uj = sd(end_uj - start_uj),
+    cv_uj = sd_uj/mean_uj,
+  ) |>
+  arrange(-sd) |>
+  print(n=150) -> df.stats
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'where', 'partition', 'nodes', 'np', 'app', 'size'. You can override
+using the `.groups` argument.
+# A tibble: 280 × 14
+# Groups:   where, partition, nodes, np, app, size [168]
+    where partition nodes    np app      size    omp     N mean_time       sd cv_time  mean_uj      sd_uj
+    <chr> <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl>    <dbl>   <dbl>    <dbl>      <dbl>
+  1 real  poti          1     8 lulesh   p        10     5   221.    152.     0.685   -3.00e10    1.16e11
+  2 real  cei           1     8 lulesh   p        10     5   167.     18.1    0.109   -1.41e11    2.35e11
+  3 real  cei           1     8 lulesh   m        10     5   197.     17.9    0.0909   1.96e10    2.03e 9
+  4 real  draco         1     8 lulesh   m        10     4   116.     17.8    0.154    9.76e 9    1.64e 9
+  5 real  tupi          1     8 lulesh   m        10     5   192.     16.7    0.0872   8.58e 9    7.26e 8
+  6 real  poti          1     8 lulesh   m        10     5   169.     12.1    0.0715   2.45e10    1.72e 9
+  7 real  tupi          1     8 lulesh   p        10     5   178.      9.82   0.0551   7.90e 9    4.49e 8
+  8 real  draco         1     8 lulesh   p        10     5    71.6     7.68   0.107   -6.59e 9    2.89e10
+  9 real  draco         1     1 comd     m        10     5    33.2     3.55   0.107    1.41e 9    1.30e 8
+ 10 real  poti          1     1 lulesh   m        10     5     7.06    1.26   0.179    2.08e 8    6.82e 7
+ 11 real  draco         1     1 lulesh   m         1     5     9.81    1.14   0.116    4.49e 8    4.04e 7
+ 12 real  draco         2     8 lulesh   m         1     4    11.4     0.878  0.0768   4.86e 9    5.08e 7
+ 13 real  poti          1     1 lulesh   p        10     5     3.93    0.687  0.175    1.16e 8    3.66e 7
+ 14 real  draco         1     8 lulesh   m         1     5    10.6     0.659  0.0620   7.56e 8    3.74e 7
+ 15 real  poti          1     1 lulesh   m         1     5     3.21    0.574  0.179    1.01e 8    1.98e 7
+ 16 real  tupi          1     8 lulesh   m         1     5     6.26    0.424  0.0679   3.03e 8    1.46e 7
+ 17 sim   draco         1     1 minivite m         1    10     3.94    0.424  0.107    4.74e 9    2.42e 8
+ 18 real  draco         2     8 comd     m         1     5     5.51    0.405  0.0735   4.29e 9    8.33e 7
+ 19 real  draco         2     8 comd     m        10     5     5.67    0.398  0.0702   4.25e 9    1.12e 8
+ 20 real  draco         1     8 comd     m         1     5     5.15    0.398  0.0772   3.90e 8    3.81e 7
+ 21 real  draco         1     8 comd     m        10     4     5.06    0.397  0.0784   3.87e 8    4.32e 7
+ 22 real  draco         2     8 lulesh   m        10     5    10.5     0.348  0.0331  -2.08e10    3.58e10
+ 23 sim   cei           1     1 minivite m         1    10     2.91    0.311  0.107    4.74e 9    2.41e 8
+ 24 sim   poti          1     1 minivite m         1    10     2.75    0.291  0.106   -2.15e10    8.30e10
+ 25 real  tupi          1     8 comd     m        10     5     2.87    0.271  0.0945   1.54e 8    1.14e 7
+ 26 real  draco         1     1 minivite m         1     5     3.17    0.270  0.0852   4.77e 9    4.14e 8
+ 27 real  tupi          1     8 comd     m         1     5     2.67    0.218  0.0814   1.46e 8    1.10e 7
+ 28 real  draco         2     8 lulesh   p        10     5     4.25    0.211  0.0495   4.37e 9    1.11e 8
+ 29 real  draco         1     1 comd     p        10     5     1.49    0.178  0.119    1.13e 8    9.43e 6
+ 30 sim   draco         1     1 comd     m        10    10    42.3     0.138  0.00326  1.93e 9    1.02e 8
+ 31 real  cei           1     1 comd     m        10     5    34.1     0.124  0.00364  2.36e 9    9.51e 7
+ 32 sim   draco         1     8 lulesh   m         1    10    16.0     0.118  0.00734  4.37e 9    2.55e 8
+ 33 sim   draco         1     1 comd     m         1    10    42.3     0.117  0.00278 -5.05e10    1.11e11
+ 34 sim   cei           1     1 comd     m        10    10    31.3     0.114  0.00364  1.94e 9    1.06e 8
+ 35 real  cei           1     1 comd     m         1     5    34.0     0.106  0.00312  2.42e 9    1.87e 7
+ 36 sim   draco         1     1 lulesh   m         1    10    12.5     0.106  0.00849  5.77e 8    3.19e 7
+ 37 sim   cei           1     1 comd     m         1    10    31.3     0.105  0.00335  1.93e 9    1.04e 8
+ 38 sim   tupi          1     1 minivite m         1    10     0.953   0.102  0.107    4.74e 9    2.35e 8
+ 39 sim   draco         2     8 lulesh   m         1    10    15.0     0.100  0.00666 -2.18e10    8.30e10
+ 40 real  poti          1     8 lulesh   m         1     5     4.7     0.0962 0.0205   7.30e 8    4.89e 7
+ 41 real  draco         1     1 lulesh   m        10     5    13.9     0.0938 0.00673  6.49e 8    6.53e 7
+ 42 sim   poti          1     1 comd     m         1    10    29.6     0.0877 0.00297  1.93e 9    1.01e 8
+ 43 real  tupi          1     1 comd     m        10     5    13.6     0.0808 0.00595  3.20e 8    1.34e 7
+ 44 sim   poti          1     1 comd     m        10    10    29.5     0.0743 0.00252  1.93e 9    1.05e 8
+ 45 real  cei           2     8 lulesh   m         1     5     9.53    0.0684 0.00718  7.24e 9    4.13e 7
+ 46 real  draco         1     1 comd     m         1     5    31.7     0.0677 0.00214  1.36e 9    1.19e 8
+ 47 real  cei           1     1 lulesh   m        10     5    17.1     0.0669 0.00391  1.23e 9    4.35e 7
+ 48 real  poti          1     1 comd     m         1     5    12.8     0.0660 0.00515  2.83e 8    4.72e 6
+ 49 sim   poti          1     8 lulesh   m         1    10    12.4     0.0643 0.00521  4.37e 9    2.46e 8
+ 50 real  cei           2     8 lulesh   p        10     5     0.418   0.0638 0.153    5.81e 9    7.69e 7
+ 51 sim   cei           4     8 lulesh   m         1    10    10.0     0.0627 0.00627  4.40e 9    2.38e 8
+ 52 real  tupi          1     1 lulesh   m        10     5     7.91    0.0604 0.00764  1.94e 8    9.53e 6
+ 53 real  draco         4     8 lulesh   m        10     5     3.86    0.0581 0.0150   8.79e 9    5.85e 7
+ 54 real  draco         1     1 minivite p         1     5     0.606   0.0566 0.0934   3.73e 8    3.49e 7
+ 55 sim   cei           1     1 lulesh   m         1    10     9.23    0.0564 0.00611  5.78e 8    2.96e 7
+ 56 sim   draco         1     1 lulesh   m        10    10     2.82    0.0558 0.0198   1.85e 8    5.89e 6
+ 57 sim   draco         1     1 minivite p         1    10     0.772   0.0558 0.0722   3.24e 8    2.10e 7
+ 58 real  cei           1     1 lulesh   m         1     5     9.18    0.0555 0.00604  7.07e 8    2.45e 7
+ 59 sim   draco         2     8 lulesh   m        10    10     5.44    0.0510 0.00937  1.53e 9    6.44e 7
+ 60 real  tupi          1     1 comd     m         1     5    13.6     0.0506 0.00373  3.04e 8    1.41e 7
+ 61 real  cei           4     8 minivite m         1     5     0.426   0.0493 0.116    1.26e10    7.70e 7
+ 62 sim   cei           2     8 lulesh   m        10    10     2.83    0.0492 0.0174   1.53e 9    5.96e 7
+ 63 sim   draco         4     8 lulesh   m        10    10     4.72    0.0489 0.0104   1.53e 9    5.76e 7
+ 64 real  cei           1     8 minivite m         1     5     0.447   0.0470 0.105    4.99e 8    4.84e 6
+ 65 sim   cei           1     8 lulesh   m         1    10     9.84    0.0467 0.00475  4.39e 9    2.35e 8
+ 66 sim   tupi          1     1 lulesh   m         1    10     3.00    0.0448 0.0149   5.74e 8    2.84e 7
+ 67 sim   draco         1     8 lulesh   m        10    10     6.47    0.0435 0.00673  1.52e 9    5.70e 7
+ 68 real  cei           4     8 lulesh   m         1     5     9.48    0.0428 0.00451  1.42e10    1.58e 7
+ 69 sim   cei           1     1 minivite p         1    10     0.570   0.0415 0.0728   3.24e 8    2.12e 7
+ 70 sim   poti          4     8 lulesh   m        10    10     3.86    0.0408 0.0106   1.53e 9    5.23e 7
+ 71 sim   draco         1     1 lulesh   p        10    10     0.572   0.0402 0.0703   3.74e 7    1.38e 6
+ 72 sim   cei           1     8 lulesh   m        10    10     2.73    0.0394 0.0144   1.53e 9    7.06e 7
+ 73 real  cei           2     8 comd     m        10     5     4.70    0.0394 0.00840  6.48e 9    2.46e 7
+ 74 sim   poti          1     8 lulesh   m        10    10     5.60    0.0387 0.00691  1.51e 9    6.34e 7
+ 75 sim   cei           4     8 lulesh   m        10    10     2.89    0.0386 0.0134   1.53e 9    5.80e 7
+ 76 sim   poti          1     1 minivite p         1    10     0.539   0.0384 0.0713   3.24e 8    2.17e 7
+ 77 sim   cei           2     8 lulesh   m         1    10     9.95    0.0381 0.00383  4.39e 9    2.32e 8
+ 78 real  tupi          1     1 lulesh   p        10     5     4.38    0.0371 0.00847  1.08e 8    5.81e 6
+ 79 sim   tupi          1     1 comd     m         1    10    10.2     0.0361 0.00353  1.94e 9    1.06e 8
+ 80 real  cei           2     8 minivite m         1     5     0.430   0.0359 0.0834   6.36e 9    7.29e 7
+ 81 sim   poti          1     1 lulesh   m         1    10     8.73    0.0353 0.00404  5.78e 8    3.02e 7
+ 82 real  poti          1     1 comd     m        10     5    12.8     0.0353 0.00275  2.86e 8    3.89e 6
+ 83 sim   draco         4     8 lulesh   m         1    10    14.3     0.0350 0.00244  4.39e 9    2.39e 8
+ 84 real  draco         1     1 lulesh   p         1     5     0.194   0.0329 0.169    6.70e 7    8.48e 6
+ 85 sim   draco         4     8 lulesh   p        10    10     0.872   0.0326 0.0374   2.79e 8    2.03e 7
+ 86 real  cei           4     8 lulesh   m        10     5     2.21    0.0324 0.0147   1.25e10    5.52e 7
+ 87 sim   cei           1     1 lulesh   m        10    10     2.05    0.0317 0.0154   1.83e 8    5.95e 6
+ 88 sim   poti          4     8 lulesh   m         1    10    10.6     0.0303 0.00286  4.38e 9    2.37e 8
+ 89 real  draco         2     8 minivite m         1     5     0.432   0.0303 0.0700   4.35e 9    8.90e 7
+ 90 sim   cei           1     1 lulesh   p        10    10     0.422   0.0297 0.0705   3.67e 7    1.16e 6
+ 91 real  cei           1     8 lulesh   m         1     5     9.61    0.0292 0.00303  1.02e 9    5.12e 6
+ 92 sim   draco         2     8 lulesh   p        10    10     0.893   0.0283 0.0317   2.77e 8    1.66e 7
+ 93 sim   poti          2     8 lulesh   p        10    10     0.747   0.0283 0.0379   2.84e 8    2.32e 7
+ 94 sim   draco         1     8 lulesh   p        10    10     0.913   0.0279 0.0306   2.89e 8    1.70e 7
+ 95 sim   poti          1     1 lulesh   p        10    10     0.4     0.0279 0.0697   3.68e 7    9.11e 5
+ 96 sim   poti          1     1 lulesh   m        10    10     1.98    0.0278 0.0141   1.85e 8    6.42e 6
+ 97 real  tupi          1     1 minivite p         1     5     0.245   0.0271 0.111    8.03e 7    5.08e 6
+ 98 sim   poti          2     8 lulesh   m        10    10     4.60    0.0267 0.00582  1.53e 9    5.27e 7
+ 99 real  draco         4     8 lulesh   m         1     5    11.7     0.0261 0.00222  9.67e 9    2.67e 7
+100 sim   cei           4     8 lulesh   p        10    10     0.745   0.0259 0.0348   2.71e 8    2.05e 7
+101 sim   draco         2     8 minivite m         1    10     0.596   0.0255 0.0428   1.58e 9    8.97e 7
+102 sim   poti          2     8 minivite m         1    10     0.433   0.0253 0.0584   1.58e 9    9.72e 7
+103 sim   tupi          1     1 comd     m        10    10    10.2     0.0250 0.00244  1.94e 9    1.07e 8
+104 real  cei           2     8 lulesh   m        10     5     3.50    0.0249 0.00711  6.71e 9    6.83e 7
+105 sim   cei           4     8 minivite m         1    10     0.474   0.0225 0.0475   1.58e 9    9.26e 7
+106 real  cei           1     1 lulesh   p        10     5     8.51    0.0219 0.00257  6.60e 8    1.75e 7
+107 sim   cei           1     8 minivite m         1    10     0.437   0.0210 0.0479   1.58e 9    9.22e 7
+108 sim   cei           2     8 lulesh   p        10    10     0.726   0.0207 0.0285   2.82e 8    1.68e 7
+109 real  draco         1     8 lulesh   p         1     4     0.242   0.0206 0.0850   8.66e 7    9.41e 6
+110 sim   poti          4     8 minivite m         1    10     0.466   0.0197 0.0423   1.59e 9    8.83e 7
+111 sim   poti          2     8 lulesh   m         1    10    11.3     0.0195 0.00172  4.39e 9    2.37e 8
+112 real  draco         1     1 lulesh   p        10     5     4.65    0.0192 0.00414  2.53e 8    2.46e 7
+113 real  cei           1     8 comd     m         1     5     4.64    0.0191 0.00412  5.34e 8    3.00e 6
+114 sim   poti          4     8 lulesh   p        10    10     0.729   0.0191 0.0262   2.84e 8    1.93e 7
+115 real  cei           2     8 comd     m         1     5     4.67    0.0190 0.00407  6.44e 9    1.74e 7
+116 sim   poti          1     8 minivite m         1    10     0.456   0.0189 0.0415   1.59e 9    9.04e 7
+117 sim   cei           1     8 lulesh   p        10    10     0.607   0.0189 0.0311   2.76e 8    1.91e 7
+118 real  draco         2     8 lulesh   p         1     5     0.28    0.0187 0.0668   3.72e 9    1.26e 8
+119 real  cei           4     8 comd     m        10     5     4.65    0.0186 0.00399  1.29e10    2.05e 8
+120 real  draco         1     8 comd     p         1     5     0.278   0.0184 0.0662   8.78e 7    9.28e 6
+121 real  tupi          1     8 minivite m         1     5     0.195   0.0179 0.0918   1.83e 8    8.09e 6
+122 real  draco         1     8 comd     p        10     5     0.265   0.0171 0.0646   9.20e 7    9.21e 6
+123 sim   draco         1     8 minivite m         1    10     0.606   0.0167 0.0276   1.59e 9    8.89e 7
+124 sim   tupi          4     8 lulesh   m         1    10     4.73    0.0165 0.00348  4.40e 9    2.52e 8
+125 sim   poti          1     8 lulesh   p        10    10     0.747   0.0157 0.0210   2.85e 8    1.97e 7
+126 sim   tupi          2     8 lulesh   m         1    10     5.52    0.0157 0.00284  4.38e 9    2.35e 8
+127 real  cei           1     8 comd     p        10     5     0.269   0.0156 0.0580   1.30e 8    5.30e 6
+128 real  cei           1     8 lulesh   p         1     5     0.246   0.0152 0.0616   1.29e 8    1.80e 6
+129 sim   tupi          1     8 lulesh   m         1    10     6.59    0.0149 0.00226  4.39e 9    2.41e 8
+130 real  tupi          1     8 comd     p        10     5     0.149   0.0137 0.0922   3.58e 7    9.16e 5
+131 sim   tupi          1     1 minivite p         1    10     0.186   0.0136 0.0728   3.23e 8    2.15e 7
+132 sim   draco         2     8 comd     m        10     5     9.68    0.0135 0.00139  2.17e 9    1.80e 7
+133 real  cei           4     8 comd     m         1     5     4.64    0.0133 0.00286  1.28e10    6.64e 7
+134 real  cei           2     8 minivite p         1     5     0.148   0.0131 0.0883   5.77e 9    2.02e 7
+135 real  tupi          1     1 lulesh   m         1     5     3.64    0.0130 0.00358  1.01e 8    3.16e 6
+136 real  poti          1     1 lulesh   p         1     5     0.062   0.0130 0.210    2.48e 7    3.88e 6
+137 real  draco         2     8 comd     p         1     5     0.418   0.0130 0.0312   3.82e 9    1.13e 8
+138 real  cei           2     8 comd     p        10     5     0.294   0.0130 0.0442  -4.66e10    1.17e11
+139 sim   draco         4     8 comd     m         1     5     8.88    0.0128 0.00145  2.16e 9    1.39e 7
+140 real  cei           2     8 comd     p         1     5     0.287   0.0121 0.0421   5.76e 9    2.65e 7
+141 real  poti          1     8 comd     m        10     5     1.89    0.0116 0.00615  3.44e 8    9.47e 6
+142 real  tupi          1     8 comd     p         1     5     0.150   0.0115 0.0768   3.43e 7    1.14e 6
+143 sim   tupi          1     8 lulesh   m        10    10     4.26    0.0114 0.00267  1.53e 9    5.73e 7
+144 real  poti          1     8 comd     m         1     5     1.90    0.0112 0.00590  3.21e 8    1.53e 7
+145 real  draco         4     8 comd     m        10     5     5.88    0.0111 0.00189 -4.61e 9    2.93e10
+146 sim   cei           2     8 minivite m         1    10     0.472   0.0110 0.0233   1.59e 9    8.95e 7
+147 sim   tupi          4     8 lulesh   m        10    10     2.39    0.0110 0.00460  1.51e 9    5.03e 7
+148 sim   draco         4     8 minivite p         1    10     0.195   0.0110 0.0564   1.40e 8    1.02e 7
+149 real  tupi          1     8 lulesh   p         1     5     0.118   0.0110 0.0928   3.47e 7    1.06e 6
+150 sim   tupi          2     8 minivite m         1    10     0.194   0.0107 0.0553   1.58e 9    9.34e 7
+# ℹ 130 more rows
+# ℹ 1 more variable: cv_uj <dbl>
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+#  poti          1     8 lulesh   p        10
+df |> filter(partition == "cei" &
+             app == "lulesh" &
+             nodes == 1 &
+             size == "m" &
+             omp == "10")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 30 × 11
+   where partition nodes    np app    size    omp   run  time     start_uj       end_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <dbl> <dbl>        <dbl>        <dbl>
+ 1 real  cei           1     1 lulesh m        10     3  17.1  13229405096  14422687015
+ 2 real  cei           1     1 lulesh m        10     5  17.0  18755258504  19950355115
+ 3 real  cei           1     8 lulesh m        10     4 215.  190551489115 212113343767
+ 4 real  cei           1     8 lulesh m        10     3 210.  407787109381 428847304857
+ 5 real  cei           1     1 lulesh m        10     1  17.0 163026320138 164308868430
+ 6 real  cei           1     1 lulesh m        10     2  17.0 325754615223 327016776298
+ 7 real  cei           1     8 lulesh m        10     1 170.  234857922626 251271030632
+ 8 real  cei           1     8 lulesh m        10     5 190.  264092682013 283209520708
+ 9 real  cei           1     1 lulesh m        10     4  17.2 483873637073 485067483076
+10 real  cei           1     8 lulesh m        10     2 198.  365558945879 385470255258
+# ℹ 20 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+
+meu_estilo <- function(base=20) {
+    list(
+        theme_bw(base_size = base),
+        theme(
+            legend.title = element_blank(),
+            plot.margin = unit(c(0, 0, 0, 0), "cm"),
+            legend.spacing = unit(1, "mm"),
+            legend.position = "right",
+            legend.justification = "left",
+            legend.box.spacing = unit(0, "pt"),
+            legend.box.margin = margin(0, 0, 0, 0),
+            axis.text.x = element_text(angle=45, vjust=1, hjust=1)
+        ))
+}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :results output :session *R* :exports both
+df.stats  |>
+  filter(partition=="cei" &
+         app=="lulesh") |>
+  print(n=32)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 32 × 14
+# Groups:   where, partition, nodes, np, app, size [16]
+   where partition nodes    np app    size    omp     N mean_time       sd cv_time  mean_uj         sd_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <int>     <dbl>    <dbl>   <dbl>    <dbl>         <dbl>
+ 1 real  cei           1     8 lulesh p        10     5   167.    18.1     0.109   -1.41e11 235347114598.
+ 2 real  cei           1     8 lulesh m        10     5   197.    17.9     0.0909   1.96e10   2028970301.
+ 3 real  cei           2     8 lulesh m         1     5     9.53   0.0684  0.00718  7.24e 9     41304449.
+ 4 real  cei           1     1 lulesh m        10     5    17.1    0.0669  0.00391  1.23e 9     43482250.
+ 5 real  cei           2     8 lulesh p        10     5     0.418  0.0638  0.153    5.81e 9     76859146.
+ 6 sim   cei           4     8 lulesh m         1    10    10.0    0.0627  0.00627  4.40e 9    237532397.
+ 7 sim   cei           1     1 lulesh m         1    10     9.23   0.0564  0.00611  5.78e 8     29628962.
+ 8 real  cei           1     1 lulesh m         1     5     9.18   0.0555  0.00604  7.07e 8     24481179.
+ 9 sim   cei           2     8 lulesh m        10    10     2.83   0.0492  0.0174   1.53e 9     59648207.
+10 sim   cei           1     8 lulesh m         1    10     9.84   0.0467  0.00475  4.39e 9    235317004.
+11 real  cei           4     8 lulesh m         1     5     9.48   0.0428  0.00451  1.42e10     15815147.
+12 sim   cei           1     8 lulesh m        10    10     2.73   0.0394  0.0144   1.53e 9     70606439.
+13 sim   cei           4     8 lulesh m        10    10     2.89   0.0386  0.0134   1.53e 9     58008816.
+14 sim   cei           2     8 lulesh m         1    10     9.95   0.0381  0.00383  4.39e 9    232274422.
+15 real  cei           4     8 lulesh m        10     5     2.21   0.0324  0.0147   1.25e10     55196177.
+16 sim   cei           1     1 lulesh m        10    10     2.05   0.0317  0.0154   1.83e 8      5946321.
+17 sim   cei           1     1 lulesh p        10    10     0.422  0.0297  0.0705   3.67e 7      1161861.
+18 real  cei           1     8 lulesh m         1     5     9.61   0.0292  0.00303  1.02e 9      5117268.
+19 sim   cei           4     8 lulesh p        10    10     0.745  0.0259  0.0348   2.71e 8     20452164.
+20 real  cei           2     8 lulesh m        10     5     3.50   0.0249  0.00711  6.71e 9     68346654.
+21 real  cei           1     1 lulesh p        10     5     8.51   0.0219  0.00257  6.60e 8     17546238.
+22 sim   cei           2     8 lulesh p        10    10     0.726  0.0207  0.0285   2.82e 8     16838890.
+23 sim   cei           1     8 lulesh p        10    10     0.607  0.0189  0.0311   2.76e 8     19122446.
+24 real  cei           1     8 lulesh p         1     5     0.246  0.0152  0.0616   1.29e 8      1802683.
+25 real  cei           1     1 lulesh p         1     5     0.204  0.00894 0.0438   9.92e 7      2651093.
+26 real  cei           4     8 lulesh p         1     5     0.27   0.00707 0.0262   1.16e10     27257774.
+27 real  cei           2     8 lulesh p         1     5     0.274  0.00548 0.0200  -4.67e10 117234676948.
+28 sim   cei           2     8 lulesh p         1    10     0.546  0.00516 0.00946  1.38e 8      6744621.
+29 real  cei           4     8 lulesh p        10     5     0.322  0.00447 0.0139   1.16e10     66979933.
+30 sim   cei           1     1 lulesh p         1    10     0.212  0.00422 0.0199   1.59e 7      1459905.
+31 sim   cei           1     8 lulesh p         1    10     0.439  0.00316 0.00720  1.38e 8      6335734.
+32 sim   cei           4     8 lulesh p         1    10     0.58   0       0        1.37e 8      7011577.
+# ℹ 1 more variable: cv_uj <dbl>
+#+end_example
+
+
+[20:18:20; 24.02.2026]: The results looks very good, I just need a
+good way to show this now.
+
+[21:37:09; 24.02.2026]: I am waiting for the cluster results, I need
+to do one thing but after I will start the results anyway...
+
+#+begin_src R :results output :session *R* :exports both
+df.stats
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 280 × 14
+# Groups:   where, partition, nodes, np, app, size [168]
+   where partition nodes    np app    size    omp     N mean_time     sd cv_time  mean_uj   sd_uj   cv_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <int>     <dbl>  <dbl>   <dbl>    <dbl>   <dbl>   <dbl>
+ 1 real  poti          1     8 lulesh p        10     5    221.   152.    0.685  -3.00e10 1.16e11 -3.88
+ 2 real  cei           1     8 lulesh p        10     5    167.    18.1   0.109  -1.41e11 2.35e11 -1.67
+ 3 real  cei           1     8 lulesh m        10     5    197.    17.9   0.0909  1.96e10 2.03e 9  0.103
+ 4 real  draco         1     8 lulesh m        10     4    116.    17.8   0.154   9.76e 9 1.64e 9  0.168
+ 5 real  tupi          1     8 lulesh m        10     5    192.    16.7   0.0872  8.58e 9 7.26e 8  0.0846
+ 6 real  poti          1     8 lulesh m        10     5    169.    12.1   0.0715  2.45e10 1.72e 9  0.0703
+ 7 real  tupi          1     8 lulesh p        10     5    178.     9.82  0.0551  7.90e 9 4.49e 8  0.0569
+ 8 real  draco         1     8 lulesh p        10     5     71.6    7.68  0.107  -6.59e 9 2.89e10 -4.38
+ 9 real  draco         1     1 comd   m        10     5     33.2    3.55  0.107   1.41e 9 1.30e 8  0.0921
+10 real  poti          1     1 lulesh m        10     5      7.06   1.26  0.179   2.08e 8 6.82e 7  0.328
+# ℹ 270 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+#+begin_src R :results output :session *R* :exports both
+df.stats |>
+  filter(omp==1) |>
+  group_by(partition, nodes, np, app, size, omp) |>
+  summarise(
+    N=sum(N),
+    mean_time_real = mean_time[where=="real"],
+    mean_time_sim = mean_time[where=="sim"],
+    mean_diff = abs(mean_time[where=="real"] - mean_time[where=="sim"]),
+    cv_erro = mean_diff / mean_time[where=="real"] * 100
+  ) |>
+  arrange(-cv_erro) |>
+  print(n=120)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'partition', 'nodes', 'np', 'app', 'size', 'omp'. You can override
+using the `.groups` argument.
+# A tibble: 72 × 11
+# Groups:   partition, nodes, np, app, size, omp [72]
+   partition nodes    np app      size    omp     N mean_time_real mean_time_sim mean_diff  cv_erro
+   <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>          <dbl>         <dbl>     <dbl>    <dbl>
+ 1 poti          1     8 comd     p         1    10         0.101         1.27     1.17    1163.
+ 2 tupi          1     8 comd     p         1    10         0.150         1.11     0.956    638.
+ 3 poti          1     8 lulesh   p         1    15         0.078         0.569    0.491    629.
+ 4 draco         1     8 comd     p         1    10         0.278         1.34     1.06     382.
+ 5 poti          1     8 comd     m         1    10         1.90          8.96     7.06     372.
+ 6 poti          1     8 minivite p         1    15         0.0327        0.144    0.111    339.
+ 7 tupi          1     8 lulesh   p         1    15         0.118         0.41     0.292    247.
+ 8 poti          1     8 minivite m         1    15         0.134         0.456    0.322    240.
+ 9 poti          1     1 lulesh   p         1    15         0.062         0.201    0.139    224.
+10 draco         2     8 comd     p         1    10         0.418         1.24     0.820    196.
+11 poti          1     1 lulesh   m         1    15         3.21          8.73     5.53     172.
+12 draco         1     8 lulesh   p         1    14         0.242         0.654    0.412    170.
+13 poti          1     8 lulesh   m         1    15         4.7          12.4      7.65     163.
+14 draco         4     8 comd     p         1    10         0.420         1.07     0.646    154.
+15 poti          1     1 minivite p         1    15         0.219         0.539    0.320    146.
+16 cei           4     8 comd     p         1    10         0.289         0.679    0.389    134.
+17 tupi          1     8 comd     m         1    10         2.67          6.19     3.52     132.
+18 poti          1     1 comd     m         1    15        12.8          29.6     16.8      131.
+19 poti          1     1 minivite m         1    15         1.20          2.75     1.56     130.
+20 draco         2     8 lulesh   p         1    15         0.28          0.635    0.355    127.
+21 cei           2     8 comd     p         1    10         0.287         0.623    0.336    117.
+22 cei           4     8 lulesh   p         1    15         0.27          0.58     0.31     115.
+23 poti          1     1 comd     p         1    15         0.574         1.23     0.655    114.
+24 draco         4     8 lulesh   p         1    15         0.302         0.645    0.343    114.
+25 draco         1     8 comd     m         1    10         5.15         10.6      5.45     106.
+26 cei           1     8 comd     p         1    10         0.259         0.530    0.271    104.
+27 cei           2     8 lulesh   p         1    15         0.274         0.546    0.272     99.3
+28 cei           1     8 lulesh   p         1    15         0.246         0.439    0.193     78.5
+29 draco         1     8 minivite p         1    15         0.0974        0.173    0.0753    77.3
+30 draco         2     8 comd     m         1    10         5.51          9.67     4.17      75.7
+31 draco         2     8 minivite p         1    15         0.108         0.189    0.0804    74.3
+32 tupi          1     8 minivite p         1    15         0.0466        0.0812   0.0346    74.1
+33 draco         4     8 minivite p         1    14         0.119         0.195    0.0760    64.0
+34 draco         1     8 minivite m         1    15         0.392         0.606    0.213     54.4
+35 cei           4     8 minivite p         1    15         0.116         0.175    0.0590    51.0
+36 draco         4     8 comd     m         1    10         5.88          8.88     3.00      51.0
+37 draco         1     8 lulesh   m         1    15        10.6          16.0      5.4       50.8
+38 draco         1     1 lulesh   p         1    15         0.194         0.281    0.087     44.8
+39 draco         2     8 minivite m         1    15         0.432         0.596    0.164     38.0
+40 draco         4     8 minivite m         1    15         0.453         0.618    0.165     36.5
+41 draco         1     1 comd     m         1    15        31.7          42.3     10.6       33.4
+42 draco         2     8 lulesh   m         1    14        11.4          15.0      3.59      31.4
+43 tupi          1     1 comd     p         1    15         0.610         0.424    0.186     30.5
+44 draco         1     1 comd     p         1    15         1.36          1.75     0.394     29.0
+45 draco         1     1 minivite p         1    15         0.606         0.772    0.166     27.4
+46 draco         1     1 lulesh   m         1    15         9.81         12.5      2.66      27.1
+47 cei           4     8 comd     m         1    10         4.64          5.88     1.24      26.7
+48 tupi          1     1 minivite m         1    15         1.28          0.953    0.322     25.3
+49 tupi          1     1 comd     m         1    15        13.6          10.2      3.34      24.6
+50 draco         1     1 minivite m         1    15         3.17          3.94     0.773     24.4
+51 tupi          1     1 minivite p         1    15         0.245         0.186    0.0581    23.8
+52 draco         4     8 lulesh   m         1    15        11.7          14.3      2.62      22.3
+53 cei           2     8 comd     m         1    10         4.67          5.66     0.985     21.1
+54 tupi          1     1 lulesh   m         1    15         3.64          3.00     0.642     17.6
+55 cei           1     8 comd     m         1    10         4.64          5.42     0.779     16.8
+56 cei           2     8 minivite p         1    15         0.148         0.166    0.0177    12.0
+57 cei           4     8 minivite m         1    15         0.426         0.474    0.0481    11.3
+58 cei           1     1 comd     p         1    15         1.45          1.30     0.154     10.6
+59 cei           2     8 minivite m         1    15         0.430         0.472    0.0417     9.69
+60 cei           1     1 comd     m         1    15        34.0          31.3      2.73       8.02
+61 cei           1     1 minivite m         1    14         3.16          2.91     0.252      7.96
+62 cei           1     1 minivite p         1    15         0.610         0.570    0.0400     6.55
+63 cei           4     8 lulesh   m         1    15         9.48         10.0      0.519      5.47
+64 tupi          1     8 lulesh   m         1    15         6.26          6.59     0.334      5.34
+65 tupi          1     8 minivite m         1    15         0.195         0.204    0.00909    4.66
+66 cei           2     8 lulesh   m         1    15         9.53          9.95     0.417      4.37
+67 cei           1     1 lulesh   p         1    15         0.204         0.212    0.00800    3.92
+68 cei           1     8 minivite p         1    15         0.133         0.137    0.00408    3.06
+69 cei           1     8 lulesh   m         1    15         9.61          9.84     0.226      2.35
+70 cei           1     8 minivite m         1    15         0.447         0.437    0.00969    2.17
+71 cei           1     1 lulesh   m         1    15         9.18          9.23     0.0460     0.501
+72 tupi          1     1 lulesh   p         1    15         0.07          0.07     0          0
+Warning message:
+Returning more (or less) than 1 row per `summarise()` group was deprecated in dplyr 1.1.0.
+ℹ Please use `reframe()` instead.
+ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()` always returns an
+  ungrouped data frame and adjust accordingly.
+Call `lifecycle::last_lifecycle_warnings()` to see where this warning was generated.
+#+end_example
+
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 1000 :height 800 :session *R*
+appl="minivite"
+part="cei"
+s="m"
+
+df.jitter <- df |> filter(
+                     ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np == 8
+                   )
+
+df.stats |> filter(
+        ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np==8) |>
+  ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where)) +
+
+    geom_errorbar(
+    aes(ymin = mean_time - sd, ymax = mean_time + sd),
+    width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+    linewidth = 0.8, alpha = 1,
+    color="black"
+  ) +
+
+  geom_point(size=7, alpha=0.8) +
+
+ geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes), y = time, color=where),
+    # Set the transparency (alpha) to 0.3 for a faint look
+    alpha = 0.3,
+    size = 3
+  ) +
+  facet_grid(app ~ partition) +
+  scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
+  meu_estilo(30) +
+
+  labs(
+    title="",
+  x="Nodes",
+  y="Mean Time (s)"
+  )
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-SkCmZC/figureZQ1ODI.png]]
+
+[23:23:41; 24.02.2026]: Best results are for minivite... comd is very
+bad...
+
+[23:27:21; 24.02.2026]: Cei showed a good result for the medium
+size...
+
+#+begin_src R :results output :session *R* :exports both
+df.stats
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 280 × 14
+# Groups:   where, partition, nodes, np, app, size [168]
+   where partition nodes    np app    size    omp     N mean_time     sd cv_time  mean_uj   sd_uj   cv_uj
+   <chr> <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <int>     <dbl>  <dbl>   <dbl>    <dbl>   <dbl>   <dbl>
+ 1 real  poti          1     8 lulesh p        10     5    221.   152.    0.685  -3.00e10 1.16e11 -3.88
+ 2 real  cei           1     8 lulesh p        10     5    167.    18.1   0.109  -1.41e11 2.35e11 -1.67
+ 3 real  cei           1     8 lulesh m        10     5    197.    17.9   0.0909  1.96e10 2.03e 9  0.103
+ 4 real  draco         1     8 lulesh m        10     4    116.    17.8   0.154   9.76e 9 1.64e 9  0.168
+ 5 real  tupi          1     8 lulesh m        10     5    192.    16.7   0.0872  8.58e 9 7.26e 8  0.0846
+ 6 real  poti          1     8 lulesh m        10     5    169.    12.1   0.0715  2.45e10 1.72e 9  0.0703
+ 7 real  tupi          1     8 lulesh p        10     5    178.     9.82  0.0551  7.90e 9 4.49e 8  0.0569
+ 8 real  draco         1     8 lulesh p        10     5     71.6    7.68  0.107  -6.59e 9 2.89e10 -4.38
+ 9 real  draco         1     1 comd   m        10     5     33.2    3.55  0.107   1.41e 9 1.30e 8  0.0921
+10 real  poti          1     1 lulesh m        10     5      7.06   1.26  0.179   2.08e 8 6.82e 7  0.328
+# ℹ 270 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 600 :height 400 :session *R*
+df.stats |>
+  filter(omp==1 & np==8 & size=="m") |>
+  ggplot(aes(x=as.factor(nodes), y=mean_uj, color=where)) +
+  geom_point(size=4, alpha=0.8) +
+   geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes),
+        y = ifelse(end_uj-start_uj > 0, end_uj-start_uj, 0),
+        color=where),
+    alpha = 0.3,
+    size = 1
+  ) +
+  facet_grid(app ~ partition) +
+  meu_estilo()
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-SkCmZC/figurehp0s1f.png]]
+
+[01:15:37; 25.02.2026]: I will use this extra week to make some high
+scale experiments.
