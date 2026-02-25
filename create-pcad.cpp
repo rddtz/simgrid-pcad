@@ -1,16 +1,36 @@
 #include <numeric>
 #include <simgrid/s4u.hpp>
+#include <fstream>
 
 namespace sg4 = simgrid::s4u;
 
 typedef struct partition {
-    std::string name;
-    std::string speed;
-    std::string bw;
-    std::string lat;
-    int count;
-    int cores; // Only counting phisical cores
+  std::string name;
+  std::string calib_file;
+  std::string speed;
+  std::string bw;
+  std::string lat;
+  int count;
+  int cores; // Only counting phisical cores
 } partition_t;
+
+std::map<std::string, std::string> load_calibration(const std::string& filename) {
+  std::map<std::string, std::string> props;
+  if (filename.empty()) return props; // Retorna vazio se não houver arquivo
+
+  std::ifstream file(filename);
+  std::string line;
+
+  while (std::getline(file, line)) {
+    auto delim = line.find('=');
+    if (delim != std::string::npos) {
+      std::string key = line.substr(0, delim);
+      std::string value = line.substr(delim + 1);
+      props[key] = value;
+    }
+  }
+  return props;
+}
 
 /*
  @brief Create a partition with N machines
@@ -25,10 +45,20 @@ void create_partition(sg4::NetZone* rack,
                       sg4::Link* switch_fatpipe,
 		      partition_t partition)
 {
+
+  auto calib_props = load_calibration(partition.calib_file);
+
   for (int id = 1; id <= partition.count; id++) {
     std::string hostname = partition.name + std::to_string(id);
 
-    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores)->seal();
+    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores);
+
+    for (const auto& [key, value] : calib_props) {
+        host->set_property(key, value);
+    }
+
+    host->seal();
+
     auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
 
     // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
@@ -92,15 +122,18 @@ void load_platform(sg4::Engine& e)
 
   */
 
-  partition_t cei = {"cei", "19.125Gf", "9.413Gbps", "124us", 6, 24};
-  partition_t draco = {"draco", "14.125Gf", "941Mbps", "115us", 6, 16};
+  // partition_t cei = {"cei", "", "19.125Gf", "9.413Gbps", "124us", 6, 24};
+  partition_t cei = {"cei", "cei.txt", "19.125Gf", "10Gbps", "124us", 6, 24};
+  // partition_t draco = {"draco", "draco.txt", "14.125Gf", "941Mbps", "115us", 6, 16};
+  partition_t draco = {"draco", "draco.txt", "14.125Gf", "1Gbps", "115us", 6, 16};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
   sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
-  partition_t poti = {"poti", "20.2Gf", "940Mbps", "117us", 5, 20};
-  partition_t tupi = {"tupi", "58.375Gf", "942Mbps", "87us", 6, 8};
+  partition_t poti = {"poti", "", "20.2Gf", "940Mbps", "117us", 5, 20};
+  // partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "942Mbps", "87us", 6, 8};
+  partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "1Gbps", "87us", 6, 8};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
   sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
