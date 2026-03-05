@@ -89,7 +89,7 @@ sg4::NetZone *create_rack(sg4::NetZone *root, std::string rack_name,
       // Create Fatpipe to simulat the switch
       auto* rack_switch_fatpipe = rack_zone->add_link(rack_name + "_fatpipe", switch_capacity)
 	->set_latency(switch_latency)
-	->set_sharing_policy(sg4::Link::SharingPolicy::FATPIPE)
+	->set_sharing_policy(sg4::Link::SharingPolicy::SHARED)
 	->seal();
 
       // Nodes partitions (nodes)
@@ -128,7 +128,7 @@ void load_platform(sg4::Engine& e)
   partition_t draco = {"draco", "draco.txt", "14.125Gf", "1Gbps", "115us", 6, 16};
   std::vector<partition_t> rack2_partitions = {cei, draco};
 
-  sg4::NetZone *rack2_zone = create_rack(root, "rack2", "10Gbps", "100ns", rack2_partitions);
+  sg4::NetZone *rack2_zone = create_rack(root, "rack2", "1Gbps", "100ns", rack2_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
   partition_t poti = {"poti", "", "20.2Gf", "940Mbps", "117us", 5, 20};
@@ -136,7 +136,7 @@ void load_platform(sg4::Engine& e)
   partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "1Gbps", "87us", 6, 8};
   std::vector<partition_t> rack4_partitions = {poti, tupi};
 
-  sg4::NetZone *rack4_zone = create_rack(root, "rack4", "10Gbps", "100ns", rack4_partitions);
+  sg4::NetZone *rack4_zone = create_rack(root, "rack4", "1Gbps", "100ns", rack4_partitions);
 
   // =-=-=-=-=-=-=-=-=-=-=-= CONNECTION BETWEEN THE RACKS (switchs) =-=-=-=-=-=-=-=-=-=-=-=
   std::string  inter_switch_bw = "10Gbps";
