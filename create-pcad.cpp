@@ -12,7 +12,7 @@ typedef struct partition {
   std::string lat;
   std::string switch_ref;
   int count;
-  int cores; // Only counting phisical cores
+  int cores; // Only counting physical cores
 } partition_t;
 
 typedef struct switch_info {
