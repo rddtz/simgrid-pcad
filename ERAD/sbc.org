@@ -1,0 +1,1041 @@
+# -*- coding: utf-8 -*-
+# -*- mode: org -*-
+
+#+TITLE: A Proposal for a Simulation of PCAD Network Topology Using SimGrid
+#+AUTHOR: Rayan Raddatz de Matos, Lucas Mello Schnorr
+
+#+STARTUP: overview indent
+#+LANGUAGE: en
+#+OPTIONS: H:3 creator:nil timestamp:nil skip:nil toc:nil num:t ^:nil ~:~
+#+OPTIONS: author:nil title:nil date:nil
+#+TAGS: noexport(n) deprecated(d) ignore(i)
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS: [12pt]
+
+#+LATEX_HEADER: \sloppy
+
+#+LATEX_HEADER: \usepackage{listings}
+#+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \lstset{
+#+LATEX_HEADER:   language=C++,
+#+LATEX_HEADER:   basicstyle=\ttfamily\footnotesize,
+#+LATEX_HEADER:   keywordstyle=\color{blue}\bfseries,
+#+LATEX_HEADER:   stringstyle=\color{red},
+#+LATEX_HEADER:   commentstyle=\color{darkgray}\itshape,
+#+LATEX_HEADER:   numbers=left,
+#+LATEX_HEADER:   numberstyle=\tiny\color{gray},
+#+LATEX_HEADER:   stepnumber=1,
+#+LATEX_HEADER:   frame=single,
+#+LATEX_HEADER:   rulecolor=\color{black},
+#+LATEX_HEADER:   breaklines=true,
+#+LATEX_HEADER:   captionpos=b
+#+LATEX_HEADER: }
+
+
+
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \usepackage{tikz}
+#+LATEX_HEADER: \usetikzlibrary{positioning, calc, fit, backgrounds, shapes.geometric}
+
+
+#+LATEX_HEADER: \usepackage{xcolor}
+#+LATEX_HEADER: \usepackage{soul}
+#+LATEX_HEADER: \usepackage[]{pdfcomment}
+
+# Macro para a nota "Sticky Note" (como na imagem)
+#+MACRO: popup @@latex:\pdfcomment[color=yellow,icon=Note]{$1}@@
+
+# Macro para texto com comentário escondido
+#+MACRO: tooltip @@latex:\pdfmarkupcomment[markup=Underline,color=yellow]{$1}{$2}@@
+
+# Macro para Destaque (Amarelo)
+#+MACRO: hl @@latex:\hl{$1}@@
+
+# Macro para Nota (Texto em vermelho entre colchetes)
+#+MACRO: red @@latex:\textcolor{red}{$1}@@
+#+MACRO: blue @@latex:\textcolor{blue}{$1}@@
+
+#+LATEX_HEADER: \newenvironment{red}{\color{red}}{}
+#+LATEX_HEADER: \newenvironment{blue}{\color{blue}}{}
+
+
+# PDF generation can be done by make (thanks Luka Stanisic)
+#   or C-c C-e l p (thanks Vinicius Garcia)
+
+
+
+* *The Paper*                                                       :ignore:
+** Frontpage                                                        :ignore:
+
+#+BEGIN_EXPORT latex
+\makeatletter
+\let\orgtitle\@title
+\makeatother
+
+\title{\orgtitle}
+
+\author{
+   Rayan Raddatz de Matos\inst{1},
+   Lucas Mello Schnorr\inst{1}
+   }
+
+\address{
+   Institute of Informatics, Federal University of Rio Grande do Sul (UFRGS)\\
+   Caixa Postal 15.064 -- 91.501-970 -- Porto Alegre -- RS -- Brazil
+   \email{\{rayan.raddatz, schnorr\}@inf.ufrgs.br}}
+#+END_EXPORT
+
+#+LaTeX: \maketitle
+
+** Abstract                                                         :ignore:
+
+# #+begin_abstract
+# Simulation is a well-established methodology for evaluating
+# High-Performance Computing (HPC) systems, ensuring reproducibility
+# with a reduced energy footprint. While frameworks like SimGrid are
+# used to model massive supercomputers, validating these programmatic
+# approaches on heterogeneous institutional clusters remains a
+# challenge. This work proposes a programmatic network model of the PCAD
+# infrastructure using the SimGrid S4U API. We map the physical
+# architecture into a hierarchical simulated structure, focusing
+# initially on four core partitions (cei, draco, tupi, poti). The
+# platform is calibrated using High-Performance Linpack (HPL) for
+# computational power, alongside iperf3 and ping for network
+# metrics. Ultimately, this model enables local researchers to replicate
+# experiments and study scalability even with limited physical hardware.
+# #+end_abstract
+
+#+begin_abstract
+Simulation is a well-established methodology for evaluating
+High-Performance Computing (HPC) systems, ensuring reproducibility and
+reduced energy footprints. This work proposes a programmatic network
+model of the PCAD infrastructure, a heterogeneous institutional
+cluster, using the SimGrid S4U API. Focusing on four core partitions,
+we map the physical architecture into a simulated structure and
+calibrate the platform properties with experimentation. The main goal
+is to enable local researchers to replicate experiments and study
+scalability even with limited physical hardware.
+#+end_abstract
+
+
+# keywords for look for: Energy Efficiency, Environmental Issues, HPC,
+# Power Usage, Simulation, Simulators.
+
+** Introduction
+
+# In this scenario, one promising approach is to make use of
+# simulation to achieve scientific results.
+
+# [HPC, Sustainability and Enviroment]
+
+
+Computer systems performance analysis can be done following three
+different methods, analytical modeling, simulation or measurement. The
+choice of which method to use when performing analysis depends on a
+variety of factors such as the time available, the desired accuracy
+and several others cite:jain. While measurement tends to show the most
+accurate results when properly configured, it requires access to the
+actual system, which typically leads to higher energy consumption and
+limits the ability to extrapolate new scenarios. On the other hand,
+analytical modeling offers great extrapolation capabilities at a
+considerably lower energy consumption, but often suffers from low
+accuracy results. Simulation acts as a middle term, maintaining good
+accuracy with reduced energy footprint, while also enabling the
+exploration of new scenarios. Furthermore, using simulations also
+target the lack of reproducibility in High-Performance Computing
+cite:repro2024, ensuring a controlled and reproducible environment for
+experiments.
+
+# Simulators can be used not only to simulate applications, but whole
+# computing platforms. In High-Performance Computing (HPC)
+# infrastructures are critical for scientific advancement. However, with
+# increasing concerns regarding environmental sustainability, HPC
+# clusters and data centers are recognized as major electricity
+# consumers cite:IAE2024. Simulators aim to address these issues by
+# creating a faithful model of the real system, allowing researchers to
+# perform predictive analysis and validate 'what-if' scenarios without
+# the operational costs or constraints of using the actual machine.
+
+Therefore, the simulation of High-Performance Computing (HPC)
+infrastructures has become a well-established methodology for
+evaluating system behavior. Among the available tools, SimGrid emerges
+as a free and open-source computational framework capable of
+simulating several HPC scenarios with reproducibility and versatility,
+allowing researchers to simulate large platforms while maintaining
+accuracy cite:simgrid2025.
+
+
+In this work, we propose a model of the network of the "Parque
+Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
+cite:LPPD through the SimGrid programmatic interface Simgrid For You
+(S4U). We show preliminary performance results between the proposed
+platform created through simulation and the real cluster.
+
+
+# Section [[sec.relatedwork]] details related work. Section discusses the
+# experimental methodology used in this work, with a description of the
+# applications, tools, and systems used in the experiments. Lastly,
+# Section [[sec.results]] shows and discusses the experimental results,
+# while Section [[sec.conclusion]] concludes this work.
+
+
+#+latex: \noindent
+*Software and Data Availability*. We endeavor to make our analysis
+reproducible for a better science. We made available a companion
+material hosted in a public GitHub repository at
+#+latex: {\scriptsize\url{https://github.com/rddtz/simgrid-pcad}}.
+Our companion contains the source code of this article and the
+software necessary to handle the created datasets. We also include
+instructions to run the experiment and figures.
+# An archive is also available in Zenodo at URL.
+
+
+** Related Work
+<<sec.relatedwork>>
+
+The evaluation of High-Performance Computing (HPC) systems often
+requires balancing accuracy, time, and energy consumption. To achieve
+this balance and simultaneously address the lack of reproducibility in
+HPC experiments, simulation has become a well-established
+methodology. Frameworks like SimGrid offer the versatility needed for
+these tasks. Specifically, SimGrid provides the S4U API, which enables
+the programmatic creation of complex simulators. Recent works
+demonstrate the power of this API for modeling state-of-the-art
+environments. As an example, cite:arthur2025 successfully used the S4U
+API to model and simulate the network topology of the Frontier
+supercomputer cite:frontier. However, while existing works often focus
+on modeling massive systems, there is a need to apply and validate
+these programmatic creation methodologies in the context of
+heterogeneous institutional HPC clusters. Moreover, by creating a
+validated model of the PCAD infrastructure, it makes it possible for local
+researchers to easily replicate experiments and create what-if
+scenarios, as well as study scalability even with limited physical
+hardware.
+
+# #+begin_red
+# SimGrid has also the S4U API, enabling the programmatic creation of
+# complex simulators. As example, cite:arthur2025 used this API to model
+# and simulate the Frontier cite:frontier network topology.
+
+# In this work we demonstrate the process of creation and validation of
+# a heterogeneous HPC cluster using the SimGrid programmatic interface
+# S4U, making possible to replicate experiments and create /what-if/
+# scenarios with in the cluster.
+# #+end_red
+
+** Platform Proposal and Initial Implementation
+
+This section discusses the proposed platform and methodology used for
+its creation and calibration.
+
+# , focusing on hosts computational power and the network topology.
+
+*** Platform Proposal
+
+# Figure  shows the network topology of the
+# PCAD cluster. The PCAD infrastructure is composed by four racks and a
+# total of 47 machines separated into 19 different partitions.
+
+Figure @@latex: \ref{fig:topology}@@ illustrate the PCAD network
+topology. The PCAD infrastructure is composed by four racks and
+comports a total of 47 machines separated into 19 different
+partitions. Furthermore, the distribution of network capacities varies
+across the infrastructure. For instance, while Rack 1, Rack 3, and
+Rack 4 utilize 1Gb switches, Rack 2 presents a mixed network capacity,
+containing both a 1Gb and a 10Gb switch.  While the complete PCAD
+platform is composed of these multiple different partitions, we
+initially selected only a few partitions to simulate, these being the
+=cei=, =draco=, =tupi=, and =poti= partitions. The first three partitions have
+six nodes each, and the last one has only five. We chose these
+partitions as they are the most used ones, aiming to first create a
+generic approach that can later be applied to the whole cluster if
+wanted.
+
+#+begin_export latex
+\begin{figure}[htbp]
+\centering
+\resizebox{0.8\textwidth}{!}{%
+\begin{tikzpicture}[
+    % Estilos padronizados e mais fortes
+    basenode/.style={rectangle, rounded corners=2pt, draw=black, line width=1pt, minimum width=2.6cm, minimum height=0.55cm, align=center, font=\sffamily\small, fill=white},
+    switchnode/.style={basenode, font=\sffamily\small\bfseries},
+    rackBg/.style={draw=black!80, line width=0.8pt, fill=black!2, rounded corners=4pt},
+    linhaBus/.style={draw, line width=1.5pt, rounded corners=2pt} % Fios bem espessos
+]
+
+% ==========================
+% COORDENADAS X DOS RACKS (Calculadas para empacotamento perfeito)
+% ==========================
+\def\XA{0}
+\def\XB{3.8}
+\def\XC{7.9}
+\def\XD{11.7}
+
+% ==========================
+% CAIXAS DOS RACKS (Alturas e larguras independentes)
+% ==========================
+\begin{scope}[on background layer]
+    % Rack 1
+    \draw[rackBg] (\XA-1.9, 0.5) rectangle (\XA+1.5, -6.8);
+    \node[anchor=south west, font=\sffamily\bfseries] at (\XA-1.9, 0.5) {Rack 1};
+
+    % Rack 2
+    \draw[rackBg] (\XB-1.9, 0.5) rectangle (\XB+1.9, -6.8);
+    \node[anchor=south west, font=\sffamily\bfseries] at (\XB-1.9, 0.5) {Rack 2};
+
+    % Rack 3
+    \draw[rackBg] (\XC-1.9, 0.5) rectangle (\XC+1.5, -6.8);
+    \node[anchor=south west, font=\sffamily\bfseries] at (\XC-1.9, 0.5) {Rack 3};
+
+    % Rack 4
+    \draw[rackBg] (\XD-1.9, 0.5) rectangle (\XD+1.5, -6.8);
+    \node[anchor=south west, font=\sffamily\bfseries] at (\XD-1.9, 0.5) {Rack 4};
+\end{scope}
+
+% ==========================
+% DEFINIÇÃO DOS NÓS
+% ==========================
+% RACK 1
+\node[switchnode] (r1_sw) at (\XA, 0) {Switch 1Gb};
+\node[basenode] (r1_n1) at (\XA, -0.8) {tsubasa};
+\node[basenode] (r1_n2) at (\XA, -1.6) {hype[1-3,5]};
+\node[basenode] (r1_n3) at (\XA, -2.4) {knl[1-4]};
+\node[basenode] (r1_n4) at (\XA, -3.2) {bali2};
+\node[basenode] (r1_n5) at (\XA, -4.0) {beagle};
+\node[basenode] (r1_n6) at (\XA, -4.8) {turing};
+
+% RACK 2
+\node[switchnode] (r2_sw1)  at (\XB, 0) {Switch 1Gb};
+\node[switchnode] (r2_sw10) at (\XB, -0.8) {Switch 10Gb};
+\node[basenode] (r2_n1) at (\XB, -1.6) {grace[1,2]};
+\node[basenode] (r2_n2) at (\XB, -2.4) {cei[1-6]};
+\node[basenode] (r2_n3) at (\XB, -3.2) {blaise};
+\node[basenode] (r2_n4) at (\XB, -4.0) {pheonix};
+\node[basenode] (r2_n5) at (\XB, -4.8) {orion};
+\node[basenode] (r2_n6) at (\XB, -5.6) {gppd-hpc};
+\node[basenode] (r2_n7) at (\XB, -6.4) {draco[1-7]};
+
+% RACK 3
+\node[switchnode] (r3_sw) at (\XC, 0) {Switch 1Gb};
+\node[basenode] (r3_n1) at (\XC, -0.8) {cidia};
+\node[basenode] (r3_n2) at (\XC, -1.6) {saude};
+\node[basenode] (r3_n3) at (\XC, -2.4) {lunaris};
+\node[basenode] (r3_n4) at (\XC, -3.2) {sirius};
+
+% RACK 4
+\node[switchnode] (r4_sw) at (\XD, 0) {Switch 1Gb};
+\node[basenode] (r4_n1) at (\XD, -0.8) {poti[1-6]};
+\node[basenode] (r4_n2) at (\XD, -1.6) {tupi[1-6]};
+
+% ==========================
+% ROTEAMENTO DOS BARRAMENTOS LATERAIS
+% ==========================
+% Barramento Rack 1
+\draw[linhaBus] (r1_sw.west) -- (\XA-1.6, 0) |- (r1_n6.west);
+\foreach \i in {1,...,5} { \draw[linhaBus] (\XA-1.6, -0.8*\i) -- (r1_n\i.west); }
+
+% Barramentos Rack 2 (Esquerda: 1Gb / Direita: 10Gb)
+\draw[linhaBus] (r2_sw1.west) -- (\XB-1.6, 0) |- (r2_n7.west);
+\foreach \i in {1,...,6} { \draw[linhaBus] (\XB-1.6, -0.8*\i - 0.8) -- (r2_n\i.west); }
+
+\draw[linhaBus] (r2_sw10.east) -- (\XB+1.6, -0.8) |- (r2_n2.east);
+\draw[linhaBus] (\XB+1.6, -1.6) -- (r2_n1.east);
+
+% Barramento Rack 3
+\draw[linhaBus] (r3_sw.west) -- (\XC-1.6, 0) |- (r3_n4.west);
+\foreach \i in {1,...,3} { \draw[linhaBus] (\XC-1.6, -0.8*\i) -- (r3_n\i.west); }
+
+% Barramento Rack 4
+\draw[linhaBus] (r4_sw.west) -- (\XD-1.6, 0) |- (r4_n2.west);
+\draw[linhaBus] (\XD-1.6, -0.8) -- (r4_n1.west);
+
+% ==========================
+% LIGAÇÃO SUPERIOR (Backbone alinhado e elevado)
+% ==========================
+\def\Ybackbone{1.3} % Altura definida para passar bem acima dos títulos
+\draw[linhaBus] (r1_sw.north) -- (\XA, \Ybackbone);
+\draw[linhaBus] (r2_sw1.north) -- (\XB, \Ybackbone);
+\draw[linhaBus] (r3_sw.north) -- (\XC, \Ybackbone);
+\draw[linhaBus] (r4_sw.north) -- (\XD, \Ybackbone);
+\draw[linhaBus] (\XA, \Ybackbone) -- (\XD, \Ybackbone); % Fio mestre conectando todos
+
+\end{tikzpicture}
+}
+\caption{Network topology of PCAD.}
+\label{fig:topology}
+\end{figure}
+#+end_export
+
+After defining the platform scope, the SimGrid for You (S4U) C++ API with
+SimGrid v4.1 was used to programmatically implement the network
+model. The physical architecture was mapped into a hierarchical
+simulated structure using S4U's Star Zones. Each rack was therefore
+defined as a distinct network zone and within these zones individual
+host nodes are instantiated. The modeling explicitly defines hardware
+characteristics for each node, including physical core counts and
+computational speed measured in Gflops. Network capabilities are
+established by attaching dedicated cables to each host, specifying
+both bandwidth and latency.
+
+
+*** Platform Calibration Methodology
+
+After having a programmatic model of the network topology, the next
+stop is to calibrate it. The calibration consist in the execution of
+several experiments in the target system to gather information about
+the network and hosts capabilities. The essential information for each
+hosts are the host computing power and the host connection bandwidth
+and latency. The information about the host computing power can be
+achieved by various was, we chose to use the High-Performance Linpack
+(HPL) cite:HPL2003. For each partition, the HPL was executed 10 times
+across two different machines, and the mean result in Gflops was taken
+as the time for a node in that partition. For the network properties,
+we used simple network tools such as iperf3 for bandwidth and ping
+for latency. We also make use of official SimGrid material to
+calibrate the network and MPI factors for each partition
+cite:calibration.
+
+
+** COMMENT Platform Proposal and Initial Implementation
+
+
+The PCAD platform is composed of different partitions,
+
+#+begin_red
+The PCAD platform is composed of different partitions, we
+initially selected only the =cei=, =draco=, =tupi= e =poti= partitions from
+PCAD infrastructure to simulate, with the three first having
+six nodes and the last having only five. We choose these partitions as
+they are the more used ones, aiming to first create a generic approach
+that later can be used in the whole cluster. The methodology for
+modeling was divided into programmatic platform generation and system
+calibration, focusing on hosts computational power and the network
+topology. The simulated environment was created programmatically using
+the SimGrid for You (S4U) C++ API with SimGrid v4.1. This approach
+allowed for the flexible definition of the cluster hierarchical
+structure, effectively mirroring the physical architecture of PCAD.
+
+
+*** Calibration Methodology
+Several different experiments were executed for the system
+calibration. All experiments were run using Guix to ensure
+reproducibility. The host calibration for the simulated partitions
+consisted on the execution of High-Performance Linpack (HPL)
+cite:HPL2003. For each partition this HPL was executed 10 times in two
+different machines. The mean results in Gflops was taken as the time
+for a node in the partition. Simple network tools such as =iperf3= and
+=ping= were used to initially measure information such as network
+bandwidth and latency. This initial information as latter used
+together with official SimGrid material for calibrating the network
+and MPI factors for each partition cite:calibration.
+#+end_red
+
+** COMMENT Platform Validation
+
+# , each application focusing in one
+# point of the model such as computation, communication bandwidth and
+# latency.
+
+After calibrating the platform we used different proxy applications to
+verify and validate the create model. Proxy apps are scale models of
+real HPC applications, exhibiting the same computation and
+communication patterns as the massive application that it stands
+for. We chose three different proxy applications[fn::
+https://framagit.org/simgrid/SMPI-proxy-apps]. Lulesh cite:lulesh,
+that simulates shock hydrodynamics on unstructured meshes, widely used
+to evaluate compute performance. MiniVite cite:minivite, that
+implements distributed graph clustering, stressing the network through
+highly irregular MPI communication patterns. CoMD cite:comd, that
+simulates atomic forces, designed to stress system memory and regular
+MPI communication.
+
+
+We then created a experimental design using these applications. The
+three applications were executed in all the target partitions (=cei=,
+=draco=, =poti= and =tupi=). We varied the number of nodes used for the
+execution between one, two or four. Also, for each application we
+executed with different problems sizes, one small that takes
+approximately one second to execute and one medium that take
+approximately 30 seconds to execute, all executed with eight MPI
+processes. Lastly, as SimGrid does not simulate threads parallelism,
+we defined =OMP_NUM_THREADS= as one in all experiments. It gives us a
+total of 480 unique configurations. We randomly executed each
+configuration ten times to tackle variety. This experimental design
+was applied to both the SimGrid simulation and the real-world
+cluster. SimGrid simulation was execute in one machine of the cei
+partition with the =host-speed= defined as 19.125Gf. The RAPL tool was
+used the measure the energy consumed in each experiment.
+
+
+** COMMENT Methods and Materials
+<<sec.methods>>
+
+
+CRIAMOS APENAS ALGUMAS PARTIÇÕES DO PCAD PARA ESSE TRABALHO INICIAL
+
+[S4U]
+The Simgrid offers a Application Interface to create platform de forma
+pragramatica, this interface is called S4U. This enables the creation
+of platforms more flexibilizadamente by utilizing C++ per example.
+
+
+# #+begin_export latex
+# \begin{lstlisting}[language=C++, caption={Sua legenda do código aqui}, label={lst:codigo1}]
+# static sg4::NetZone* create_cabinet(sg4::NetZone* root, const std::string& name)
+# {
+#     auto* cluster = root->add_netzone_star(name);
+#     std::string prefix = "griffon-";
+#     // ... resto do seu codigo C++ ...
+#     return cluster;
+# }
+# \end{lstlisting}
+# #+end_export
+
+
+[Reproducibility]
+
+
+*** Hardware and Software Configuration
+
+
+** Loading data                                            :noexport:ignore:
+
+*** Load data
+[00:09:54; 25.02.2026]: This data is in [[data/validation]]
+#+begin_src R :results output :session *R* :exports both
+
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "."
+tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |>
+  filter(!grepl("/", CSV) &
+         !grepl("tupi", CSV) &
+         !grepl("base", CSV) &
+         !grepl("cei", CSV) &
+         !grepl("switch", CSV)) |>
+  print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  separate(CSV, into=paste0("XX", 1:2), sep="_") |>
+  unnest(DATA) |>
+  select(where=XX1, everything()) |>
+  select(-XX2) -> df
+
+df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 6 × 1
+  CSV
+  <fs::path>
+1 basic2_results.csv
+2 basic_results.csv
+3 newsim_results.csv
+4 real_results.csv
+5 shared_results.csv
+6 sim_results.csv
+# A tibble: 3,563 × 11
+   where  partition nodes    np app    size    omp   run  time     start_uj       end_uj
+   <chr>  <chr>     <dbl> <dbl> <chr>  <chr> <dbl> <dbl> <dbl>        <dbl>        <dbl>
+ 1 basic2 tupi          2     8 lulesh g         1     1 14.4  308739987699 322081276970
+ 2 basic2 draco         4     8 lulesh g         1     1 43.6  398493034541 411933981029
+ 3 basic2 cei           4     8 lulesh p         1     1  1.88 277325777531 277458794768
+ 4 basic2 poti          4     8 lulesh p         1     1  2.76 191402309568 191532519867
+ 5 basic2 cei           2     8 lulesh m         1     1 11.0  237891426640 242028448092
+ 6 basic2 cei           2     8 lulesh p         1     1  1.81 278200764610 278330654841
+ 7 basic2 tupi          1     8 lulesh g         1     1 16.1   62208628647  75506033693
+ 8 basic2 tupi          2     8 lulesh p         1     1  0.57 142340274218 142478911192
+ 9 basic2 poti          1     8 lulesh p         1     1  2.69 144952120315 145089540861
+10 basic2 draco         2     8 lulesh p         1     1  0.77 156820988551 156951846858
+# ℹ 3,553 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+*** Statistics
+#+begin_src R :results output :session *R* :exports both
+df |> group_by(where, partition, nodes, np, app, size, omp) |>
+  filter(!is.na(time)) |>
+  mutate(start_uj=ifelse(start_uj < 0, end_uj, start_uj)) |>
+  mutate(end_uj=ifelse(end_uj < 0, start_uj, end_uj)) |>
+  summarise(
+    N=n(),
+    mean_time = mean(time),
+    sd = sd(time),
+    cv_time = sd/mean_time,
+    mean_uj = mean(end_uj - start_uj),
+    sd_uj = sd(end_uj - start_uj),
+    cv_uj = sd_uj/mean_uj,
+  ) |>
+  arrange(-sd) |>
+  print(n=150) -> df.stats
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'where', 'partition', 'nodes', 'np', 'app', 'size'. You can override
+using the `.groups` argument.
+# A tibble: 593 × 14
+# Groups:   where, partition, nodes, np, app, size [593]
+    where  partition nodes    np app      size    omp     N mean_time      sd  cv_time  mean_uj     sd_uj
+    <chr>  <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl>   <dbl>    <dbl>    <dbl>     <dbl>
+  1 real   tupi          2     8 comd     g         1    10   29.4    10.5    0.356     3.26e 9   2.09e 9
+  2 real   tupi          1     8 lulesh   g         1    10   23.6     9.70   0.411    -2.48e10   8.27e10
+  3 real   tupi          2     8 comd     m         1    10   10.5     5.57   0.531     1.22e 9   8.26e 8
+  4 real   tupi          1     8 comd     g         1    10   11.3     4.96   0.438     5.66e 8   1.88e 8
+  5 real   tupi          1     8 lulesh   m         1    10    5.97    2.97   0.497     4.31e 8   1.26e 8
+  6 real   tupi          2     8 lulesh   g         1    10   29.2     2.70   0.0923    2.77e 9   5.70e 8
+  7 real   draco         2     8 lulesh   g         1    10   37.8     2.19   0.0580    4.35e 9   2.87e 8
+  8 real   poti          2     8 comd     g         1    10    9.49    1.63   0.172     1.61e 9   1.22e 8
+  9 real   tupi          2     8 lulesh   m         1    10    8.74    1.55   0.177     9.50e 8   2.63e 8
+ 10 real   tupi          4     8 lulesh   g         1    10   32.2     1.50   0.0465    5.20e 9   2.28e 8
+ 11 real   poti          1     8 comd     g         1    10    6.28    1.36   0.217    -2.55e10   8.28e10
+ 12 real   tupi          4     8 lulesh   m         1    10   15.1     1.36   0.0900    2.50e 9   1.98e 8
+ 13 real   tupi          1     8 comd     m         1    10    2.66    1.28   0.480     1.77e 8   5.32e 7
+ 14 real   poti          2     8 lulesh   g         1    10   13.1     1.10   0.0841    1.88e 9   1.22e 8
+ 15 real   poti          1     8 lulesh   g         1    10   14.6     0.985  0.0675    1.90e 9   5.56e 8
+ 16 real   tupi          2     8 comd     p         1    10    0.856   0.689  0.804     1.90e 8   9.13e 7
+ 17 real   tupi          4     8 comd     g         1    10   39.9     0.577  0.0145    6.28e 9   8.20e 7
+ 18 real   poti          1     8 lulesh   m         1    10    3.78    0.410  0.108     4.88e 8   1.66e 8
+ 19 real   draco         2     8 lulesh   m         1    10   10.9     0.346  0.0318   -5.28e 9   2.07e10
+ 20 real   draco         2     8 comd     g         1    10   23.6     0.328  0.0139   -3.96e 9   2.07e10
+ 21 real   poti          2     8 comd     m         1    10    2.71    0.305  0.113     4.94e 8   6.00e 7
+ 22 real   tupi          4     8 comd     m         1     9   14.8     0.289  0.0195    2.44e 9   4.25e 7
+ 23 real   draco         4     8 lulesh   g         1    10   37.4     0.229  0.00613   7.02e 9   3.57e 7
+ 24 newsim draco         1     8 lulesh   g         1    10   46.6     0.215  0.00461   1.54e10   9.88e 7
+ 25 sim    draco         1     8 lulesh   g         1    10   46.0     0.207  0.00449   1.34e10   7.52e 7
+ 26 real   poti          1     8 comd     m         1    10    1.17    0.197  0.168     2.32e 8   3.97e 7
+ 27 sim    draco         4     8 lulesh   g         1    10   43.2     0.194  0.00450   1.34e10   9.55e 7
+ 28 real   tupi          1     8 minivite g         1    10    0.318   0.185  0.580     3.03e 8   9.02e 7
+ 29 real   tupi          2     8 lulesh   p         1    10    0.319   0.171  0.535     1.20e 8   2.16e 7
+ 30 real   tupi          2     8 minivite g         1    10    0.423   0.161  0.381     6.66e 8   9.96e 6
+ 31 newsim cei           4     8 lulesh   g         1    10   31.3     0.150  0.00481   1.54e10   7.98e 7
+ 32 newsim draco         4     8 lulesh   g         1    10   43.5     0.149  0.00343   1.53e10   6.54e 7
+ 33 real   draco         4     8 comd     g         1    10   23.0     0.139  0.00605  -2.27e 9   2.07e10
+ 34 real   poti          4     8 lulesh   g         1    10   13.2     0.138  0.0105    3.29e 9   3.03e 7
+ 35 sim    draco         2     8 lulesh   g         1    10   44.4     0.138  0.00311   1.34e10   1.07e 8
+ 36 newsim cei           2     8 lulesh   g         1    10   31.1     0.138  0.00443  -1.09e10   8.29e10
+ 37 newsim draco         2     8 lulesh   g         1    10   44.7     0.125  0.00279  -1.16e11   1.38e11
+ 38 real   tupi          1     8 minivite m         1    10    0.171   0.120  0.704     1.80e 8   4.79e 7
+ 39 sim    cei           4     8 lulesh   g         1    10   30.8     0.119  0.00387   1.34e10   1.12e 8
+ 40 sim    poti          1     8 lulesh   g         1    10   35.2     0.111  0.00315  -1.28e10   8.29e10
+ 41 real   draco         1     8 lulesh   g         1    10   47.7     0.107  0.00223   3.07e 9   3.27e 8
+ 42 newsim cei           1     8 lulesh   g         1    10   31.1     0.103  0.00333  -1.08e10   8.29e10
+ 43 real   tupi          2     8 minivite m         1    10    0.280   0.102  0.363     3.54e 8   8.69e 6
+ 44 real   cei           1     8 lulesh   g         1    10   33.9     0.102  0.00300   3.07e 9   1.43e 8
+ 45 sim    draco         2     8 lulesh   m         1    10   15       0.100  0.00669   4.23e 9   3.83e 7
+ 46 sim    cei           2     8 lulesh   g         1    10   30.8     0.0993 0.00323   1.34e10   1.02e 8
+ 47 real   draco         2     8 comd     m         1    10    5.60    0.0955 0.0171    7.10e 8   2.23e 7
+ 48 sim    cei           1     8 lulesh   m         1    10    9.80    0.0953 0.00972   4.18e 9   5.85e 7
+ 49 real   cei           4     8 comd     g         1    10   18.5     0.0946 0.00512   5.44e 9   4.98e 7
+ 50 sim    poti          4     8 lulesh   g         1    10   32.5     0.0831 0.00256  -1.28e10   8.29e10
+ 51 sim    poti          2     8 lulesh   g         1    10   33.6     0.0828 0.00246   1.34e10   7.78e 7
+ 52 sim    cei           1     8 lulesh   g         1    10   30.6     0.0803 0.00262  -1.28e10   8.29e10
+ 53 newsim draco         1     8 lulesh   m         1    10   16.1     0.0801 0.00497   4.82e 9   3.50e 7
+ 54 real   cei           2     8 comd     g         1    10   18.6     0.0743 0.00400   2.94e 9   7.14e 7
+ 55 real   cei           2     8 minivite g         1    10    0.615   0.0734 0.119    -2.50e10   8.29e10
+ 56 newsim draco         4     8 lulesh   m         1    10   14.4     0.0720 0.00499   4.80e 9   3.25e 7
+ 57 real   draco         4     8 lulesh   m         1    10   10.6     0.0696 0.00659   2.16e 9   1.36e 7
+ 58 sim    draco         4     8 lulesh   m         1    10   14.3     0.0677 0.00472   4.22e 9   2.10e 7
+ 59 newsim cei           4     8 lulesh   m         1    10   10.2     0.0658 0.00644   4.82e 9   3.31e 7
+ 60 real   cei           4     8 lulesh   g         1    10   31.0     0.0655 0.00212   8.98e 9   9.47e 7
+ 61 real   draco         1     8 lulesh   m         1    10   11.9     0.0611 0.00515   7.94e 8   1.99e 7
+ 62 real   cei           2     8 lulesh   g         1    10   31.7     0.0603 0.00191   5.07e 9   1.06e 8
+ 63 real   draco         1     8 comd     g         1    10   22.6     0.0583 0.00258   1.35e 9   4.22e 7
+ 64 real   tupi          1     8 lulesh   p         1    10    0.077   0.0554 0.719     4.53e 7   9.46e 6
+ 65 real   tupi          1     8 comd     p         1    10    0.105   0.0548 0.522     4.54e 7   9.49e 6
+ 66 sim    cei           4     8 lulesh   m         1    10    9.96    0.0538 0.00540   4.20e 9   3.63e 7
+ 67 real   cei           1     8 comd     g         1    10   18.8     0.0522 0.00278   1.69e 9   6.95e 7
+ 68 newsim tupi          1     8 lulesh   g         1    10   16.1     0.0489 0.00303   1.54e10   7.66e 7
+ 69 sim    poti          1     8 lulesh   m         1    10   13.3     0.0474 0.00356   4.21e 9   3.22e 7
+ 70 real   draco         1     8 comd     m         1    10    4.89    0.0473 0.00967   3.81e 8   5.55e 7
+ 71 real   cei           1     8 minivite g         1    10    0.599   0.0460 0.0768    7.01e 8   3.76e 7
+ 72 sim    draco         1     8 lulesh   m         1    10   16.0     0.0458 0.00287   4.22e 9   3.01e 7
+ 73 real   cei           4     8 lulesh   m         1    10    9.62    0.0442 0.00460   3.03e 9   4.21e 7
+ 74 newsim tupi          4     8 lulesh   g         1    10   13.0     0.0426 0.00328  -3.71e10   1.11e11
+ 75 sim    poti          2     8 lulesh   m         1    10   12.7     0.0419 0.00329   4.21e 9   3.01e 7
+ 76 sim    tupi          4     8 lulesh   g         1    10   20.4     0.0416 0.00204  -3.90e10   1.11e11
+ 77 real   cei           2     8 minivite m         1    10    0.419   0.0414 0.0988    6.70e 8   1.84e 7
+ 78 real   poti          4     8 comd     g         1    10   10.4     0.0398 0.00383   2.67e 9   2.36e 7
+ 79 real   cei           1     8 minivite m         1    10    0.406   0.0392 0.0966    3.68e 8   2.15e 7
+ 80 real   cei           2     8 lulesh   m         1    10    9.69    0.0381 0.00394   1.66e 9   3.43e 7
+ 81 real   cei           4     8 minivite m         1    10    0.417   0.0379 0.0910    1.26e 9   1.88e 7
+ 82 sim    poti          2     8 minivite m         1    10    0.992   0.0370 0.0373    1.54e 9   1.86e 7
+ 83 sim    tupi          2     8 lulesh   g         1    10   21.3     0.0351 0.00165   1.34e10   7.92e 7
+ 84 newsim cei           1     8 lulesh   m         1    10   10.1     0.0327 0.00326   4.82e 9   2.38e 7
+ 85 real   cei           4     8 minivite g         1    10    0.597   0.0327 0.0548    2.28e 9   2.02e 7
+ 86 real   poti          1     8 minivite g         1    10    0.146   0.0316 0.216     4.09e 8   9.80e 7
+ 87 newsim cei           2     8 lulesh   m         1    10   10.1     0.0310 0.00306   4.82e 9   1.53e 7
+ 88 real   draco         2     8 minivite g         1    10    0.617   0.0304 0.0493    1.53e 9   6.43e 7
+ 89 newsim draco         2     8 lulesh   m         1    10   15.2     0.0295 0.00194  -2.14e10   8.29e10
+ 90 newsim tupi          2     8 lulesh   g         1    10   14.3     0.0284 0.00198   1.54e10   4.41e 7
+ 91 real   tupi          1     8 minivite p         1    10    0.0460  0.0282 0.615     4.93e 7   9.85e 6
+ 92 real   cei           1     8 lulesh   m         1    10    9.99    0.0280 0.00280   9.75e 8   3.73e 7
+ 93 sim    cei           2     8 lulesh   m         1    10    9.90    0.0275 0.00278   4.21e 9   1.69e 7
+ 94 real   poti          2     8 minivite g         1    10    0.184   0.0267 0.145     5.78e 8   1.76e 7
+ 95 sim    draco         4     8 minivite m         1    10    0.628   0.0266 0.0423    1.53e 9   1.34e 7
+ 96 sim    poti          4     8 lulesh   m         1    10   12.0     0.0242 0.00201   4.22e 9   3.12e 7
+ 97 real   poti          1     8 minivite m         1    10    0.0956  0.0239 0.250     2.22e 8   3.62e 7
+ 98 sim    draco         2     8 minivite g         1    10    0.907   0.0236 0.0260    3.29e 9   2.48e 7
+ 99 real   poti          2     8 lulesh   m         1    10    4.15    0.0232 0.00558   6.15e 8   6.25e 6
+100 sim    tupi          2     8 lulesh   m         1    10   12.2     0.0231 0.00190   4.20e 9   3.58e 7
+101 sim    draco         4     8 comd     g         1    10   30.6     0.0223 0.000728 -1.76e10   8.29e10
+102 newsim tupi          4     8 lulesh   m         1    10   22.6     0.0212 0.000938  4.81e 9   3.22e 7
+103 sim    poti          1     8 comd     g         1    10   28.8     0.0207 0.000718  8.60e 9   3.05e 7
+104 real   cei           4     8 minivite p         1    10    0.129   0.0206 0.160     4.47e 8   1.17e 7
+105 sim    tupi          4     8 lulesh   m         1    10   11.7     0.0204 0.00175  -4.82e10   1.11e11
+106 newsim draco         1     8 comd     g         1    10   36.4     0.0204 0.000560 -1.62e10   8.29e10
+107 newsim tupi          1     8 lulesh   m         1    10   23.6     0.0196 0.000828 -2.14e10   8.29e10
+108 newsim cei           4     8 minivite g         1    10    0.749   0.0194 0.0259    3.76e 9   5.26e 6
+109 sim    draco         1     8 comd     g         1    10   35.8     0.0193 0.000538  8.61e 9   4.37e 7
+110 real   poti          4     8 minivite g         1    10    0.208   0.0190 0.0913    1.06e 9   1.09e 7
+111 real   poti          4     8 comd     m         1    10    2.81    0.0188 0.00670   8.39e 8   6.79e 6
+112 sim    draco         2     8 comd     g         1    10   32.9     0.0188 0.000571 -1.76e10   8.29e10
+113 real   poti          4     8 lulesh   p         1    10    0.138   0.0187 0.136     1.91e 8   5.34e 6
+114 sim    tupi          1     8 lulesh   m         1    10   12.8     0.0184 0.00144   4.21e 9   3.22e 7
+115 newsim draco         2     8 minivite g         1    10    0.929   0.0180 0.0194    3.75e 9   7.02e 6
+116 sim    draco         4     8 minivite g         1    10    0.906   0.0176 0.0194    3.28e 9   2.35e 7
+117 real   cei           2     8 minivite p         1    10    0.120   0.0172 0.143     2.30e 8   1.01e 7
+118 real   tupi          2     8 minivite p         1    10    0.0731  0.0172 0.236     1.08e 8   9.00e 6
+119 newsim cei           1     8 comd     g         1    10   20.9     0.0171 0.000818  9.99e 9   4.00e 7
+120 sim    cei           4     8 comd     g         1    10   20.3     0.0169 0.000832  8.61e 9   5.10e 7
+121 real   poti          4     8 lulesh   m         1    10    4.05    0.0166 0.00411   1.12e 9   8.75e 6
+122 real   draco         4     8 comd     m         1    10    5.60    0.0165 0.00294   1.23e 9   5.57e 6
+123 sim    cei           4     8 minivite g         1    10    0.701   0.0160 0.0229    3.28e 9   2.69e 7
+124 sim    cei           1     8 comd     g         1    10   20.2     0.0159 0.000785  8.61e 9   5.96e 7
+125 sim    tupi          1     8 lulesh   g         1    10   22.5     0.0158 0.000703 -1.28e10   8.29e10
+126 real   poti          4     8 minivite m         1    10    0.146   0.0153 0.105     5.80e 8   1.51e 7
+127 newsim draco         4     8 comd     g         1    10   31.1     0.0149 0.000478  9.96e 9   8.92e 7
+128 sim    poti          2     8 comd     g         1    10   25.9     0.0146 0.000563 -1.76e10   8.29e10
+129 sim    cei           2     8 comd     g         1    10   20.2     0.0143 0.000705 -1.76e10   8.29e10
+130 newsim cei           1     8 minivite g         1    10    0.697   0.0141 0.0203    3.75e 9   6.31e 6
+131 real   poti          1     8 comd     p         1    10    0.0567  0.0140 0.247     5.26e 7   1.57e 7
+132 sim    cei           4     8 minivite m         1    10    0.491   0.0138 0.0281    1.53e 9   3.41e 6
+133 newsim draco         1     8 minivite g         1    10    0.932   0.0138 0.0148    3.78e 9   8.11e 7
+134 real   poti          4     8 comd     p         1    10    0.221   0.0137 0.0619    2.10e 8   8.96e 6
+135 newsim cei           4     8 comd     g         1    10   21.1     0.0135 0.000642  1.00e10   4.30e 7
+136 real   tupi          4     8 lulesh   p         1    10    0.581   0.0129 0.0221    2.57e 8   5.24e 6
+137 sim    draco         4     8 comd     m         1    10    8.78    0.0128 0.00145   1.97e 9   8.83e 6
+138 real   poti          2     8 minivite m         1    10    0.142   0.0127 0.0894    3.04e 8   1.08e 7
+139 sim    poti          4     8 comd     g         1    10   23.6     0.0127 0.000538  8.63e 9   6.70e 7
+140 newsim cei           2     8 minivite g         1    10    0.726   0.0124 0.0170    3.75e 9   3.97e 6
+141 sim    cei           2     8 minivite m         1    10    0.480   0.0122 0.0254    1.53e 9   3.21e 6
+142 newsim draco         4     8 comd     m         1    10    9.32    0.0120 0.00129   2.28e 9   1.22e 7
+143 newsim draco         2     8 comd     g         1    10   33.5     0.0118 0.000354  9.97e 9   5.35e 7
+144 real   tupi          4     8 comd     p         1    10    1.49    0.0118 0.00790   3.98e 8   4.03e 6
+145 newsim tupi          2     8 lulesh   m         1    10   23.1     0.0116 0.000503 -2.14e10   8.29e10
+146 sim    cei           1     8 minivite g         1    10    0.653   0.0116 0.0177    3.29e 9   2.02e 7
+147 real   poti          2     8 lulesh   p         1    10    0.109   0.0110 0.101     8.76e 7   1.53e 7
+148 real   tupi          4     8 minivite g         1    10    0.581   0.0106 0.0182    1.40e 9   9.14e 6
+149 sim    poti          4     8 minivite g         1    10    1.20    0.0105 0.00872   3.28e 9   2.95e 7
+150 real   draco         1     8 minivite m         1    10    0.399   0.0105 0.0262    4.52e 8   6.47e 7
+# ℹ 443 more rows
+# ℹ 1 more variable: cv_uj <dbl>
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+*** Graph style
+#+begin_src R :results output :session *R* :exports both
+meu_estilo <- function(base=20) {
+    list(
+        theme_bw(base_size = base),
+        theme(
+            legend.title = element_blank(),
+            plot.margin = unit(c(0, 0, 0, 0), "cm"),
+            legend.spacing = unit(1, "mm"),
+            legend.position = "right",
+            legend.justification = "left",
+            legend.box.spacing = unit(0, "pt"),
+            legend.box.margin = margin(0, 0, 0, 0),
+            axis.text.x = element_text(angle=45, vjust=1, hjust=1)
+        ))
+}
+#+end_src
+
+#+RESULTS:
+
+** Preliminary Results
+<<sec.results>>
+
+Figure [[fig:results]] show the mean time for execution of the medium
+sized experiments (represented as a bigger circle) in function of the
+number of nodes. Small circles represents our observations. The time
+is given by the application as output at the end of the
+computation. The black bars centered around the mean represents the
+standard error with a CI of 99%. The figure shows the results faceted
+by partition and applications, whit the colors identifying where the
+execution takes place, in the real cluster (=real=) or in the SimGrid
+(=sim=).
+
+#+begin_src R :results graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 12 :height 6 :session *R*
+appl="minivite"
+part="cei"
+s="m"
+
+df.jitter <- df |> filter(
+                     ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np == 8
+                   )
+
+df.stats |> filter(
+        ## partition==part &
+                   ## app==appl &
+                   size==s &
+                   omp==1 &
+                   np==8) |>
+  ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where)) +
+
+    geom_errorbar(
+    aes(ymin = mean_time - sd, ymax = mean_time + sd),
+    width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+    linewidth = 0.8, alpha = 1,
+    color="black"
+  ) +
+
+  geom_point(size=4, alpha=0.8) +
+
+ geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes), y = time, color=where),
+    # Set the transparency (alpha) to 0.3 for a faint look
+    alpha = 0.3,
+    size = 1
+  ) +
+  facet_grid(app ~ partition) +
+  ## scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
+  labs(
+    x="Nodes",
+    y="Mean Time (s)"
+  ) +
+  meu_estilo(25)
+
+#+end_src
+
+#+CAPTION: Mean of time results.
+#+NAME:fig:results
+#+attr_latex: :placement [!htb] :width 1\textwidth
+#+RESULTS:
+[[file:/tmp/babel-SkCmZC/figuredDockH.pdf]]
+
+
+WAIT FOR FINAL DATA TOMORROW...
+Maybe rerun with large scale experiments now that I have more time?
+
+# Figure [[fig:energy]] follows the same structure as the previous to show the energy
+# consumption in joules. We can see that initially the energy consumed
+# by the simulation can overcome the real execution for this smalls
+# scales simulations. However, as expected, as the number of nodes
+# increase the number the energy consumed also increases. As the
+# simulation run on only one machine, the energy consumption remained
+# almost the same no matter the number of nodes simulated.
+
+
+# #+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 10 :height 6 :session *R*
+# df.stats |>
+#   mutate(mean_uj = ifelse(mean_uj < 0, 0, mean_uj)) |>
+#   filter(mean_uj > 0) |>
+#   filter(omp==1 & np==8 & size=="m") |>
+
+#   ggplot(aes(x=as.factor(nodes), y=mean_uj/1e6, color=where)) +
+
+#   geom_point(size=4, alpha=0.8) +
+
+
+#     geom_errorbar(
+#     aes(ymin = mean_uj/1e6 - sd_uj/1e6, ymax = mean_uj/1e6 + sd_uj/1e6),
+#     width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+#     linewidth = 0.8, alpha = 1,
+#     color="black"
+#   ) +
+
+#    geom_jitter(
+#     data = df.jitter,
+#     aes(x = as.factor(nodes),
+#         y = ifelse(end_uj-start_uj >= 0, (end_uj-start_uj)/1e6, 0),
+#         color=where),
+#     alpha = 0.3,
+#     size = 1
+#   ) +
+#   facet_grid(app ~ partition) +
+#   labs(
+#     x="Nodes",
+#     y="Energy Consumption (J)"
+#   ) +
+#   scale_color_manual(values = c("real" = "#ff9922", "sim" = "#497543")) +
+#   meu_estilo(25)
+# #+end_src
+
+
+# #+CAPTION: Mean of energy consumption.
+# #+NAME:fig:energy
+# #+attr_latex: :placement [!htb] :width 0.8\textwidth
+# #+RESULTS:
+# [[file:/tmp/babel-SkCmZC/figure0HXbvp.pdf]]
+
+** Conclusion
+<<sec.conclusion>>
+
+[Is it worth and suitable to use simulators?]
+
+
+** Acknowledgments                                                  :ignore:
+# :PROPERTIES:
+# :UNNUMBERED: t
+# :END:
+
+#+LATEX:\section*{Acknowledgements}
+We would like to thank the PCAD at INF/UFRGS for making infrastructure
+and hardware used in the experiments available. We also acknowledge
+the Brazilian National Council for Scientific Technological
+Development (CNPq) for their financial support through the PIBIC-UFRGS
+scholarship.
+
+** References                                                        :ignore:
+
+# See next section to understand how refs.bib file is created.
+bibliographystyle:sbc.bst
+[[bibliography:refs.bib]]
+
+* Bib file is here                                                 :noexport:
+
+Tangle this file with C-c C-v t
+#+begin_src bibtex :tangle refs.bib
+@article{simgrid2025,
+  title = {{Lowering entry barriers to developing custom simulators of distributed applications and platforms with SimGrid}},
+  journal = {Parallel Computing},
+  volume = {123},
+  pages = {103-125},
+  year = {2025},
+  issn = {0167-8191},
+  doi = {https://doi.org/10.1016/j.parco.2025.103125},
+  author = {Casanova, Henri and Giersch, Arnaud and Legrand, Arnaud and Quinson, Martin and Suter, Fr{\'e}d{\'e}ric},
+  keywords = {Simulation of distributed computing systems, SimGrid},
+  pdf = {https://hal.science/hal-04909441/file/paper.pdf}
+}
+
+@article{repro2024,
+title = {Reproducibility, Replicability and Repeatability: A survey of reproducible research with a focus on high performance computing},
+journal = {Computer Science Review},
+volume = {53},
+pages = {100655},
+year = {2024},
+issn = {1574-0137},
+doi = {https://doi.org/10.1016/j.cosrev.2024.100655},
+url = {https://www.sciencedirect.com/science/article/pii/S157401372400039X},
+author = {Benjamin Antunes and David R.C. Hill}
+}
+
+@misc{LPPD,
+title        = {Laboratório de Processamento Paralelo e Distribuído (LPPD)},
+author       = {INF/UFRGS},
+note         = {Accessed: 2026-02-16},
+year         = {2025},
+howpublished = {\url{https://pcad.inf.ufrgs.br/}}
+}
+
+@mastersthesis{arthur2025,
+title        = {Um simulador da rede do supercomputador frontier utilizando SimGrid},
+author       = {Arthur Alves Ferreira Melo},
+year         = {2025},
+type={Bachelor's Thesis}
+}
+
+@misc{frontier,
+  author = {{Top500}},
+  title = {Frontier},
+  howpublished = {\url{https://www.top500.org/system/180047/}},
+  year = {2022},
+  note = {Accessed: 2026-02-22}
+}
+
+@techreport{IAE2024,
+  author      = {{International Energy Agency (IEA)}},
+  title       = {Energy and AI},
+  institution = {IEA},
+  year        = {2024},
+  url         = {https://www.iea.org/reports/energy-and-ai}
+}
+
+@article{HPL2003,
+  author = {Dongarra, Jack J. and Luszczek, Piotr and Petitet, Antoine},
+  title = {The {LINPACK} Benchmark: past, present and future},
+  journal = {Concurrency and Computation: Practice and Experience},
+  volume = {15},
+  number = {9},
+  pages = {803--820},
+  year = {2003}
+}
+
+@phdthesis{calibration,
+  TITLE = {{High Performance Computing : towards better Performance Predictions and Experiments}},
+  AUTHOR = {Cornebize, Tom},
+  URL = {https://theses.hal.science/tel-03328956},
+  NUMBER = {2021GRALM016},
+  SCHOOL = {{Universit{\'e} Grenoble Alpes [2020-....]}},
+  YEAR = {2021},
+  MONTH = Jun,
+  TYPE = {Theses},
+  PDF = {https://theses.hal.science/tel-03328956v2/file/CORNEBIZE_2021_archivage.pdf},
+  HAL_ID = {tel-03328956},
+  HAL_VERSION = {v2},
+}
+
+@techreport{lulesh,
+  author       = {Karlin, I. and Keasler, J. and Neely, J. R.},
+  title        = {LULESH 2.0 Updates and Changes},
+  institution  = {Lawrence Livermore National Laboratory (LLNL), Livermore, CA (United States)},
+  annote       = {Abstract not provided.},
+  doi          = {10.2172/1090032},
+  url          = {https://www.osti.gov/biblio/1090032},
+  place        = {United States},
+  year         = {2013},
+  month        = {07}}
+
+@INPROCEEDINGS{minivite,
+  author={Ghosh, Sayan and Halappanavar, Mahantesh and Tumeo, Antonino and Kalyanaraman, Ananth and Gebremedhin, Assefaw H.},
+  booktitle={2018 IEEE/ACM PMBS},
+  title={MiniVite: A Graph Analytics Benchmarking Tool for Massively Parallel Systems},
+  year={2018},
+  volume={},
+  number={},
+  pages={51-56},
+  keywords={Benchmark testing;Tools;Clustering algorithms;Partitioning algorithms;Analytical models;Generators;Two dimensional displays},
+  doi={10.1109/PMBS.2018.8641631}}
+
+@misc{comd,
+  author = {{ExMatEx}},
+  title = "{CoMD}: A Classical Molecular Dynamics Proxy Application",
+  howpublished = {\url{https://github.com/exmatex/CoMD}},
+  year = {2013}
+}
+
+@book{jain,
+author = {Jain, Raj},
+year = {1991},
+month = {04},
+pages = {},
+title = {The Art of Computer Systems Performance Analysis: Techniques For Experimental Design, Measurement, Simulation, and Modeling, NY: Wiley},
+isbn = {0471503361}
+}
+#+end_src
+* Emacs setup                                                      :noexport:
+# Local Variables:
+# eval: (add-to-list 'load-path ".")
+# eval: (require 'ox-extra)
+# eval: (ox-extras-activate '(ignore-headlines))
+# eval: (require 'org-ref)
+# eval: (require 'doi-utils)
+# eval: (add-to-list 'org-latex-packages-alist '("" "url") t)
+# eval: (add-to-list 'org-latex-packages-alist '("" "sbc-template") t)
+# eval: (add-to-list 'org-latex-packages-alist '("AUTO" "babel" t ("pdflatex")))
+# eval: (setq org-latex-pdf-process (list "latexmk -pdf %f"))
+# eval: (add-to-list 'org-export-before-processing-hook (lambda (be) (org-babel-tangle)))
+# End:
