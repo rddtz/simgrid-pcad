@@ -1,26 +1,53 @@
-#include <numeric>
 #include <simgrid/s4u.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
 #include <fstream>
 
 namespace sg4 = simgrid::s4u;
+namespace sgr = simgrid::kernel::routing;
 
-typedef struct partition {
+
+std::ofstream arquivo_dot;
+
+// ================ Visualization ================
+
+void init_dot(const std::string& filename) {
+  arquivo_dot.open(filename);
+  arquivo_dot << "graph PlataformaS4U {\n";
+  arquivo_dot << "  node [shape=box, style=filled, fillcolor=lightgrey, fontname=\"Helvetica\"];\n";
+}
+
+void close_dot() {
+  arquivo_dot << "}\n";
+  arquivo_dot.close();
+}
+
+void log_conexao(const std::string& origem, const std::string& destino, const std::string& cor = "black", const std::string& estilo = "solid", int espessura = 1) {
+  if (arquivo_dot.is_open()) {
+    arquivo_dot << "  \"" << origem << "\" -- \"" << destino
+		<< "\" [color=" << cor << ", style=" << estilo << ", penwidth=" << espessura << "];\n";
+  }
+}
+
+
+// ================ Structs ================
+struct Switch {
+  sg4::NetZone* zone;
+  std::string router_name;
+  std::string bw;
+  std::string lat;
+};
+
+
+struct Node {
   std::string name;
   std::string calib_file;
   std::string speed;
-  std::string bw;
-  std::string lat;
-  std::string switch_ref;
-  int count;
-  int cores; // Only counting phisical cores
-} partition_t;
+  int cores; // Only counting physical cores
+};
 
-typedef struct switch_info {
-  std::string name;
-  std::string capacity;
-  std::string latency;
-} switch_t;
-
+// ================ Calibration Helper ================
 std::map<std::string, std::string> load_calibration(const std::string& filename) {
   std::map<std::string, std::string> props;
   if (filename.empty()) return props; // Retorna vazio se não houver arquivo
@@ -33,138 +60,152 @@ std::map<std::string, std::string> load_calibration(const std::string& filename)
     if (delim != std::string::npos) {
       std::string key = line.substr(0, delim);
       std::string value = line.substr(delim + 1);
+      // std::cout << key << " -> " << value;
       props[key] = value;
     }
   }
   return props;
 }
 
-/*
- @brief Create a partition with N machines
+// ================ Switch Creation and Linking ================
+Switch build_switch(sg4::NetZone* root_zone, const std::string& name, const std::string& bw, const std::string& lat) {
 
- This function creates the any partition, adding the hosts and links properly.
- @param root Root netzone
- @param switch_fatpipe Switch link for the rack to model the connection
- @param partition Information about the hosts in the partition
-*/
+  auto* sw_zone = root_zone->add_netzone_star(name + "_Zone");
+  std::string router_name = "Router_" + name;
+  auto* sw_router = sw_zone->add_router(router_name);
+  sw_zone->set_gateway(sw_router);
 
-void create_partition(sg4::NetZone* rack,
-                      sg4::Link* switch_cable,
-		      partition_t partition)
-{
+  // router in the .dot
+  arquivo_dot << "  \"" << router_name << "\" [shape=circle, fillcolor=white];\n";
 
-  auto calib_props = load_calibration(partition.calib_file);
+  return {sw_zone, router_name, bw, lat};
+}
 
-  for (int id = 1; id <= partition.count; id++) {
-    std::string hostname = partition.name + std::to_string(id);
+// Connect two switches
+void connect_switches(sg4::NetZone* root_zone, const Switch& sw1, const Switch& sw2, const std::string& bw = "40GBps", const std::string& lat = "5us") {
 
-    auto* host = rack->add_host(hostname, partition.speed)->set_core_count(partition.cores);
+  std::string link_name = "Link_" + sw1.router_name + "_to_" + sw2.router_name;
+  auto* link = root_zone->add_link(link_name, bw)->set_latency(lat);
 
-    for (const auto& [key, value] : calib_props) {
-        host->set_property(key, value);
+  root_zone->add_route(sw1.zone, sw2.zone, std::vector<const sg4::Link*>{link});
+
+  log_conexao(sw1.router_name, sw2.router_name, "black", "bold", 4);
+}
+
+// Connect ALL switches
+void connect_switch_mesh(sg4::NetZone* root_zone, const std::vector<Switch>& switches, const std::string& bw = "40GBps", const std::string& lat = "5us") {
+  for (size_t i = 0; i < switches.size(); ++i) {
+    for (size_t j = i + 1; j < switches.size(); ++j) {
+      connect_switches(root_zone, switches[i], switches[j], bw, lat);
     }
-
-    host->seal();
-
-    auto* node_cable = rack->add_link(hostname + "_cable", partition.bw)->set_latency(partition.lat)->seal();
-
-    // Looks like StarZone automatically calculates the path to the netzone gateway when the second argument is a nullptr
-    rack->add_route(host,
-                    nullptr,
-                    std::vector<const sg4::Link*>{node_cable, switch_cable});
   }
 }
 
-/**
- * @brief Create a rack with N partitions
- *
- * This function creates the a rack, adding the internal partitions linked correctly.
- *
- * @param root Root netzone
- * @param rack_name Rack name
- * @param partitions Vector with the partitions information
- */
-sg4::NetZone *create_rack(sg4::NetZone *root, std::string rack_name,
-			  std::vector<switch_t> switches,
-                          std::vector<partition_t> partitions)
-    {
+// ================ Node creation ================
+sg4::NetZone* build_node(sg4::NetZone* root_zone,
+			 Node node,
+			 const std::vector<Switch>& parent_switches) {
 
-      auto* rack_zone = root->add_netzone_star(rack_name);
-      auto* rack_router = rack_zone->add_router(rack_name + "_router");
-      rack_zone->set_gateway(rack_router); // rack gateaway
+  auto* node_zone = root_zone->add_netzone_full(node.name);
 
+  std::string router_name = "Router_" + node.name;
+  auto* node_router = node_zone->add_router(router_name);
+  node_zone->set_gateway(node_router);
 
-      std::map<std::string, sg4::Link*> switch_links;
+  // cluster for .dot
+  arquivo_dot << "  subgraph cluster_" << node.name << " {\n";
+  arquivo_dot << "    label=\"Nodo " << node.name << "\"; style=dashed; color=gray; fontname=\"Helvetica\";\n";
+  // router
+  arquivo_dot << "    \"" << router_name << "\" [shape=ellipse, fillcolor=orange];\n";
 
-      for(const auto& sw : switches) {
-	auto* cable = rack_zone->add_link(rack_name + "_" + sw.name, sw.capacity)
-	  ->set_latency(sw.latency)
-	  ->set_sharing_policy(sg4::Link::SharingPolicy::SHARED)
-	  ->seal();
+  std::vector<sg4::Host*> cores;
 
-	switch_links[sw.name] = cable;
-      }
+  // create cores and link it to router
+  auto calib_props = load_calibration(node.calib_file);
+  for (int i = 0; i < node.cores; ++i) {
 
-      // // Create Fatpipe to simulat the switch
-      // auto* rack_switch_fatpipe = rack_zone->add_link(rack_name + "_fatpipe", switch_capacity)
-      // 	->set_latency(switch_latency)
-      // 	->set_sharing_policy(sg4::Link::SharingPolicy::SHARED)
-      // 	->seal();
+    std::string core_name = node.name + "/" + std::to_string(i);
+    auto* core = node_zone->add_host(core_name, node.speed);
 
-      // Nodes partitions (nodes)
-      for(const auto& partition : partitions){
-	create_partition(rack_zone, switch_links[partition.switch_ref], partition);
+    for (const auto& [key, value] : calib_props) {
+      core->set_property(key, value);
+    }
 
-      }
+    cores.push_back(core);
 
-      rack_zone->seal();
-      return rack_zone;
+    auto* link_to_router = node_zone->add_link("Link_" + core_name + "_to_Router", "500GBps")->set_latency("1ns");
+    node_zone->add_route(core->get_netpoint(), node_router, std::vector<const sg4::Link*>{link_to_router});
+
+    log_conexao(core_name, router_name, "blue");
+  }
+
+  // connections between cores
+  for (size_t i = 0; i < cores.size(); ++i) {
+    for (size_t j = i + 1; j < cores.size(); ++j) {
+      std::string p2p_link_name = "Link_cpu_" + cores[i]->get_name() + "_" + cores[j]->get_name();
+      auto* link_p2p = node_zone->add_link(p2p_link_name, "500GBps")->set_latency("1ns");
+      node_zone->add_route(cores[i], cores[j], std::vector<const sg4::Link*>{link_p2p});
+
+      log_conexao(cores[i]->get_name(), cores[j]->get_name(), "red", "dashed");
+    }
+  }
+
+  // end .dot for the node
+  arquivo_dot << "  }\n";
+
+  // connect the router to the switchs
+  for (const auto& sw : parent_switches) {
+    std::string uplink_name = "Uplink_" + node.name + "_to_" + sw.router_name;
+    auto* link_uplink = root_zone->add_link(uplink_name, sw.bw)->set_latency(sw.lat);
+
+    root_zone->add_route(node_zone, sw.zone, std::vector<const sg4::Link*>{link_uplink});
+
+    log_conexao(router_name, sw.router_name, "green", "solid", 2);
+  }
+
+  return node_zone;
 }
 
-/** @brief Programmatic version of PCAD */
+// Construct one cei partition
+void build_cei(sg4::NetZone* root_zone, const std::vector<Switch>& parent_switches, int num_nodes) {
+
+  // Host speed is already divided by number of cores.
+  Node cei = {"cei", "cei.txt", "21.125Gf", 24};
+
+  for(int i = 1; i <= num_nodes; i++){
+    cei.name = "cei" + std::to_string(i);
+    build_node(root_zone, cei, parent_switches);
+  }
+
+}
+
 extern "C" void load_platform(sg4::Engine& e);
-void load_platform(sg4::Engine& e)
-{
-  auto* root = e.get_netzone_root();
+void load_platform(sg4::Engine& e){
+  init_dot("topology.dot");
 
-  switch_t r2_sw_10gb = {"switch_10gb", "10Gbps", "100ns"};
-  switch_t r2_sw_1gb  = {"switch_1gb", "1Gbps", "100ns"};
-  std::vector<switch_t> rack2_switches = {r2_sw_10gb, r2_sw_1gb};
+  auto* implicit_root = e.get_netzone_root();
+  auto* root_zone = implicit_root->add_netzone_dijkstra("PCAD", true);
 
-  // partition_t cei = {"cei", "", "19.125Gf", "9.413Gbps", "124us", 6, 24};
-  partition_t cei = {"cei", "", "19.125Gf", "9.413Gbps", "124us", "switch_10gb", 6, 24};
-  // partition_t draco = {"draco", "draco.txt", "14.125Gf", "941Mbps", "115us", 6, 16};
-  partition_t draco = {"draco", "", "14.125Gf", "941Mbps", "115us", "switch_1gb", 6, 16};
-  std::vector<partition_t> rack2_partitions = {cei, draco};
+  // create the switchs
+  std::vector<Switch> switches;
+  switches.push_back(build_switch(root_zone, "switch_1g_rack2", "1Gbps", "100us"));
+  switches.push_back(build_switch(root_zone, "switch_10g_rack2", "10Gbps", "100us"));
+  // core_switches.push_back(build_switch(root_zone, "switch_1g_rack4"));
 
-  sg4::NetZone *rack2_zone = create_rack(root, "rack2", rack2_switches, rack2_partitions);
+  // connect all the switchs
+  connect_switch_mesh(root_zone, switches, "500GBps", "0.1us");
 
-  // =-=-=-=-=-=-=-=-=-=-=-= RACK 4 =-=-=-=-=-=-=-=-=-=-=-=
+  // Create the cei partition
+  build_cei(root_zone, {switches[0], switches[1]}, 6);
 
-  switch_t r4_sw_1gb = {"switch_1gb", "1Gbps", "100ns"};
-  std::vector<switch_t> rack4_switches = {r4_sw_1gb};
-
-  partition_t poti = {"poti", "", "20.2Gf", "940Mbps", "117us", "switch_1gb", 5, 20};
-  // partition_t tupi = {"tupi", "tupi.txt", "58.375Gf", "942Mbps", "87us", 6, 8};
-  partition_t tupi = {"tupi", "", "58.375Gf", "942Mbps", "87us", "switch_1gb", 6, 8};
-  std::vector<partition_t> rack4_partitions = {poti, tupi};
-
-  sg4::NetZone *rack4_zone = create_rack(root, "rack4", rack4_switches, rack4_partitions);
-
-  // =-=-=-=-=-=-=-=-=-=-=-= CONNECTION BETWEEN THE RACKS (switchs) =-=-=-=-=-=-=-=-=-=-=-=
-  std::string inter_switch_bw = "10Gbps";
-  std::string inter_switch_lat = "50us";
-
-  auto* link_rack2_gw = root->add_link("link_rack2_gateway", inter_switch_bw)->set_latency(inter_switch_lat)->seal();
-  auto* link_rack4_gw = root->add_link("link_rack4_gateway", inter_switch_bw)->set_latency(inter_switch_lat)->seal();
-
-  // auto* rack_link = root->add_link("r2_to_r4_cable", inter_switch_bw)
-  //   ->set_latency(inter_switch_lat)
-  //   ->seal();
-
-  root->add_route(rack2_zone, rack4_zone, std::vector<const sg4::Link*>{link_rack2_gw, link_rack4_gw});
-  // connect the zones
-  // root->add_route(rack2_zone, rack4_zone, {rack_link});
-
-  root->seal();
+  close_dot();
+  e.seal_platform();
 }
+
+// int main(int argc, char* argv[]) {
+//   sg4::Engine e(&argc, argv);
+//   create_platform(e);
+
+//   // std::cout << "[SIM] platform created, .dot generated ---\n";
+//   return 0;
+// }
