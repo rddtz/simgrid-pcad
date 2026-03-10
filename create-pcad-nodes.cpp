@@ -8,6 +8,7 @@
 
 namespace sg4 = simgrid::s4u;
 
+// ================ Structs ================
 struct Switch {
   sg4::NetZone* zone;
   std::string router_name;
@@ -22,6 +23,7 @@ struct Node {
   int cores;
 };
 
+// ================ Helpers ================
 std::map<std::string, std::string> load_calibration(const std::string& filename) {
   std::map<std::string, std::string> props;
   if (filename.empty()) return props;
@@ -36,6 +38,7 @@ std::map<std::string, std::string> load_calibration(const std::string& filename)
   return props;
 }
 
+// ================ Switch (NetZone) ================
 Switch build_switch(sg4::NetZone* root_zone, const std::string& name, const std::string& bw, const std::string& lat) {
   auto* sw_zone = root_zone->add_netzone_dijkstra(name + "_zone", true);
   std::string router_name = "router_from_" + name;
@@ -45,48 +48,23 @@ Switch build_switch(sg4::NetZone* root_zone, const std::string& name, const std:
   return {sw_zone, router_name, bw, lat};
 }
 
+// ================ Node creation ================
 void build_node(Switch& sw, Node node) {
 
-  std::string router_name = "router_from_" + node.name;
-  auto* node_router = sw.zone->add_router(router_name);
+  auto* host = sw.zone->add_host(node.name, node.speed);
 
-  // connect the router to the switchs
-  std::string uplink_name = node.name + "_to_" + sw.router_name;
-  auto* link_uplink = sw.zone->add_link(uplink_name, sw.bw)->set_latency(sw.lat);
+  host->set_core_count(node.cores);
 
-  sw.zone->add_route(node_router, sw.zone->get_gateway(), {sg4::LinkInRoute(link_uplink)});
 
-  std::vector<sg4::Host*> cores;
-
-  // create cores and link it to router
   auto calib_props = load_calibration(node.calib_file);
-  for (int i = 0; i < node.cores; ++i) {
-
-    std::string core_name = node.name + "/" + std::to_string(i);
-    auto* core = sw.zone->add_host(core_name, node.speed);
-
-    for (const auto& [key, value] : calib_props) {
-      core->set_property(key, value);
-    }
-
-    cores.push_back(core);
-
-    auto* link_to_router = sw.zone->add_link(core_name + "_to_" + router_name, "500Gbps")->set_latency("100ns");
-    sw.zone->add_route(core->get_netpoint(), node_router, {sg4::LinkInRoute(link_to_router)});
+  for (const auto& [key, value] : calib_props) {
+    host->set_property(key, value);
   }
 
+  std::string link_name = "link_" + node.name;
+  auto* link_nic = sw.zone->add_link(link_name, sw.bw)->set_latency(sw.lat);
 
-  // connections between cores
-  for (size_t i = 0; i < cores.size(); ++i) {
-    for (size_t j = i + 1; j < cores.size(); ++j) {
-      std::string p2p_link_name = cores[i]->get_name() + "_to_" + cores[j]->get_name();
-      auto* link_p2p = sw.zone->add_link(p2p_link_name, "500Gbps")->set_latency("100ns");
-
-      sw.zone->add_route(cores[i], cores[j], {sg4::LinkInRoute(link_p2p)});
-    }
-  }
-
-
+  sw.zone->add_route(host->get_netpoint(), sw.zone->get_gateway(), {sg4::LinkInRoute(link_nic)});
 }
 
 void build_cei(std::vector<Switch>& switches, int num_nodes) {
@@ -103,9 +81,8 @@ void load_platform(sg4::Engine& e) {
   auto* root_zone = e.get_netzone_root();
 
   std::vector<Switch> switches;
-  switches.push_back(build_switch(root_zone, "switch_10g_rack2", "9.413Gbps", "124us"));
+  switches.push_back(build_switch(root_zone, "switch_10g_rack2", "9.413Gbps", "124.5us"));
 
-  // Cria os CEIs dentro da hierarquia do switch
   build_cei(switches, 6);
 
   e.seal_platform();
