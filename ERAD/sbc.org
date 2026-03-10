@@ -139,41 +139,28 @@ variety of factors such as the time available, the desired accuracy
 and several others cite:jain. While measurement tends to show the most
 accurate results when properly configured, it requires access to the
 actual system, which typically leads to higher energy consumption and
-limits the ability to extrapolate new scenarios. On the other hand,
+limits the ability to extrapolate to new scenarios. On the other hand,
 analytical modeling offers great extrapolation capabilities at a
 considerably lower energy consumption, but often suffers from low
 accuracy results. Simulation acts as a middle term, maintaining good
-accuracy with reduced energy footprint, while also enabling the
-exploration of new scenarios. Furthermore, using simulations also
-target the lack of reproducibility in High-Performance Computing
-cite:repro2024, ensuring a controlled and reproducible environment for
-experiments.
-
-# Simulators can be used not only to simulate applications, but whole
-# computing platforms. In High-Performance Computing (HPC)
-# infrastructures are critical for scientific advancement. However, with
-# increasing concerns regarding environmental sustainability, HPC
-# clusters and data centers are recognized as major electricity
-# consumers cite:IAE2024. Simulators aim to address these issues by
-# creating a faithful model of the real system, allowing researchers to
-# perform predictive analysis and validate 'what-if' scenarios without
-# the operational costs or constraints of using the actual machine.
+accuracy with a reduced energy footprint, while also enabling the
+exploration of new what-if scenarios. Furthermore, employing
+simulations also tackles the problem of the lack of reproducibility in
+High-Performance Computing cite:repro2024, ensuring a controlled and
+reproducible environment for experiments.
 
 Therefore, the simulation of High-Performance Computing (HPC)
 infrastructures has become a well-established methodology for
 evaluating system behavior. Among the available tools, SimGrid emerges
-as a free and open-source computational framework capable of
-simulating several HPC scenarios with reproducibility and versatility,
-allowing researchers to simulate large platforms while maintaining
-accuracy cite:simgrid2025.
-
+as a free software capable of simulating several HPC scenarios with
+reproducibility and versatility, allowing researchers to simulate
+large platforms while maintaining accuracy cite:simgrid2025.
 
 In this work, we propose a model of the network of the "Parque
-Computacional de Alto Desempenho" infrastructure present at INF/UFRGS
-cite:LPPD through the SimGrid programmatic interface Simgrid For You
-(S4U). We show preliminary performance results between the proposed
-platform created through simulation and the real cluster.
-
+Computacional de Alto Desempenho" infrastructure cite:LPPD through the
+SimGrid programmatic interface Simgrid For You (S4U). We show
+preliminary performance results between the proposed platform created
+through simulation and the real cluster.
 
 # Section [[sec.relatedwork]] details related work. Section discusses the
 # experimental methodology used in this work, with a description of the
@@ -188,8 +175,8 @@ reproducible for a better science. We made available a companion
 material hosted in a public GitHub repository at
 #+latex: {\scriptsize\url{https://github.com/rddtz/simgrid-pcad}}.
 Our companion contains the source code of this article and the
-software necessary to handle the created datasets. We also include
-instructions to run the experiment and figures.
+programmatic description of the platform. We also include instructions
+to run the real experiment, simulations and  to recreate the figures.
 # An archive is also available in Zenodo at URL.
 
 
@@ -209,11 +196,10 @@ API to model and simulate the network topology of the Frontier
 supercomputer cite:frontier. However, while existing works often focus
 on modeling massive systems, there is a need to apply and validate
 these programmatic creation methodologies in the context of
-heterogeneous institutional HPC clusters. Moreover, by creating a
-validated model of the PCAD infrastructure, it makes it possible for local
-researchers to easily replicate experiments and create what-if
-scenarios, as well as study scalability even with limited physical
-hardware.
+institutional HPC clusters. Moreover, by creating a validated model of
+the PCAD infrastructure, it enable local researchers to easily
+replicate experiments and create what-if scenarios, as well as study
+scalability even with limited physical hardware.
 
 # #+begin_red
 # SimGrid has also the S4U API, enabling the programmatic creation of
@@ -228,8 +214,8 @@ hardware.
 
 ** Platform Proposal and Initial Implementation
 
-This section discusses the proposed platform and methodology used for
-its creation and calibration.
+# This section discusses the proposed platform and methodology used for
+# its creation and calibration.
 
 # , focusing on hosts computational power and the network topology.
 
@@ -252,7 +238,7 @@ initially selected only a few partitions to simulate, these being the
 six nodes each, and the last one has only five. We chose these
 partitions as they are the most used ones, aiming to first create a
 generic approach that can later be applied to the whole cluster if
-wanted.
+necessary.
 
 #+begin_export latex
 \begin{figure}[htbp]
@@ -377,7 +363,7 @@ defined as a distinct network zone and within these zones individual
 host nodes are instantiated. The modeling explicitly defines hardware
 characteristics for each node, including physical core counts and
 computational speed measured in Gflops. Network capabilities are
-established by attaching dedicated cables to each host, specifying
+established by attaching dedicated links to each host, specifying
 both bandwidth and latency.
 
 
@@ -386,17 +372,16 @@ both bandwidth and latency.
 After having a programmatic model of the network topology, the next
 stop is to calibrate it. The calibration consist in the execution of
 several experiments in the target system to gather information about
-the network and hosts capabilities. The essential information for each
-hosts are the host computing power and the host connection bandwidth
-and latency. The information about the host computing power can be
-achieved by various was, we chose to use the High-Performance Linpack
-(HPL) cite:HPL2003. For each partition, the HPL was executed 10 times
-across two different machines, and the mean result in Gflops was taken
-as the time for a node in that partition. For the network properties,
-we used simple network tools such as iperf3 for bandwidth and ping
-for latency. We also make use of official SimGrid material to
-calibrate the network and MPI factors for each partition
-cite:calibration.
+its capabilities. The essential information for each hosts are the
+host computing power and the host connection bandwidth and
+latency. The information about the computing power can be achieved by
+various ways, we chose to use the High-Performance Linpack (HPL)
+cite:HPL2003. For each partition, the HPL was executed 10 times across
+two different machines, and the mean result in Gflops was taken as the
+speed of a node in that partition. For the network properties, we used
+simple network tools such as =iperf3= for bandwidth and =ping= for
+latency. Official SimGrid material was also used to calibrate the
+network and MPI factors for each partition cite:calibration.
 
 
 ** COMMENT Platform Proposal and Initial Implementation
@@ -523,7 +508,8 @@ tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |>
   separate(CSV, into=paste0("XX", 1:2), sep="_") |>
   unnest(DATA) |>
   select(where=XX1, everything()) |>
-  select(-XX2) -> df
+  select(-XX2) |> filter(where == "real2" | where =="sim") |>
+  mutate(where = ifelse(where=="real2", "real", "sim")) -> df
 
 df
 #+end_src
@@ -762,36 +748,36 @@ meu_estilo <- function(base=20) {
 ** Preliminary Results
 <<sec.results>>
 
-Figure [[fig:results]] show the mean time for execution of the medium
-sized experiments (represented as a bigger circle) in function of the
-number of nodes. Small circles represents our observations. The time
-is given by the application as output at the end of the
-computation. The black bars centered around the mean represents the
-standard error with a CI of 99%. The figure shows the results faceted
-by partition and applications, whit the colors identifying where the
+We used the LULESH proxy app cite:lulesh, a common benchmark for MPI
+communication and network performance, to evaluate a initial
+implementation.  Figure [[fig:results]] show the mean time for
+execution of different experiments sizes (represented as a bigger
+circle) in function of the number of nodes. Small circles represents
+our observations. The time is given by the application as output at
+the end of the computation. The black bars centered around the mean
+represents the standard error with a CI of 99%. The figure shows the
+results faceted by partition, with the colors identifying where the
 execution takes place, in the real cluster (=real=) or in the SimGrid
-(=sim=).
+(=sim=). The simulation was executed in a node of the =cei= partition.
 
-#+begin_src R :results graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 12 :height 6 :session *R*
-appl="minivite"
+
+#+begin_src R :results graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 12 :height 4 :session *R*
+appl="lulesh"
 part="cei"
 s="m"
 
 df.jitter <- df |> filter(
                      ## partition==part &
-                   ## app==appl &
-                   size==s &
-                   omp==1 &
-                   np == 8
+                   app==appl &
+                   size==s
                    )
 
 df.stats |> filter(
         ## partition==part &
-                   ## app==appl &
-                   size==s &
-                   omp==1 &
-                   np==8) |>
-  ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where)) +
+                   app==appl &
+                   size==s
+            ) |>
+  ggplot(aes(y=mean_time, x=as.factor(nodes), fill=where, color=where)) +
 
     geom_errorbar(
     aes(ymin = mean_time - sd, ymax = mean_time + sd),
@@ -809,82 +795,45 @@ df.stats |> filter(
     alpha = 0.3,
     size = 1
   ) +
-  facet_grid(app ~ partition) +
-  ## scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
+  facet_grid(. ~ partition) +
+  scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
   labs(
     x="Nodes",
     y="Mean Time (s)"
   ) +
+  expand_limits(y = 0) +
   meu_estilo(25)
 
 #+end_src
 
-#+CAPTION: Mean of time results.
+#+CAPTION: Mean execution time of the LULESH benchmark for different partitions.
 #+NAME:fig:results
 #+attr_latex: :placement [!htb] :width 1\textwidth
 #+RESULTS:
-[[file:/tmp/babel-SkCmZC/figuredDockH.pdf]]
+[[file:/tmp/babel-TmQorR/figurej1wgnV.pdf]]
 
 
-WAIT FOR FINAL DATA TOMORROW...
-Maybe rerun with large scale experiments now that I have more time?
-
-# Figure [[fig:energy]] follows the same structure as the previous to show the energy
-# consumption in joules. We can see that initially the energy consumed
-# by the simulation can overcome the real execution for this smalls
-# scales simulations. However, as expected, as the number of nodes
-# increase the number the energy consumed also increases. As the
-# simulation run on only one machine, the energy consumption remained
-# almost the same no matter the number of nodes simulated.
-
-
-# #+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".pdf") :exports results :width 10 :height 6 :session *R*
-# df.stats |>
-#   mutate(mean_uj = ifelse(mean_uj < 0, 0, mean_uj)) |>
-#   filter(mean_uj > 0) |>
-#   filter(omp==1 & np==8 & size=="m") |>
-
-#   ggplot(aes(x=as.factor(nodes), y=mean_uj/1e6, color=where)) +
-
-#   geom_point(size=4, alpha=0.8) +
-
-
-#     geom_errorbar(
-#     aes(ymin = mean_uj/1e6 - sd_uj/1e6, ymax = mean_uj/1e6 + sd_uj/1e6),
-#     width = 0.2, # Controls the width of the horizontal bar at the end of the error line
-#     linewidth = 0.8, alpha = 1,
-#     color="black"
-#   ) +
-
-#    geom_jitter(
-#     data = df.jitter,
-#     aes(x = as.factor(nodes),
-#         y = ifelse(end_uj-start_uj >= 0, (end_uj-start_uj)/1e6, 0),
-#         color=where),
-#     alpha = 0.3,
-#     size = 1
-#   ) +
-#   facet_grid(app ~ partition) +
-#   labs(
-#     x="Nodes",
-#     y="Energy Consumption (J)"
-#   ) +
-#   scale_color_manual(values = c("real" = "#ff9922", "sim" = "#497543")) +
-#   meu_estilo(25)
-# #+end_src
-
-
-# #+CAPTION: Mean of energy consumption.
-# #+NAME:fig:energy
-# #+attr_latex: :placement [!htb] :width 0.8\textwidth
-# #+RESULTS:
-# [[file:/tmp/babel-SkCmZC/figure0HXbvp.pdf]]
+As observed in the results, there is currently a noticeable gap
+between the simulated execution times and the real cluster performance
+across the partitions. This initial discrepancy is an expected
+behavior during the early stages of modeling a heterogeneous
+environment. While the initial calibration successfully captured host
+computing power and link limits for some partitions, the complex
+behavior of the network requires further refinement. Consequently, the
+next necessary step is to perform a deeper, more granular calibration,
+particularly focusing on adjusting the network and MPI factors to
+accurately simulate communication overhead and contention.
 
 ** Conclusion
 <<sec.conclusion>>
 
-[Is it worth and suitable to use simulators?]
-
+This work proposed a programmatic methodology to model the
+heterogeneous PCAD infrastructure using the SimGrid S4U API. We
+established a hierarchical baseline and an initial calibration
+workflow. Preliminary results show that while static hardware
+capabilities are represented, the network behavior still diverges from
+the physical cluster. Future work focus on a iterative fine-grained
+calibration of MPI and network parameters.
 
 ** Acknowledgments                                                  :ignore:
 # :PROPERTIES:
