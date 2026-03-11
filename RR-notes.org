@@ -4122,6 +4122,7 @@ echo "========= Todos os jobs foram enfileirados! Use 'squeue -u \$USER' para ac
 #+end_src
 
 
+** 2026 Week 10 [Mar]
 *** 2026-03-01
 
 **** Load data
@@ -5114,28 +5115,33 @@ tibble(CSV = dir_ls(BASE, regexp = ".csv$", recurse=TRUE)) |>
 
 df
 #+end_src
-
 #+RESULTS:
 #+begin_example
-# A tibble: 13 × 1
+# A tibble: 19 × 1
    CSV
    <fs::path>
  1 base.csv
  2 basic2_results.csv
  3 basic_results.csv
- 4 ceimsim_results.csv
- 5 local_results.csv
- 6 newsim_results.csv
- 7 noMPI_results.csv
- 8 real2_results.csv
- 9 real_results.csv
-10 shared_results.csv
-11 sim_results.csv
-12 switchsright_results.csv
-13 tupisim_results.csv
+ 4 cei_results.csv
+ 5 ceimsim_results.csv
+ 6 ceinewFASTER_results.csv
+ 7 ceiold_results.csv
+ 8 ceireal_results.csv
+ 9 ceisim_results.csv
+10 local_results.csv
+11 newGFLOPS_results.csv
+12 newsim_results.csv
+13 noMPI_results.csv
+14 real2_results.csv
+15 real_results.csv
+16 shared_results.csv
+17 sim_results.csv
+18 switchsright_results.csv
+19 tupisim_results.csv
 Warning message:
 Expected 2 pieces. Missing pieces filled with `NA` in 1 rows [1].
-# A tibble: 6,164 × 13
+# A tibble: 6,319 × 13
    where    partition nodes    np app      exp_size   omp Blocks size    run  time start_uj end_uj
    <chr>    <chr>     <dbl> <dbl> <chr>    <chr>    <dbl>  <dbl> <chr> <dbl> <dbl>    <dbl>  <dbl>
  1 base.csv cei           2     8 comd     g            1    0.1 <NA>     NA    NA       NA     NA
@@ -5148,7 +5154,7 @@ Expected 2 pieces. Missing pieces filled with `NA` in 1 rows [1].
  8 base.csv cei           2     8 lulesh   p            1    0.1 <NA>     NA    NA       NA     NA
  9 base.csv poti          4     8 comd     m            1    0.1 <NA>     NA    NA       NA     NA
 10 base.csv tupi          4     8 minivite m            1    0.1 <NA>     NA    NA       NA     NA
-# ℹ 6,154 more rows
+# ℹ 6,309 more rows
 # ℹ Use `print(n = ...)` to see more rows
 #+end_example
 
@@ -5176,8 +5182,8 @@ df |> group_by(where, partition, nodes, np, app, size, omp) |>
 #+begin_example
 `summarise()` has grouped output by 'where', 'partition', 'nodes', 'np', 'app', 'size'. You can override
 using the `.groups` argument.
-# A tibble: 1,107 × 14
-# Groups:   where, partition, nodes, np, app, size [1,107]
+# A tibble: 1,262 × 14
+# Groups:   where, partition, nodes, np, app, size [1,262]
     where   partition nodes    np app      size    omp     N mean_time      sd cv_time  mean_uj     sd_uj
     <chr>   <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl>   <dbl>   <dbl>    <dbl>     <dbl>
   1 real    tupi          2     8 comd     g         1    10   29.4    10.5    0.356    3.26e 9   2.09e 9
@@ -5330,7 +5336,7 @@ using the `.groups` argument.
 148 newsim  cei           1     8 lulesh   m         1    10   10.1     0.0327 0.00326  4.82e 9   2.38e 7
 149 real    cei           4     8 minivite g         1    10    0.597   0.0327 0.0548   2.28e 9   2.02e 7
 150 local   cei           1     8 comd     p         1    10    1.38    0.0323 0.0234  NA        NA
-# ℹ 957 more rows
+# ℹ 1,112 more rows
 # ℹ 1 more variable: cv_uj <dbl>
 # ℹ Use `print(n = ...)` to see more rows
 #+end_example
@@ -5358,39 +5364,34 @@ meu_estilo <- function(base=20) {
 
 **** Graph
 
-
 #+begin_src R :results graphics file :file (org-babel-temp-file "figure" ".png") :exports results :width 1000 :height 1000 :session *R*
 appl="lulesh"
 part="cei"
 s="p"
 
 df.jitter <- df |> filter(
-                     ## partition==part &
-                   ## app==appl &
-( where == "sim" |
- where == "basic2" |
- where == "local" |
- ## where == "shared" |
- where == "noMPI" |
- where == "real2") &
-## size==s &
-omp==1 &
-np == 8
+                     partition==part &
+                   app==appl &
+(
+ ## where == "cei" |
+ where == "ceireal" |
+ where == "ceinewFASTER" |
+ where == "ceiold" |
+ where == "ceisim")
 )
 
 
 df.stats |> filter(
-        ## partition==part &
-                   ## app==appl &
-( where == "sim" |
- where == "basic2" |
- where == "local" |
- ## where == "shared" |
- where == "noMPI" |
- where == "real2") &
-## size==s &
-omp==1 &
-np==8) |>
+        partition==part &
+                   app==appl &
+(
+  ## where == "sim" |
+## where == "ceisim" |
+where == "ceireal" |
+where == "ceinewFASTER" |
+ where == "ceiold" |
+ where == "ceisim")
+) |>
   ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where, shape=where)) +
 
     geom_errorbar(
@@ -5423,7 +5424,7 @@ np==8) |>
 #+NAME:fig:results
 #+attr_latex: :placement [!htb] :width 1.2\textwidth
 #+RESULTS:
-[[file:/tmp/babel-CGIwRH/figureD331aC.png]]
+[[file:/tmp/babel-TmQorR/figure8p65LU.png]]
 
 
 #+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports results :width 1000 :height 600 :session *R*
@@ -5473,8 +5474,7 @@ df.stats |>
 #+end_src
 
 #+RESULTS:
-[[file:/tmp/babel-4YOiWd/figure9mwK44.png]]
-
+[[file:/tmp/babel-I4GyyW/figuree1dHlG.png]]
 
 *** 2026-03-04
 newsim (from day 03/03) are with the new results from new mpi
@@ -5485,3 +5485,395 @@ Testing the basic now...
 
 Testing shared now... (simgrid_validation_on_cei2_770743.out, simgrid_validation_on_cei2_770743.err)
 Shared was horrible...
+
+*** 2026-03-06
+
+Run with akypuera:
+
+1. Activate Guix
+   #+begin_src
+   export GUIX_PROFILE="$HOME/.guix-profiles/simgrid-env"
+   source "$GUIX_PROFILE/etc/profile"
+   #+end_src
+
+2. Compile Akypuera
+   #+begin_src shell :results output :exports both
+   make clean; cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.5; make
+   #+end_src
+
+3. Execute:
+   #+begin_src
+   OMP_NUM_THREADS=1 LD_PRELOAD=../akypuera/build/libaky.so mpirun -np 8 SMPI-proxy-apps-real/Benchmarks/Coral/Lulesh/lulesh2.0 -s 10 -i 10
+   #+end_src
+
+
+#+begin_src R :results output :session *R0* :exports both
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+BASE <- "."
+tibble(CSV = dir_ls(BASE, regexp = "local.csv$", recurse=TRUE)) |>
+  filter(!grepl("/", CSV)) |>
+  print() |>
+  mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+  unnest(DATA) |> select(-CSV) -> df
+
+df |> filter(!is.na(gflops)) |>
+  group_by(machine, size) |>
+  summarise(
+    N=n(),
+    sd = sd(gflops),
+    mean = mean(gflops),
+    cv = sd / mean
+  ) |> print() |>
+  mutate(partition = gsub("[0-9]+", "", machine)) |>
+  group_by(partition) |>
+  summarise(
+    mean = mean(mean),
+    sd = sd(sd),
+    cv = sd / mean
+  )
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 1 × 1
+  CSV
+  <fs::path>
+1 local.csv
+`summarise()` has grouped output by 'machine'. You can override using the `.groups` argument.
+# A tibble: 16 × 6
+# Groups:   machine [4]
+   machine  size     N     sd  mean      cv
+   <chr>   <dbl> <int>  <dbl> <dbl>   <dbl>
+ 1 cei1    15000    10  1.61   503. 0.00320
+ 2 cei1    20000    10  1.55   506. 0.00307
+ 3 cei1    30000    10  2.17   508. 0.00427
+ 4 cei1    40000    10  1.62   509. 0.00318
+ 5 draco3  15000    10  0.936  240. 0.00390
+ 6 draco3  20000    10  5.53   241. 0.0229
+ 7 draco3  30000    10  6.84   242. 0.0283
+ 8 draco3  40000    10  3.30   246. 0.0134
+ 9 poti2   15000    10  3.01   574. 0.00525
+10 poti2   20000    10  1.73   574. 0.00301
+11 poti2   30000    10  4.67   570. 0.00820
+12 poti2   40000    10  3.38   573. 0.00590
+13 tupi4   15000    10  4.75   826. 0.00575
+14 tupi4   20000    10  5.45   839. 0.00650
+15 tupi4   30000    10  6.61   835. 0.00791
+16 tupi4   40000    10 12.2    836. 0.0146
+# A tibble: 4 × 4
+  partition  mean    sd       cv
+  <chr>     <dbl> <dbl>    <dbl>
+1 cei        507. 0.290 0.000573
+2 draco      242. 2.60  0.0107
+3 poti       572. 1.21  0.00212
+4 tupi       834. 3.40  0.00408
+#+end_example
+
+
+#+begin_src R :results output :session *R* :exports both
+options(crayon.enabled=FALSE)
+library(DoE.base)
+library(tidyverse)
+
+fator_partition = c("cei", "draco", "poti", "tupi")
+fator_app = c("lulesh", "comd", "minivite")
+fator_nodes = c(1, 2, 4)
+fator_exp_size = c("p", "m", "g")
+
+fac.design(nfactors=4,
+           replications=1,
+           repeat.only= FALSE ,
+           randomize=TRUE,
+           seed=17366,
+           nlevels=c(length(fator_partition),
+                     length(fator_nodes),
+                     length(fator_app),
+                     length(fator_exp_size)),
+           factor.names=list(
+             partition = fator_partition,
+             nodes = fator_nodes,
+             app = fator_app,
+             exp_size = fator_exp_size
+           )) |>
+  as_tibble() |>
+  mutate_at(vars(nodes), as.character) |>
+  mutate_at(vars(nodes), as.numeric) |>
+  mutate(omp=1) |>
+  mutate(np = ifelse(nodes==1 | app!="lulesh", 8, ifelse(nodes==2, 27, 64))) |>
+  mutate(Blocks=".1") |>
+  ## mutate(app="lulesh") |>
+  select(partition,nodes,np,app,exp_size,omp,Blocks) |>
+  filter(np >= nodes & partition=="cei") |>
+  print() |>
+  write_csv("cei.csv", progress=FALSE)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+creating full factorial with 108 runs ...
+
+# A tibble: 27 × 7
+   partition nodes    np app      exp_size   omp Blocks
+   <fct>     <dbl> <dbl> <fct>    <fct>    <dbl> <chr>
+ 1 cei           2     8 comd     g            1 .1
+ 2 cei           1     8 comd     p            1 .1
+ 3 cei           2     8 minivite p            1 .1
+ 4 cei           2    27 lulesh   p            1 .1
+ 5 cei           1     8 comd     g            1 .1
+ 6 cei           4    64 lulesh   g            1 .1
+ 7 cei           2     8 minivite m            1 .1
+ 8 cei           1     8 lulesh   g            1 .1
+ 9 cei           1     8 lulesh   m            1 .1
+10 cei           4     8 comd     g            1 .1
+# ℹ 17 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+*** 2026-03-07
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 1000 :height 1000 :session *R*
+
+inputFilename = "/home/rayan/graduation/ic/simgrid/data/validation/real/REAL-cei-07-03-26-1772908394/REAL-cei-4-64-lulesh-g-1-1/rastro.csv";
+  #"/home/rayan/graduation/ic/simgrid/data/validation/sim/SIM-cei-07-03-26-1772891867/cei-1-8-lulesh-g-1-1/rastro.pj"; #args[1];
+stateType = "STATE"; #args[2];
+
+#
+# Function to read states from a file
+#
+read_paje_trace <- function(file) {
+  df <- read.csv(file, header=FALSE, strip.white=TRUE)
+  names(df) <- c("Nature","ResourceId","Type","Start","End","Duration", "Depth", "Value")
+  df$Origin=file
+  m <- min(df$Start)
+  df$Start <- df$Start - m
+  df$End <- df$Start+df$Duration
+  df$Origin <- NULL
+  df$Nature <- NULL
+  df$Depth <- NULL
+  df
+}
+
+# read trace file
+df <- read_paje_trace (inputFilename);
+
+# make the trace selection
+timeSelection = FALSE;
+if (length(args) >= 3) {
+    timeSelection = TRUE;
+    startTime = as.double(args[3]);
+}else{
+    startTime = 0;
+}
+if (length(args) >= 4) {
+    timeSelection = TRUE;
+    endTime = as.double(args[4]);
+}else{
+    endTime = max(df$End);
+}
+
+if (timeSelection){
+    df <- df[df$Start >= startTime & df$End <= endTime,];
+}
+df <- df[df$Type == stateType,];
+
+# get rid of durations == 0
+df <- df[df$Duration != 0,];
+
+# prepare name of output file
+# outputFile = paste (inputFilename, "-", stateType, "-", startTime, "-", endTime, ".pdf", sep="");
+
+#pdf(outputFile);
+
+library(ggplot2);
+ggplot(df,
+aes(xmin=Start, xmax=End,
+ymin=as.integer(factor(ResourceId)),
+ymax=as.integer(factor(ResourceId))+0.9,
+fill=Value)) +
+theme_bw() +
+geom_rect()
+#print(p);
+#p
+#dev.off();
+#print(outputFile);
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-TmQorR/figure33Rhs6.png]]
+s[[file:/tmp/babel-TmQorR/figurefpb8tb.png]]
+[19:04:22; 07.03.2026]: When we look carefully a lot of small calls
+are made...
+
+** 2026 Week 11 [Mar]
+
+*** 2026-03-10
+[16:10:36; 10.03.2026]: Continuing. Yesterday I tried to fix the
+topology and create a small platform visualizer to help me.
+
+[16:11:34; 10.03.2026]: After doing some changes in the platform, i
+executed some simulations for all aplications. Lets see the results.
+
+[16:13:13; 10.03.2026]: Often used functions:
+#+begin_src R :results output :session *R* :exports both
+
+options(crayon.enabled=FALSE)
+suppressMessages(library(fs))
+suppressMessages(library(tidyverse))
+
+load <- function(BASE=".", regex=".csv$") {
+
+  tibble(CSV = dir_ls(BASE, regexp = regex, recurse=TRUE)) |>
+    filter(!grepl("/", CSV)) |>
+    print() |>
+    mutate(DATA = map(CSV, read_csv, show_col_types=FALSE, progress=FALSE)) |>
+    separate(CSV, into=paste0("XX", 1:2), sep="_") |>
+    unnest(DATA) |>
+    select(where=XX1, everything()) |>
+    select(-XX2)
+}
+
+stats <- function(df) {
+  df |> group_by(where, partition, nodes, np, app, size, omp) |>
+    filter(!is.na(time)) |>
+    mutate(start_uj=ifelse(start_uj < 0, end_uj, start_uj)) |>
+    mutate(end_uj=ifelse(end_uj < 0, start_uj, end_uj)) |>
+    summarise(
+      N=n(),
+      mean_time = mean(time),
+      sd = sd(time),
+      cv_time = sd/mean_time,
+      mean_uj = mean(end_uj - start_uj),
+      sd_uj = sd(end_uj - start_uj),
+      cv_uj = sd_uj/mean_uj,
+      )
+}
+
+meu_estilo <- function(base=20) {
+    list(
+        theme_bw(base_size = base),
+        theme(
+            legend.title = element_blank(),
+            plot.margin = unit(c(0, 0, 0, 0), "cm"),
+            legend.spacing = unit(1, "mm"),
+            legend.position = "right",
+            legend.justification = "left",
+            legend.box.spacing = unit(0, "pt"),
+            legend.box.margin = margin(0, 0, 0, 0),
+            axis.text.x = element_text(angle=45, vjust=1, hjust=1)
+        ))
+}
+
+sgraph <- function(df) {
+
+df.jitter <- df
+
+df |> stats() |>
+  ggplot(aes(y=mean_time, x= as.factor(nodes), fill=where, color=where, shape=where)) +
+
+    geom_errorbar(
+    aes(ymin = mean_time - sd, ymax = mean_time + sd),
+    width = 0.2, # Controls the width of the horizontal bar at the end of the error line
+    linewidth = 0.8, alpha = 1,
+    color="black"
+  ) +
+
+  geom_point(size=4, alpha=0.7) +
+
+ geom_jitter(
+    data = df.jitter,
+    aes(x = as.factor(nodes), y = time, color=where),
+    # Set the transparency (alpha) to 0.3 for a faint look
+    alpha = 0.3,
+    size = 1
+  ) +
+  facet_grid(app ~ size, scales="free") +
+  ## scale_color_manual(values = c("real" = "#5555ff", "sim" = "#ff5555")) +
+  labs(
+    x="Nodes",
+    y="Mean Time (s)"
+  ) +
+  meu_estilo(25)
+}
+
+#+end_src
+
+#+RESULTS:
+
+#+begin_src R :results output :session *R* :exports both
+load() |> stats()
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 2 × 1
+  CSV
+  <fs::path>
+1 real_results.csv
+2 sim_results.csv
+`summarise()` has grouped output by 'where', 'partition', 'nodes', 'np', 'app', 'size'. You can override
+using the `.groups` argument.
+# A tibble: 54 × 14
+# Groups:   where, partition, nodes, np, app, size [54]
+   where partition nodes    np app      size    omp     N mean_time    sd cv_time    mean_uj sd_uj cv_uj
+   <chr> <chr>     <dbl> <dbl> <chr>    <chr> <dbl> <int>     <dbl> <dbl>   <dbl>      <dbl> <dbl> <dbl>
+ 1 real  cei           1     8 comd     g         1     1    18.7      NA      NA 1549112368    NA    NA
+ 2 real  cei           1     8 comd     m         1     1     4.22     NA      NA  405162170    NA    NA
+ 3 real  cei           1     8 comd     p         1     1     0.185    NA      NA  106082004    NA    NA
+ 4 real  cei           1     8 lulesh   g         1     1    34        NA      NA 2856306592    NA    NA
+ 5 real  cei           1     8 lulesh   m         1     1    10        NA      NA 1017214498    NA    NA
+ 6 real  cei           1     8 lulesh   p         1     1     0.21     NA      NA   93722295    NA    NA
+ 7 real  cei           1     8 minivite g         1     1     0.672    NA      NA  645121762    NA    NA
+ 8 real  cei           1     8 minivite m         1     1     0.488    NA      NA  353719737    NA    NA
+ 9 real  cei           1     8 minivite p         1     1     0.120    NA      NA  111985431    NA    NA
+10 real  cei           2     8 comd     g         1     1    18.5      NA      NA 3091880940    NA    NA
+# ℹ 44 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 1000 :height 600 :session *R*
+load() |> sgraph()
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-BlqADL/figureTx4stB.png]]
+[17:20:20; 10.03.2026]: Even though this results are great, the traces
+aren't as good as it could be...
+
+[19:30:42; 10.03.2026]: I executed some experiments with the versions
+using only the nodes with set cpu count, lets see it:
+
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 1000 :height 1000 :session *R*
+load() |> sgraph()
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-BlqADL/figureVX2XQb.png]]
+
+
+[22:41:38; 10.03.2026]: I launched two simulations. One with the cores
+connecting through the router and one with a proper connection between then.
+
+
+[23:24:03; 10.03.2026]: Let's see the results in time
+
+#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 800 :height 600 :session *R*
+load() |> sgraph()
+#+end_src
+
+#+RESULTS:
+[[file:/tmp/babel-BlqADL/figureUFLgV3.png]]
+
+[23:25:52; 10.03.2026]: I am very dumb... I set to only 2 machines and
+the run didn't executed...
+*** 2026-03-11
+
+[23:41:51; 11.03.2026]: To run the osu benchmarks:
+
+#+begin_src shell :results output :exports both
+$HOME/.guix-profiles/osu-env/bin/mpirun   --prefix $HOME/.guix-profiles/osu-env  --mca btl_tcp_if_include "192.168.30.0/24"   --mca oob_tcp_if_include "192.168.30.0/24"  -np 2 --hostfile hosts_latency.txt --map-by node   $HOME/.guix-profiles/osu-env/libexec/osu-micro-benchmarks/mpi/pt2pt/osu_latency
+#+end_src
