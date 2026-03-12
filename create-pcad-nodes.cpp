@@ -55,16 +55,19 @@ void build_node(Switch& sw, Node node) {
 
   host->set_core_count(node.cores);
 
-
   auto calib_props = load_calibration(node.calib_file);
   for (const auto& [key, value] : calib_props) {
     host->set_property(key, value);
   }
 
-  std::string link_name = "link_" + node.name;
-  auto* link_nic = sw.zone->add_link(link_name, sw.bw)->set_latency(sw.lat);
+  auto* link_switch = sw.zone->add_split_duplex_link(node.name + " -- " + sw.router_name, sw.bw)
+    ->set_latency(sw.lat);
 
-  sw.zone->add_route(host->get_netpoint(), sw.zone->get_gateway(), {sg4::LinkInRoute(link_nic)});
+  sw.zone->add_route(host->get_netpoint(), sw.zone->get_gateway(),
+                     {sg4::LinkInRoute(link_switch, sg4::LinkInRoute::Direction::UP)}, false);
+
+  sw.zone->add_route(sw.zone->get_gateway(), host->get_netpoint(),
+                     {sg4::LinkInRoute(link_switch, sg4::LinkInRoute::Direction::DOWN)}, false);
 }
 
 void build_cei(std::vector<Switch>& switches, int num_nodes) {
@@ -81,7 +84,7 @@ void load_platform(sg4::Engine& e) {
   auto* root_zone = e.get_netzone_root();
 
   std::vector<Switch> switches;
-  switches.push_back(build_switch(root_zone, "switch_10g_rack2", "9.413Gbps", "124.5us"));
+  switches.push_back(build_switch(root_zone, "switch_10g_rack2", "9.413Gbps", "31us"));
 
   build_cei(switches, 6);
 

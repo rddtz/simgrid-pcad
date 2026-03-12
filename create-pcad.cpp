@@ -50,14 +50,15 @@ void build_node(Switch& sw, Node node) {
   std::string router_name =  node.name + " router";
   auto* node_router = sw.zone->add_router(router_name);
 
-  std::string uplink_name = node.name + " to " + sw.router_name;
-  auto* link_uplink = sw.zone->add_link(uplink_name, sw.bw)->set_latency(sw.lat);
+  auto* link_switch = sw.zone->add_split_duplex_link(node.name + " -- " + sw.router_name, sw.bw)
+    ->set_latency(sw.lat);
 
-  std::string downlink_name = node.name + " from " + sw.router_name;
-  auto* link_downlink = sw.zone->add_link(downlink_name, sw.bw)->set_latency(sw.lat);
+  sw.zone->add_route(node_router, sw.zone->get_gateway(),
+                     {sg4::LinkInRoute(link_switch, sg4::LinkInRoute::Direction::UP)}, false);
+  sw.zone->add_route(sw.zone->get_gateway(), node_router,
+                     {sg4::LinkInRoute(link_switch, sg4::LinkInRoute::Direction::DOWN)}, false);
 
-  sw.zone->add_route(node_router, sw.zone->get_gateway(), {sg4::LinkInRoute(link_uplink)}, false);
-  sw.zone->add_route(sw.zone->get_gateway(), node_router, {sg4::LinkInRoute(link_downlink)}, false);
+  // sw.zone->add_route(node_router, sw.zone->get_gateway(), {sg4::LinkInRoute(link_switch)});
 
   std::vector<sg4::Host*> cores;
 
@@ -73,30 +74,15 @@ void build_node(Switch& sw, Node node) {
 
     cores.push_back(core);
 
-    // auto* link_to_switch = sw.zone->add_link(core_name + " to " + sw.router_name, "500Gbps")->set_latency("100ns");
-    // auto* link_from_switch = sw.zone->add_link(core_name + " from " + sw.router_name, "500Gbps")->set_latency("100ns");
+    auto* link_router = sw.zone->add_split_duplex_link(core_name + " -- " + router_name, "1000Gbps")
+      ->set_latency("0ns");
 
-    // sw.zone->add_route(core->get_netpoint(), sw.zone->get_gateway(), {sg4::LinkInRoute(link_to_switch)}, false);
-    // sw.zone->add_route(sw.zone->get_gateway(), core->get_netpoint(), {sg4::LinkInRoute(link_from_switch)}, false);
+    sw.zone->add_route(core->get_netpoint(), node_router,
+                       {sg4::LinkInRoute(link_router, sg4::LinkInRoute::Direction::UP)}, false);
 
-    auto* link_to_router = sw.zone->add_link(core_name + " to " + router_name, "500Gbps")->set_latency("100ns");
-    auto* link_from_router = sw.zone->add_link(core_name + " from " + router_name, "500Gbps")->set_latency("100ns");
-
-    sw.zone->add_route(core->get_netpoint(), node_router, {sg4::LinkInRoute(link_to_router)}, false);
-    sw.zone->add_route(node_router, core->get_netpoint(), {sg4::LinkInRoute(link_from_router)}, false);
-
+    sw.zone->add_route(node_router, core->get_netpoint(),
+                       {sg4::LinkInRoute(link_router, sg4::LinkInRoute::Direction::DOWN)}, false);
   }
-
-  // // connections between cores
-  // for (size_t i = 0; i < cores.size(); ++i) {
-  //   for (size_t j = i + 1; j < cores.size(); ++j) {
-  //     std::string p2p_link_name = cores[i]->get_name() + "_to_" + cores[j]->get_name();
-  //     auto* link_p2p = sw.zone->add_link(p2p_link_name, "500Gbps")->set_latency("100ns");
-
-  //     sw.zone->add_route(cores[i], cores[j], {sg4::LinkInRoute(link_p2p)});
-  //   }
-  // }
-
 }
 
 void build_cei(std::vector<Switch>& switches, int num_nodes) {
