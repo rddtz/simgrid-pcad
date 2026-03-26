@@ -1,0 +1,56 @@
+#+STARTUP: content
+#+STARTUP: overview
+#+STARTUP: indent
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes :tangle ops-histogram.R
+options(crayon.enabled=FALSE)
+suppressMessages(library(tidyverse))
+library(readr)
+library(dplyr)
+library(stringr)
+
+cols <- c(
+  "State", "Container", "Type", "Start",
+  "End", "Duration", "Depth", "Operation"
+)
+
+ops_regex <- paste(
+  c(
+    "Send", "Recv", "Isend", "Irecv", "Ssend", "Bsend", "Rsend",
+    "Wait", "Waitall", "Waitany", "Waitsome", "Test",
+    "Barrier", "Bcast", "Reduce", "Allreduce",
+    "Gather", "Allgather", "Scatter", "Alltoall",
+    "Scan", "Exscan"
+  ),
+  collapse = "|"
+)
+
+arquivos <- c("rastro-real-minivite64.csv", "rastro-sim-minivite64.csv")
+
+dados <- map_dfr(arquivos, function(arq) {
+  
+  linhas <- read_lines(arq, progress = FALSE)
+  linhas_state <- linhas[str_starts(linhas, "State")]
+  
+  read_csv(
+    I(linhas_state),
+    col_names = cols,
+    progress = FALSE,
+    show_col_types = FALSE
+  ) |>
+    mutate(
+      File = arq,
+      Rank = as.integer(gsub("rank", "", Container))
+    ) |>
+    mutate(Operation = gsub("^P", "", Operation)) |>
+    select(File, Rank, Start, End, Duration, Operation)
+})
+dados |>
+  filter(str_detect(Operation, ops_regex)) |>
+  ggplot(aes(x = Duration, fill=File)) +
+  geom_histogram(alpha=.4, bins=100) +
+  theme_bw(base_size=12) +
+  facet_wrap(~Operation)
+#+end_src
+
+#+RESULTS:
