@@ -51,6 +51,40 @@ dados |>
   geom_histogram(alpha=.4, bins=100) +
   theme_bw(base_size=12) +
   facet_wrap(~Operation)
+
+dados |>
+  filter(str_detect(Operation, ops_regex)) |>
+  group_by(File, Operation) |>
+  summarize(N = n(),
+            Mean = mean(Duration),
+            SD = sd(Duration)) |>
+  arrange(Operation)
 #+end_src
 
 #+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'File'. You can override using the
+`.groups` argument.
+# A tibble: 18 × 5
+# Groups:   File [2]
+   File                       Operation         N        Mean         SD
+   <chr>                      <chr>         <int>       <dbl>      <dbl>
+ 1 rastro-real-minivite64.csv MPI_Allreduce  1408 0.000237    0.0000432 
+ 2 rastro-sim-minivite64.csv  MPI_Allreduce  1408 0.000535    0.000304  
+ 3 rastro-real-minivite64.csv MPI_Alltoall   2624 0.00155     0.00135   
+ 4 rastro-sim-minivite64.csv  MPI_Alltoall   2624 0.000806    0.000275  
+ 5 rastro-real-minivite64.csv MPI_Barrier    1088 0.00147     0.00478   
+ 6 rastro-sim-minivite64.csv  MPI_Barrier    1088 0.000570    0.00174   
+ 7 rastro-real-minivite64.csv MPI_Bcast        64 0.00346     0.0000205 
+ 8 rastro-sim-minivite64.csv  MPI_Bcast        64 0.000121    0.0000831 
+ 9 rastro-real-minivite64.csv MPI_Irecv     10206 0.000000434 0.00000149
+10 rastro-sim-minivite64.csv  MPI_Irecv     10206 0           0         
+11 rastro-real-minivite64.csv MPI_Isend     10206 0.00000283  0.00000314
+12 rastro-sim-minivite64.csv  MPI_Isend     10206 0           0         
+13 rastro-real-minivite64.csv MPI_Reduce      384 0.0000206   0.0000542 
+14 rastro-sim-minivite64.csv  MPI_Reduce      384 0.00000427  0.0000409 
+15 rastro-real-minivite64.csv MPI_Sendrecv    896 0.0000668   0.000185  
+16 rastro-sim-minivite64.csv  MPI_Sendrecv    880 0.0000371   0.0000924 
+17 rastro-real-minivite64.csv MPI_Waitall   10368 0.0000445   0.0000727 
+18 rastro-sim-minivite64.csv  MPI_Waitall   10368 0.0000301   0.0000819
+#+end_example
