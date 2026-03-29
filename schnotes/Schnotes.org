@@ -2,6 +2,8 @@
 #+STARTUP: overview
 #+STARTUP: indent
 
+* Ler e primeira tentativa de análise
+
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes :tangle ops-histogram.R
 options(crayon.enabled=FALSE)
 suppressMessages(library(tidyverse))
