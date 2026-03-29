@@ -42,7 +42,7 @@ dados <- map_dfr(arquivos, function(arq) {
   ) |>
     mutate(
       File = arq,
-      Rank = as.integer(gsub("rank", "", Container))
+      Rank = as.integer(gsub("rank-?", "", Container))
     ) |>
     mutate(Operation = gsub("^P", "", Operation)) |>
     select(File, Rank, Start, End, Duration, Operation)
@@ -90,3 +90,165 @@ dados |>
 17 rastro-real-minivite64.csv MPI_Waitall   10368 0.0000445   0.0000727 
 18 rastro-sim-minivite64.csv  MPI_Waitall   10368 0.0000301   0.0000819
 #+end_example
+
+* Ver o gantt-chart
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
+dados |>  
+  mutate(File = str_extract(File, "real|sim")) |>
+  filter(str_detect(Operation, ops_regex)) |>
+  ggplot(aes(xmin = Start, xmax = End,
+             ymin = Rank, ymax=Rank+0.9,
+             fill = Operation)) +
+  geom_rect() +
+  facet_wrap(~File, ncol=1)
+#+end_src
+
+#+RESULTS:
+
+Vemos que o real levou mais tempo.
+
+* Quantificar o tempo gasto por operação MPI por caso
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
+dados |>
+  mutate(File = str_extract(File, "real|sim")) -> dados.aux
+dados.aux |>
+  group_by(File) |>
+  summarize(Makespan = max(End) * length(unique(Rank))) -> dados.makespan
+dados.aux |>
+  filter(str_detect(Operation, ops_regex)) |>
+  group_by(File, Operation) |>
+  summarize(Total = sum(Duration), .groups="keep") |>
+  arrange(Operation) |>
+  pivot_wider(
+    names_from = File,
+    values_from = c(Total)
+  ) |>
+  mutate(dif = real - sim)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 9 × 4
+# Groups:   Operation [9]
+  Operation        real     sim      dif
+  <chr>           <dbl>   <dbl>    <dbl>
+1 MPI_Allreduce 0.333   0.753   -0.420  
+2 MPI_Alltoall  4.06    2.12     1.94   
+3 MPI_Barrier   1.60    0.620    0.983  
+4 MPI_Bcast     0.222   0.00773  0.214  
+5 MPI_Irecv     0.00443 0        0.00443
+6 MPI_Isend     0.0289  0        0.0289 
+7 MPI_Reduce    0.00793 0.00164  0.00629
+8 MPI_Sendrecv  0.0598  0.0327   0.0272 
+9 MPI_Waitall   0.461   0.312    0.149
+#+end_example
+
+Vemos que todas as operações levam mais tempo no real, salvo allreduce.
+
+* Quantificar a duração por rank de cada operação MPI e compute
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
+dados |>
+  mutate(File = str_extract(File, "real|sim")) |>
+  group_by(File, Rank) |>
+  arrange(Start) |>
+  mutate(Start.Next = lead(Start)) |>
+  filter(!is.na(Start.Next)) |>
+  mutate(Operation = "Compute") |>
+  mutate(Duration = Start.Next - End) |>
+  select(File, Rank, Start = End, End = Start.Next, Duration, Operation) -> dados.compute
+bind_rows(dados |>
+        mutate(File = str_extract(File, "real|sim")), dados.compute) -> dados.all
+dados.all |>
+  group_by(File, Operation) |>
+  mutate(Makespan = max(End)) |>
+  group_by(File, Operation, Makespan) |>  
+  summarize(Total.Operation = sum(Duration) / length(unique(Rank)), .groups="keep") |>
+  mutate(P = round(Total.Operation / Makespan * 100, 2)) |>
+  arrange(-P)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+# A tibble: 30 × 5
+# Groups:   File, Operation, Makespan [30]
+   File  Operation     Makespan Total.Operation     P
+   <chr> <chr>            <dbl>           <dbl> <dbl>
+ 1 sim   Compute        0.289          0.229    79.2 
+ 2 real  Compute        0.337          0.227    67.4 
+ 3 real  MPI_Alltoall   0.336          0.0634   18.9 
+ 4 real  MPI_Bcast      0.0273         0.00346  12.7 
+ 5 real  MPI_Finalize   0.390          0.0468   12   
+ 6 sim   MPI_Alltoall   0.288          0.0331   11.5 
+ 7 sim   MPI_Bcast      0.00145        0.000121  8.32
+ 8 real  MPI_Barrier    0.337          0.0250    7.43
+ 9 sim   MPI_Allreduce  0.288          0.0118    4.08
+10 sim   MPI_Barrier    0.289          0.00969   3.35
+# ℹ 20 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+We can see clearly that Compute takes the majority of the time, in
+average ~80% of the time. That means that any Compute difference might
+have a significant impact in the differences we can see in simulation
+against reality.
+
+* Comparar unicamente os tempos de cálculo entre real e sim
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
+dados |>
+  mutate(File = str_extract(File, "real|sim")) |>
+  group_by(File, Rank) |>
+  arrange(Start) |>
+  mutate(Start.Next = lead(Start)) |>
+  filter(!is.na(Start.Next)) |>
+  mutate(Operation = "Compute") |>
+  mutate(Duration = Start.Next - End) |>
+  select(File, Rank, Start = End, End = Start.Next, Duration, Operation) |>
+  group_by(File, Rank) |>
+  summarize(Total = sum(Duration), .groups="keep") |>
+  ggplot(aes(x = Rank, y = Total)) +
+  geom_point() +
+  ylim(0, NA) +
+  facet_wrap(~File)
+#+end_src
+
+#+RESULTS:
+
+There is indeed a much "stable" behavior in compute time per rank in
+the simulation when compared against reality. But those values around
+~0.23 are somehow within the range of reality. There is still the rank
+0 and 64 different behavior that simulation captures well (a bit not
+optimistic thou).
+
+Let's see how this things add up along the simulation.
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
+dados |>
+  mutate(File = str_extract(File, "real|sim")) |>
+  group_by(File, Rank) |>
+  arrange(Start) |>
+  mutate(Start.Next = lead(Start)) |>
+  filter(!is.na(Start.Next)) |>
+  mutate(Operation = "Compute") |>
+  mutate(Duration = Start.Next - End) |>
+  select(File, Rank, Start = End, End = Start.Next, Duration, Operation) |>
+  select(File, Rank, Start, Duration) |>
+  arrange(Start) |>
+  mutate(Cumulative.Duration = cumsum(Duration)) |>
+  ggplot(aes(x = Start, y = Cumulative.Duration, group=Rank, color=Rank)) +
+  geom_line(alpha=.3) +
+  geom_point() +  
+  facet_wrap(~File, ncol=1)
+#+end_src
+
+#+RESULTS:
+
+Since we identified that Compute takes roughly ~80% of time. My
+hypothesis indicate that are not the differences of MPI operations
+that explain the difference between reality and simulation. It is the
+compute. Indeed, when the compute of reality takes place, there is a
+lot of concurrency involved (competition). While in simulation, the
+compute is alone in the machine, so it gets faster.
