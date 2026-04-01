@@ -209,6 +209,7 @@ dados.gasto |> mutate(Operation = gsub("MPI_", "", Operation)) |>
 
 #+RESULTS:
 [[file:imgs/compare-opps-time.png]]
+
 Here we can confirm that the compute time is basically the same in the
 real and sim versions, but that the all to all and barrier shows a
 higher time. The sum of the differences of broadcast and all_to_all
@@ -246,7 +247,7 @@ time_diff
 : [1] 0.047781
 
 A total of 0.047 seconds of difference between the simulation and the
-real world execution. This value is a little smaller then the value
+real world execution. This value is a little higher then the value
 obtained previously by only counting the differences for the Bcast and
 Alltoall.
 
