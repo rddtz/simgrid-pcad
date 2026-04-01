@@ -304,7 +304,7 @@ ops_regex <- paste(
   collapse = "|"
 )
 
-arquivos <- c("longer-real-minivite.csv", "longer-sim-minivite.csv") #(dir_ls("." , regexp = ".*64.csv$", recurse=TRUE))
+arquivos <- c("longer-real-comd.csv", "longer-sim-comd.csv") #(dir_ls("." , regexp = ".*64.csv$", recurse=TRUE))
 
 dados <- map_dfr(arquivos, function(arq) {
 
@@ -347,28 +347,18 @@ dados |>
 #+begin_example
 `summarise()` has grouped output by 'File', 'Operation', 'Type'. You can override using the `.groups`
 argument.
-# A tibble: 18 × 7
-# Groups:   File, Operation, Type [18]
-   File                     Operation     Type  App              N        Mean          SD
-   <chr>                    <chr>         <chr> <chr>        <int>       <dbl>       <dbl>
- 1 longer-real-minivite.csv MPI_Allreduce real  minivite.csv  1600 0.000250    0.000174
- 2 longer-sim-minivite.csv  MPI_Allreduce sim   minivite.csv  1600 0.0497      0.0163
- 3 longer-real-minivite.csv MPI_Alltoall  real  minivite.csv  3008 0.00245     0.00208
- 4 longer-sim-minivite.csv  MPI_Alltoall  sim   minivite.csv  3008 0.0755      0.0168
- 5 longer-real-minivite.csv MPI_Barrier   real  minivite.csv  1088 0.00178     0.00767
- 6 longer-sim-minivite.csv  MPI_Barrier   sim   minivite.csv  1088 0.0466      0.0588
- 7 longer-real-minivite.csv MPI_Bcast     real  minivite.csv    64 0.00321     0.0000269
- 8 longer-sim-minivite.csv  MPI_Bcast     sim   minivite.csv    64 0.0123      0.00871
- 9 longer-real-minivite.csv MPI_Irecv     real  minivite.csv 11718 0.000000474 0.00000174
-10 longer-sim-minivite.csv  MPI_Irecv     sim   minivite.csv 11718 0           0
-11 longer-real-minivite.csv MPI_Isend     real  minivite.csv 11718 0.00000296  0.00000335
-12 longer-sim-minivite.csv  MPI_Isend     sim   minivite.csv 11718 0.00000951  0.000000573
-13 longer-real-minivite.csv MPI_Reduce    real  minivite.csv   384 0.0000287   0.0000954
-14 longer-sim-minivite.csv  MPI_Reduce    sim   minivite.csv   384 0.000369    0.00305
-15 longer-real-minivite.csv MPI_Sendrecv  real  minivite.csv   896 0.0000894   0.000238
-16 longer-sim-minivite.csv  MPI_Sendrecv  sim   minivite.csv   880 0.00767     0.0186
-17 longer-real-minivite.csv MPI_Waitall   real  minivite.csv 11904 0.0000453   0.0000765
-18 longer-sim-minivite.csv  MPI_Waitall   sim   minivite.csv 11904 0.00340     0.00876
+# A tibble: 8 × 7
+# Groups:   File, Operation, Type [8]
+  File                 Operation     Type  App          N    Mean        SD
+  <chr>                <chr>         <chr> <chr>    <int>   <dbl>     <dbl>
+1 longer-real-comd.csv MPI_Allreduce real  comd.csv  2112 0.0193  0.0581
+2 longer-sim-comd.csv  MPI_Allreduce sim   comd.csv  2112 0.0333  0.00728
+3 longer-real-comd.csv MPI_Barrier   real  comd.csv   320 0.00564 0.00761
+4 longer-sim-comd.csv  MPI_Barrier   sim   comd.csv   320 0.0293  0.00707
+5 longer-real-comd.csv MPI_Bcast     real  comd.csv    64 0.00353 0.0000335
+6 longer-sim-comd.csv  MPI_Bcast     sim   comd.csv    64 0.0123  0.00867
+7 longer-real-comd.csv MPI_Sendrecv  real  comd.csv 38784 0.00917 0.0370
+8 longer-sim-comd.csv  MPI_Sendrecv  sim   comd.csv 38784 0.0243  0.0341
 #+end_example
 
 
@@ -460,3 +450,216 @@ time_diff
 
 [09:16:16; 01.04.2026]: Again, most part of the difference came from
 MPI collective operations.
+
+
+* Seeing for all applications:
+
+* Compare execution with operation times
+
+#+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes :tangle ops-histogram.R
+options(crayon.enabled=FALSE)
+suppressMessages(library(tidyverse))
+suppressMessages(library(fs))
+library(readr)
+library(dplyr)
+library(stringr)
+
+
+cols <- c(
+  "State", "Container", "Type", "Start",
+  "End", "Duration", "Depth", "Operation"
+)
+
+ops_regex <- paste(
+  c(
+    "Send", "Recv", "Isend", "Irecv", "Ssend", "Bsend", "Rsend",
+    "Wait", "Waitall", "Waitany", "Waitsome", "Test",
+    "Barrier", "Bcast", "Reduce", "Allreduce",
+    "Gather", "Allgather", "Scatter", "Alltoall",
+    "Scan", "Exscan"
+  ),
+  collapse = "|"
+)
+
+arquivos <- c(dir_ls("." , regexp = "longer.*.csv$", recurse=TRUE)) |>
+  str_subset("/", negate = TRUE)
+
+
+dados <- map_dfr(arquivos, function(arq) {
+
+  linhas <- read_lines(arq, progress = FALSE)
+  linhas_state <- linhas[str_starts(linhas, "State")]
+
+  read_csv(
+    I(linhas_state),
+    col_names = cols,
+    progress = FALSE,
+    show_col_types = FALSE
+  ) |>
+    mutate(
+      File = arq,
+      Rank = as.integer(gsub("rank", "", Container))
+    ) |>
+    mutate(Operation = gsub("^P", "", Operation)) |>
+    mutate(mFile = File) |>
+    separate(mFile, into=paste0("XX", 1:3), sep="-")  |>
+    select(-XX1) |> select(mType = XX2, App = XX3, everything()) |>
+    filter(str_detect(Operation, ops_regex)) |>
+    mutate(App = gsub(".csv", "", App)) |>
+    select(File, Rank, Start, End, Duration, Operation, Type = mType, App)
+})
+
+dados |>
+
+  ggplot(aes(x = Duration, fill=File)) +
+  geom_histogram(alpha=.4, bins=100) +
+  theme_bw(base_size=12) +
+  facet_wrap(~Operation)
+
+dados |>
+  group_by(File, Operation, Type, App) |>
+  summarize(N = n(),
+            Mean = mean(Duration),
+             SD = sd(Duration)) |>
+  arrange(Operation) |> print(n=100) -> df
+#+end_src
+
+#+RESULTS:
+#+begin_example
+`summarise()` has grouped output by 'File', 'Operation', 'Type'. You can override using the `.groups`
+argument.
+# A tibble: 40 × 7
+# Groups:   File, Operation, Type [40]
+   File                     Operation     Type  App           N        Mean          SD
+   <chr>                    <chr>         <chr> <chr>     <int>       <dbl>       <dbl>
+ 1 longer-real-comd.csv     MPI_Allreduce real  comd       2112 0.0193      0.0581
+ 2 longer-real-lulesh.csv   MPI_Allreduce real  lulesh     6336 0.246       0.191
+ 3 longer-real-minivite.csv MPI_Allreduce real  minivite   1600 0.000250    0.000174
+ 4 longer-sim-comd.csv      MPI_Allreduce sim   comd       2112 0.0333      0.00728
+ 5 longer-sim-lulesh.csv    MPI_Allreduce sim   lulesh     6336 0.119       0.0491
+ 6 longer-sim-minivite.csv  MPI_Allreduce sim   minivite   1600 0.0497      0.0163
+ 7 longer-real-minivite.csv MPI_Alltoall  real  minivite   3008 0.00245     0.00208
+ 8 longer-sim-minivite.csv  MPI_Alltoall  sim   minivite   3008 0.0755      0.0168
+ 9 longer-real-comd.csv     MPI_Barrier   real  comd        320 0.00564     0.00761
+10 longer-real-lulesh.csv   MPI_Barrier   real  lulesh       64 0.00726     0.00301
+11 longer-real-minivite.csv MPI_Barrier   real  minivite   1088 0.00178     0.00767
+12 longer-sim-comd.csv      MPI_Barrier   sim   comd        320 0.0293      0.00707
+13 longer-sim-lulesh.csv    MPI_Barrier   sim   lulesh       64 0.0235      0.00502
+14 longer-sim-minivite.csv  MPI_Barrier   sim   minivite   1088 0.0466      0.0588
+15 longer-real-comd.csv     MPI_Bcast     real  comd         64 0.00353     0.0000335
+16 longer-real-minivite.csv MPI_Bcast     real  minivite     64 0.00321     0.0000269
+17 longer-sim-comd.csv      MPI_Bcast     sim   comd         64 0.0123      0.00867
+18 longer-sim-minivite.csv  MPI_Bcast     sim   minivite     64 0.0123      0.00871
+19 longer-real-lulesh.csv   MPI_Irecv     real  lulesh   170136 0.00000102  0.00000492
+20 longer-real-minivite.csv MPI_Irecv     real  minivite  11718 0.000000474 0.00000174
+21 longer-sim-lulesh.csv    MPI_Irecv     sim   lulesh   170136 0           0
+22 longer-sim-minivite.csv  MPI_Irecv     sim   minivite  11718 0           0
+23 longer-real-lulesh.csv   MPI_Isend     real  lulesh   170136 0.0000167   0.0000263
+24 longer-real-minivite.csv MPI_Isend     real  minivite  11718 0.00000296  0.00000335
+25 longer-sim-lulesh.csv    MPI_Isend     sim   lulesh   170136 0.0000384   0.0000396
+26 longer-sim-minivite.csv  MPI_Isend     sim   minivite  11718 0.00000951  0.000000573
+27 longer-real-lulesh.csv   MPI_Reduce    real  lulesh       64 0.243       0.192
+28 longer-real-minivite.csv MPI_Reduce    real  minivite    384 0.0000287   0.0000954
+29 longer-sim-lulesh.csv    MPI_Reduce    sim   lulesh       64 0.000496    0.00390
+30 longer-sim-minivite.csv  MPI_Reduce    sim   minivite    384 0.000369    0.00305
+31 longer-real-comd.csv     MPI_Sendrecv  real  comd      38784 0.00917     0.0370
+32 longer-real-minivite.csv MPI_Sendrecv  real  minivite    896 0.0000894   0.000238
+33 longer-sim-comd.csv      MPI_Sendrecv  sim   comd      38784 0.0243      0.0341
+34 longer-sim-minivite.csv  MPI_Sendrecv  sim   minivite    880 0.00767     0.0186
+35 longer-real-lulesh.csv   MPI_Wait      real  lulesh   170136 0.000147    0.00148
+36 longer-sim-lulesh.csv    MPI_Wait      sim   lulesh   170136 0.00116     0.00728
+37 longer-real-lulesh.csv   MPI_Waitall   real  lulesh    19264 0.0229      0.0411
+38 longer-real-minivite.csv MPI_Waitall   real  minivite  11904 0.0000453   0.0000765
+39 longer-sim-lulesh.csv    MPI_Waitall   sim   lulesh    19264 0.0647      0.0195
+40 longer-sim-minivite.csv  MPI_Waitall   sim   minivite  11904 0.00340     0.00876
+#+end_example
+
+
+#+begin_src R :results output :session *R* :exports both
+dados |>
+  mutate(File = str_extract(File, "real|sim")) |>
+  group_by(File, Rank, App) |>
+  arrange(Start) |>
+  mutate(Start.Next = lead(Start)) |>
+  filter(!is.na(Start.Next)) |>
+  mutate(Operation = "Compute") |>
+  mutate(Duration = Start.Next - End) |>
+  select(File, Rank, Start = End, End = Start.Next, Duration, Operation) -> dados.compute
+
+bind_rows(dados |>
+        mutate(File = str_extract(File, "real|sim")), dados.compute) -> dados.all
+
+dados.all |>
+  group_by(File) |>
+  mutate(Makespan = max(End)) |>
+  group_by(File, App, Operation, Makespan) |>
+  summarize(Total.Operation = sum(Duration) / length(unique(Rank)),
+          Mean.Operation = mean(Duration), .groups="keep") |>
+  mutate(P = round(Total.Operation / Makespan * 100, 2)) |>
+  arrange(-P) -> dados.gasto
+
+dados.gasto
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Adding missing grouping variables: `App`
+# A tibble: 46 × 7
+# Groups:   File, App, Operation, Makespan [46]
+   File  App    Operation     Makespan Total.Operation Mean.Operation     P
+   <chr> <chr>  <chr>            <dbl>           <dbl>          <dbl> <dbl>
+ 1 real  lulesh Compute           217.          185.          0.0221  85.2
+ 2 sim   lulesh Compute           156.          121.          0.0144  77.6
+ 3 sim   lulesh MPI_Waitall       156.           19.5         0.0647  12.5
+ 4 sim   comd   Compute           156.           18.3         0.0284  11.8
+ 5 real  lulesh MPI_Allreduce     217.           24.4         0.246   11.2
+ 6 sim   comd   MPI_Sendrecv      156.           14.7         0.0243   9.48
+ 7 real  comd   Compute           217.           18.5         0.0288   8.53
+ 8 sim   lulesh MPI_Allreduce     156.           11.8         0.119    7.6
+ 9 real  lulesh MPI_Waitall       217.            6.90        0.0229   3.17
+10 real  comd   MPI_Sendrecv      217.            5.56        0.00917  2.56
+# ℹ 36 more rows
+# ℹ Use `print(n = ...)` to see more rows
+#+end_example
+
+
+#+begin_src R :results output graphics file :file imgs/all-apps-time-div-by-opps.png :exports both :width 1500 :height 600 :session *R*
+dados.gasto |>
+  ggplot(aes(x = File, y = Total.Operation, color = Operation, fill = Operation)) +
+  geom_col() +
+  facet_wrap(~ App, scales = "free") +
+  theme_bw(base_size = 20)
+#+end_src
+
+#+RESULTS:
+[[file:imgs/all-apps-time-div-by-opps.png]]
+
+
+*DIFFERENT SCALES*
+
+Two of have the difference is in other operations, while in lulesh
+the difference is mostly in compute (but also a good difference in
+All_Reduce and Waitall)
+
+Comd has a huge time difference in the sendrecv operation that afaik
+is not collective.
+
+** Compare operation times individually
+#+begin_src R :results output graphics file :file imgs/all-apps-compare-opps-time.png :exports both :width 2000 :height 600 :session *R*
+dados.gasto |> mutate(Operation = gsub("MPI_", "", Operation)) |>
+  ggplot(aes(x = File, y = Total.Operation, color = Operation, fill = Operation)) +
+  geom_col() +
+  facet_grid(App ~ Operation, scales = "free") +
+  theme_bw(base_size = 30)
+#+end_src
+
+#+RESULTS:
+[[file:imgs/all-apps-compare-opps-time.png]]
+
+
+*DIFFERENT SCALES*
+
+We can here better see where are the differences for each
+application. All resuce has difference for all cases, being faster in
+Lulesh but slower in the others (It is worth seeing that lulesh take a
+really longer time to run).
