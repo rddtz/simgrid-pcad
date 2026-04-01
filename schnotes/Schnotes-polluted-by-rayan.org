@@ -76,7 +76,8 @@ dados |>
 
 #+RESULTS:
 #+begin_example
-`summarise()` has grouped output by 'File', 'Operation', 'Type'. You can override using the `.groups` argument.
+`summarise()` has grouped output by 'File', 'Operation', 'Type'. You can override using the `.groups`
+argument.
 # A tibble: 18 × 7
 # Groups:   File, Operation, Type [18]
    File                       Operation     Type  App                N        Mean         SD
@@ -141,12 +142,12 @@ dados |> filter(str_detect(Operation, ops_regex)) |>
 #+end_src
 
 #+RESULTS:
-[[file:/tmp/babel-nMDsva/figureKggeMr.png]]
+[[file:/tmp/babel-nMDsva/figureMaiEL1.png]]
 
 
 #+begin_src R :results output graphics file  :file  (org-babel-temp-file "figure" ".png") :exports both :width 1000 :height 600 :session *R*
 df |>
-  ggplot(aes(x = Type, y = Mean, fill = Operation)) +
+  ggplot(aes(x = Type, y = Mean, fill = Operation)) + do
   geom_col() +
   ## geom_jitter(data=dados, aes(x=Type, y=Duration), alpha=0.01) +
   geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD)) +
@@ -183,15 +184,22 @@ dados.all |>
 
 #+RESULTS:
 
-#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 600 :height 400 :session *R*
+* Compare execution with operation times
+#+begin_src R :results output graphics file :file imgs/execution-time-div-by-opps.png :exports both :width 1000 :height 600 :session *R*
 dados.gasto |>
   ggplot(aes(x = File, y = Total.Operation, color = Operation, fill = Operation)) +
   geom_col() + theme_bw(base_size = 20)
 #+end_src
 
 #+RESULTS:
-[[file:/tmp/babel-nMDsva/figurepDTSMU.png]]
-#+begin_src R :results output graphics file :file (org-babel-temp-file "figure" ".png") :exports both :width 600 :height 400 :session *R*
+[[file:imgs/execution-time-div-by-opps.png]]
+
+The compute time seems pretty similar when comparing its total result
+in the application final time. The All_to_All and Bcast seems to have
+more impact in the final time result. Let's look to the per operation data.
+
+* Compare operation times individually
+#+begin_src R :results output graphics file :file imgs/compare-opps-time.png :exports both :width 600 :height 400 :session *R*
 dados.gasto |> mutate(Operation = gsub("MPI_", "", Operation)) |>
   ggplot(aes(x = File, y = Total.Operation, color = Operation, fill = Operation)) +
   geom_col() +
@@ -200,46 +208,99 @@ dados.gasto |> mutate(Operation = gsub("MPI_", "", Operation)) |>
 #+end_src
 
 #+RESULTS:
-[[file:/tmp/babel-nMDsva/figureUttRSt.png]]
+[[file:imgs/compare-opps-time.png]]
+Here we can confirm that the compute time is basically the same in the
+real and sim versions, but that the all to all and barrier shows a
+higher time. The sum of the differences of broadcast and all_to_all
+are:
+
+#+begin_src R :results output :session *R* :exports both
+dados.gasto |> group_by(Operation) |>
+  summarise(
+    real = Total.Operation[File == "real"],
+    sim = Total.Operation[File == "sim"],
+    diff = real - sim
+) -> data.ops.diffs
+
+sum(data.ops.diffs$diff[df$Operation %in% c("MPI_Bcast", "MPI_Alltoall")])
+
+#+end_src
+
+#+RESULTS:
+: [1] 0.04621845
+
+The sum of the difference of Bcast and All to All is 0.046. Very
+similar with the difference between the simulation and the real execution:
+
 #+begin_src R :results output :session *R* :exports both
 dados |> group_by(File) |> mutate(File = str_extract(File, "real|sim")) |>
   summarise(Fim = max(End)) |>
-  pivot_wider(names_from=File, values_from=Fim) |>
-  mutate(diff = real - sim) |> pull(diff)
+  pivot_wider(names_from=File, values_from=Fim) -> data.diff
+
+time_diff <- data.diff |> mutate(diff = real - sim) |> pull(diff)
+
+time_diff
 #+end_src
 
 #+RESULTS:
 : [1] 0.047781
 
+A total of 0.047 seconds of difference between the simulation and the
+real world execution. This value is a little smaller then the value
+obtained previously by only counting the differences for the Bcast and
+Alltoall.
+
+This value represents:
+
 #+begin_src R :results output :session *R* :exports both
-dados.gasto |>  pivot_wider(names_from=File, values_from=Fim) |>
-  mutate(diff = real - sim)
+sim_time <- data.diff |> pull(sim)
+real_time <- data.diff |> pull(real)
+
+cat("SIM time:", sim_time, "\n")
+cat("REAL time:", real_time, "\n")
+
+cat("Diff in percent in SIM:", (time_diff / sim_time) * 100, "\n")
+cat("Diff in percent in REAL:", (time_diff / real_time) * 100, "\n")
+#+end_src
+
+#+RESULTS:
+: SIM time: 0.289142
+: REAL time: 0.336923
+: Diff in percent in SIM: 16.5251
+: Diff in percent in REAL: 14.18158
+
+This means that currently the simulation has a error of more than 10%
+in execution time, even though the computation time is almost the
+same.
+
+* Diff per operation
+#+begin_src R :results output :session *R* :exports both
+dados.gasto |> group_by(Operation) |>
+  summarise(
+    real = Total.Operation[File == "real"],
+    sim = Total.Operation[File == "sim"],
+    diff = real - sim
+)
+
 #+end_src
 
 #+RESULTS:
 #+begin_example
-# A tibble: 20 × 6
-# Groups:   File, Operation, Makespan [20]
-   File  Operation     Makespan Total.Operation Mean.Operation     P
-   <chr> <chr>            <dbl>           <dbl>          <dbl> <dbl>
- 1 sim   Compute          0.289       0.229        0.000394    79.2
- 2 real  Compute          0.337       0.227        0.000391    67.4
- 3 real  MPI_Alltoall     0.337       0.0634       0.00155     18.8
- 4 sim   MPI_Alltoall     0.289       0.0331       0.000806    11.4
- 5 real  MPI_Barrier      0.337       0.0250       0.00147      7.43
- 6 sim   MPI_Allreduce    0.289       0.0118       0.000535     4.07
- 7 sim   MPI_Barrier      0.289       0.00969      0.000570     3.35
- 8 real  MPI_Waitall      0.337       0.00721      0.0000445    2.14
- 9 sim   MPI_Waitall      0.289       0.00488      0.0000301    1.69
-10 real  MPI_Allreduce    0.337       0.00521      0.000237     1.55
-11 real  MPI_Bcast        0.337       0.00346      0.00346      1.03
-12 real  MPI_Sendrecv     0.337       0.000935     0.0000668    0.28
-13 sim   MPI_Sendrecv     0.289       0.000511     0.0000371    0.18
-14 real  MPI_Isend        0.337       0.000451     0.00000283   0.13
-15 real  MPI_Reduce       0.337       0.000124     0.0000206    0.04
-16 sim   MPI_Bcast        0.289       0.000121     0.000121     0.04
-17 real  MPI_Irecv        0.337       0.0000693    0.000000434  0.02
-18 sim   MPI_Reduce       0.289       0.0000256    0.00000427   0.01
-19 sim   MPI_Irecv        0.289       0            0            0
-20 sim   MPI_Isend        0.289       0            0            0
+# A tibble: 10 × 4
+   Operation          real       sim       diff
+   <chr>             <dbl>     <dbl>      <dbl>
+ 1 Compute       0.227     0.229     -0.00199
+ 2 MPI_Allreduce 0.00521   0.0118    -0.00656
+ 3 MPI_Alltoall  0.0634    0.0331     0.0303
+ 4 MPI_Barrier   0.0250    0.00969    0.0154
+ 5 MPI_Bcast     0.00346   0.000121   0.00334
+ 6 MPI_Irecv     0.0000693 0          0.0000693
+ 7 MPI_Isend     0.000451  0          0.000451
+ 8 MPI_Reduce    0.000124  0.0000256  0.0000983
+ 9 MPI_Sendrecv  0.000935  0.000511   0.000425
+10 MPI_Waitall   0.00721   0.00488    0.00233
 #+end_example
+
+Even though computation has the highest percent in the execution, the
+difference in time is just of 1.9e-3. This means that the computation
+time is similar in the execution and simulation.
