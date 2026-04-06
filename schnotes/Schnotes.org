@@ -1,7 +1,11 @@
 #+AUTHOR: Lucas M. Schnorr
 #+STARTUP: overview indent content
 
-* Ler e primeira tentativa de análise
+* 2026-03-29
+:PROPERTIES:
+:header-args: :tangle "do-2026-03-29.R" :tangle-mode (identity #o755) :shebang "#!/usr/bin/Rscript"
+:END:
+** Ler e primeira tentativa de análise
 
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes :tangle ops-histogram.R
 options(crayon.enabled=FALSE)
@@ -90,7 +94,7 @@ dados |>
 18 rastro-sim-minivite64.csv  MPI_Waitall   10368 0.0000301   0.0000819
 #+end_example
 
-* Ver o gantt-chart
+** Ver o gantt-chart
 
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
 dados |>  
@@ -107,7 +111,7 @@ dados |>
 
 Vemos que o real levou mais tempo.
 
-* Quantificar o tempo gasto por operação MPI por caso
+** Quantificar o tempo gasto por operação MPI por caso
 
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
 dados |>
@@ -146,7 +150,7 @@ dados.aux |>
 
 Vemos que todas as operações levam mais tempo no real, salvo allreduce.
 
-* Quantificar a duração por rank de cada operação MPI e compute
+** Quantificar a duração por rank de cada operação MPI e compute
 
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
 dados |>
@@ -194,7 +198,7 @@ average ~80% of the time. That means that any Compute difference might
 have a significant impact in the differences we can see in simulation
 against reality.
 
-* Comparar unicamente os tempos de cálculo entre real e sim
+** Comparar unicamente os tempos de cálculo entre real e sim
 
 #+begin_src R :results output :session *R* :exports both :noweb yes :colnames yes
 dados |>
