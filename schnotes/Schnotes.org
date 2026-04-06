@@ -48,17 +48,16 @@ dados <- map_dfr(arquivos, function(arq) {
       Rank = as.integer(gsub("rank-?", "", Container))
     ) |>
     mutate(Operation = gsub("^P", "", Operation)) |>
-    select(File, Rank, Start, End, Duration, Operation)
+    select(File, Rank, Start, End, Duration, Operation) |>
+    filter(str_detect(Operation, ops_regex))
 })
 dados |>
-  filter(str_detect(Operation, ops_regex)) |>
   ggplot(aes(x = Duration, fill=File)) +
   geom_histogram(alpha=.4, bins=100) +
   theme_bw(base_size=12) +
   facet_wrap(~Operation)
 
 dados |>
-  filter(str_detect(Operation, ops_regex)) |>
   group_by(File, Operation) |>
   summarize(N = n(),
             Mean = mean(Duration),
