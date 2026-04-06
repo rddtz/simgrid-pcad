@@ -580,7 +580,7 @@ ops_regex <- paste(
   collapse = "|"
 )
 
-arquivos <- c("rastro-real-minivite64.csv", "rastro-sim-minivite64.csv")
+arquivos <- c("2026-03-29/rastro-real-minivite64.csv", "2026-03-29/rastro-sim-minivite64.csv")
 
 dados <- map_dfr(arquivos, function(arq) {
   
